@@ -34,7 +34,8 @@ INSTALLED_APPS = [
 
 # in build apps
 INSTALLED_APPS += [
-    'authentication'
+    'authentication',
+    'communication'
 ]
 
 # third party apps
@@ -163,3 +164,8 @@ EMAIL_USE_TLS = False
 EMAIL_HOST_USER = 'no-reply@edcluster.com'
 EMAIL_HOST_PASSWORD = 'Fxw*zyy0#G@a!yEbj0Y&'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# zoom settings
+ZOOM_CLIENT_ID = env('ZOOM_CLIENT_ID')
+ZOOM_CLIENT_SECRET = env('ZOOM_CLIENT_SECRET')
+ZOOM_ACCOUNT_ID = env('ZOOM_ACCOUNT_ID')

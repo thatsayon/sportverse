@@ -27,3 +27,17 @@ def create_otp_token(payload):
     })
 
     return jwt.encode(token_data, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_otp_token(token):
+    if not token:
+        return None
+        
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None  
+    except jwt.InvalidTokenError:
+        return None 
+    except Exception:
+        return None

@@ -12,20 +12,29 @@ from django.contrib.auth import authenticate, get_user_model
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.core.mail import EmailMultiAlternatives
+from django.shortcuts import redirect
 
+from urllib.parse import urlencode
 from .models import (
     OTP
 )
 from .serializers import (
+    CustomTokenObtainPairSerializer,
     UserRegistrationSerializer,
+    UserLoginSerializer,
 )
 from .tasks import (
     send_confirmation_email_task
 )
 from .utils import (
     generate_otp, 
-    create_otp_token
+    create_otp_token,
+    decode_otp_token
 )
+
+import os 
+
+User = get_user_model()
 
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
@@ -89,5 +98,222 @@ class UserLoginView(APIView):
 
 
     def post(self, request):
-        pass
+        serializer = UserLoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"success": False, "error": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = authenticate(
+            username=serializer.validated_data.get("email"),
+            password=serializer.validated_data.get("password")
+        )
+
+        if not user:
+            return Response(
+                {"error": "Invalid email or password."},
+                status=status.HTTP_401_UNAUTHORIZED
+            ) 
+
+        refresh = CustomTokenObtainPairSerializer.get_token(user) 
+        access = refresh.access_token
+
+        response = Response(
+            {"access_token": str(access)},
+            status=status.HTTP_200_OK,
+        )
+
+        response.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            httponly=True,
+            secure=True,       # Set to True in production
+            samesite="None",   # Adjust based on your requirements
+            max_age=60*60*24,
+        )
+
+        return response
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get('refresh_token')
+            if not refresh_token:
+                pass
+        except TokenError:
+            return Response(
+                {"error": "Invalid or expired token"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class VerifyToken(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        otp_token = request.COOKIES.get('verificationToken')
+        if not otp_token:
+            return Response({"error": "No token found"})
+        
+        decode = decode_otp_token(otp_token)
+        if not decode:
+            return Response(
+                {"error": "Invalid or expired token."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            {"message": "Valid token"},
+            status=status.HTTP_200_OK
+        )
+
+class VerifyOTP(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        otp = request.data.get('otp')
+
+        # Retrieve the OTP token from cookies
+        otp_token = request.COOKIES.get('verificationToken')
+        if not otp_token or not otp:
+            return Response({"error": "OTP token and OTP are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Decode the token
+        decoded = decode_otp_token(otp_token)
+        if not decoded:
+            return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the user ID from the token
+        user_id = decoded.get("user_id")
+        try:
+            user = User._default_manager.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        otp_instance = user.otps.filter(otp=otp).first()
+        if not otp_instance or not otp_instance.is_valid():
+            return Response({"error": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Activate the user and clear OTPs
+        user.is_active = True
+        user.otps.all().delete()
+        user.save()
+
+        # Generate tokens
+        refresh = CustomTokenObtainPairSerializer.get_token(user)
+        access_token = str(refresh.access_token)
+
+        # Set refresh token as an HttpOnly cookie
+        response = Response({"access_token": access_token}, status=status.HTTP_200_OK)
+        response.delete_cookie(
+            key='verificationToken',
+            path='/',  # Match the original path
+            domain=None,  # Match the original domain, if any
+            samesite='None'  # Match the original SameSite policy
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            httponly=True,
+            secure=True,  # Use Secure flag if using HTTPS
+            samesite='None',
+            max_age=60*60*24,
+        )
+
+        return response 
+        
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+    REDIRECT_URI = 'https://v1.mindcryptic.com'
+
+    def get(self, request):
+        code = request.GET.get('code')
+        if not code:
+            # No code provided, so build the authorization URL and redirect to Google.
+            params = {
+                'client_id': self.GOOGLE_CLIENT_ID,
+                'redirect_uri': self.REDIRECT_URI,
+                'response_type': 'code',
+                'scope': 'openid email profile',
+                'access_type': 'offline',
+                'prompt': 'consent',  # Forces account selection and consent screen.
+            }
+            auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
+            return redirect(auth_url)
+
+        # Exchange code for tokens
+        token_data = {
+            'code': code,
+            'client_id': self.GOOGLE_CLIENT_ID,
+            'client_secret': self.GOOGLE_CLIENT_SECRET,
+            'redirect_uri': self.REDIRECT_URI,
+            'grant_type': 'authorization_code'
+        }
+
+        token_response = req.post('https://oauth2.googleapis.com/token', data=token_data)
+        token_json = token_response.json()
+
+        if 'error' in token_json:
+            return Response({"error": token_json['error']}, status=status.HTTP_400_BAD_REQUEST)
+
+        id_token_jwt = token_json.get('id_token')
+
+        try:
+            # Verify the ID token
+            # idinfo = id_token.verify_oauth2_token(id_token_jwt, requests.Request(), self.GOOGLE_CLIENT_ID)
+            idinfo = id_token.verify_oauth2_token(
+                id_token_jwt,
+                google_requests.Request(),  # Use Google's Request class
+                self.GOOGLE_CLIENT_ID
+            )
+            email = idinfo.get('email')
+            name = idinfo.get('name')
+
+            # Get or create user
+            user, created = User.objects.get_or_create(
+                email=email,
+                defaults={"username": generate_username(name), "is_active": True}
+            )
+
+            if created:
+                user.is_google_auth = True
+                user.did_google_auth = True
+                user.save()
+
+            if not user.is_active:
+                if user.deletion_scheduled_at and user.deletion_scheduled_at > timezone.now():
+                    user.deletion_scheduled_at = None
+                    user.is_active = True
+                    user.save()
+
+            refresh = CustomTokenObtainPairSerializer.get_token(user)
+
+            response = HttpResponse(status=302)  # 302 means temporary redirect
+            response["Location"] = "https://mindcryptic.com/challenge-hub"
+
+            # Set the cookie before redirecting
+            response.set_cookie(
+                key="refresh_token",
+                value=str(refresh),
+                httponly=True,
+                secure=True,
+                samesite="None",
+                max_age=60 * 60 * 24
+            )
+            
+            return response
+        except ValueError as e:
+            return Response({"error": f"Invalid token: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 

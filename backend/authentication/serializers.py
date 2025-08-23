@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.contrib.auth.password_validation import validate_password
@@ -40,3 +42,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
+class UserLoginSerializer(serializers.Serializer):
+    email = serializers.CharField()
+    password = serializers.CharField()
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token['username'] = user.username  # Add username to the token payload
+        token['full_name'] = user.full_name
+        token['profile_pic'] = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+
+        return token
