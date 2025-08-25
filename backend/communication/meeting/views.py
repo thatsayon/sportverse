@@ -1,99 +1,51 @@
-import requests, base64
-from django.conf import settings
+# views.py
+import time
+import json
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .models import ConsultationMeeting
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from agora_token_builder import RtcTokenBuilder
+from django.conf import settings
 
-class CreateConsultationView(APIView):
+class GenerateAgoraTokenView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        teacher = request.user
-        student_id = request.data.get("student_id")
+    def post(self, request, *args, **kwargs):
+        if not request.body:
+            return Response({"error": "Empty request body"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get Zoom OAuth Access Token
-        token = self._get_access_token()  # now works
-        if not token:
-            return Response({"error": "Unable to fetch Zoom token"}, status=500)
+        try:
+            body = json.loads(request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            return Response({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
 
-        url = "https://api.zoom.us/v2/users/me/meetings"
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        payload = {"topic": "Consultation", "type": 1}
+        channel_name = body.get("channelName")
+        uid = body.get("uid", 0)
 
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code != 201:
-            return Response(response.json(), status=response.status_code)
+        if not channel_name:
+            return Response({"error": "channelName is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = response.json()
 
-        # meeting = ConsultationMeeting.objects.create(
-        #     teacher=teacher,
-        #     student_id=student_id,
-        #     meeting_number=data["id"],
-        #     start_url=data["start_url"],
-        #     join_url=data["join_url"],
-        # )
-        #
-        print(data)
-        # return Response({
-        #     "meeting_number": meeting.meeting_number,
-        #     "start_url": meeting.start_url,
-        #     "join_url": meeting.join_url
-        # })
-        return Response(data)
+        print("hi")
+        # Agora credentials (store in settings.py or env variables)
+        app_id = settings.AGORA_APP_ID
+        app_certificate = settings.AGORA_APP_CERTIFICATE
+        role = 1  # 1 = publisher, 2 = subscriber
+        expiration_time_in_seconds = 3600
+        current_timestamp = int(time.time())
+        privilege_expired_ts = current_timestamp + expiration_time_in_seconds
 
-    def _get_access_token(self):
-        """Add self as first argument!"""
-        client_id = settings.ZOOM_CLIENT_ID
-        client_secret = settings.ZOOM_CLIENT_SECRET
-        account_id = settings.ZOOM_ACCOUNT_ID
+        token = RtcTokenBuilder.buildTokenWithUid(
+            app_id, app_certificate, channel_name, uid, role, privilege_expired_ts
+        )
 
-        # Basic Auth
-        auth_str = f"{client_id}:{client_secret}"
-        b64_auth = base64.b64encode(auth_str.encode()).decode()
-
-        url = "https://zoom.us/oauth/token"
-        headers = {
-            "Authorization": f"Basic {b64_auth}",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-
-        data = {
-            "grant_type": "account_credentials",
-            "account_id": account_id
-        }
-
-        r = requests.post(url, headers=headers, data=data)
-
-        if r.status_code != 200:
-            print("Error fetching token:", r.status_code, r.text)
-            return None
-
-        return r.json().get("access_token")
-
-class GenerateSignatureView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        import jwt, time
-        meeting_number = request.data.get("meetingNumber")
-        role = request.data.get("role", 0)  # 0=student, 1=teacher
-
-        iat = int(time.time())
-        exp = iat + 60 * 5
-
-        payload = {
-            "sdkKey": settings.ZOOM_SDK_KEY,
-            "mn": meeting_number,
-            "role": role,
-            "iat": iat,
-            "exp": exp,
-            "appKey": settings.ZOOM_SDK_KEY,
-            "tokenExp": exp
-        }
-
-        token = jwt.encode(payload, settings.ZOOM_SDK_SECRET, algorithm="HS256")
-        return Response({"signature": token})
+        return JsonResponse({
+            "token": token,
+            "appId": app_id,
+            "channelName": channel_name,
+            "uid": uid,
+            "expireAt": privilege_expired_ts
+        })
 

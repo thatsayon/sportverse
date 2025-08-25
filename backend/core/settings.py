@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 import environ
 import os
 
@@ -18,7 +19,26 @@ SECRET_KEY = 'django-insecure-3xmppg_-h8o6in6qm)ds__ia-$o1ddru82&pc6&#-=6+w&d7h#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "*"
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "PATCH",
+    "OPTIONS",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
 
 
 # Application definition
@@ -40,10 +60,12 @@ INSTALLED_APPS += [
 
 # third party apps
 INSTALLED_APPS += [
-    'rest_framework'
+    'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -156,6 +178,16 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=17),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'SIGNING_KEY': env('SIGNING_KEY'),
+}
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.hostinger.com'
 EMAIL_PORT = 465
@@ -165,7 +197,5 @@ EMAIL_HOST_USER = 'no-reply@edcluster.com'
 EMAIL_HOST_PASSWORD = 'Fxw*zyy0#G@a!yEbj0Y&'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# zoom settings
-ZOOM_CLIENT_ID = env('ZOOM_CLIENT_ID')
-ZOOM_CLIENT_SECRET = env('ZOOM_CLIENT_SECRET')
-ZOOM_ACCOUNT_ID = env('ZOOM_ACCOUNT_ID')
+AGORA_APP_ID = env('AGORA_APP_ID')
+AGORA_APP_CERTIFICATE = env('AGORA_APP_CERTIFICATE')

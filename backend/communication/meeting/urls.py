@@ -1,10 +1,8 @@
 from django.urls import path
 from .views import (
-    CreateConsultationView,
-    GenerateSignatureView
+    GenerateAgoraTokenView
 )
 
 urlpatterns = [
-    path('create/', CreateConsultationView.as_view()),
-    path('signature/', GenerateSignatureView.as_view())
+    path("agora/token/", GenerateAgoraTokenView.as_view(), name="agora-token"),
 ]
