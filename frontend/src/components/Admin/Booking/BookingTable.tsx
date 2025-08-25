@@ -12,6 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Edit2, Trash2 } from "lucide-react";
+import { useAppSelector } from "@/store/hooks/hooks";
+import { RootState } from "@/store/store";
 
 // Type definitions for better TypeScript support
 interface Manager {
@@ -217,6 +219,9 @@ const BookingTable: React.FC = () => {
     console.log(`Delete manager with ID: ${id}`);
     // Implement delete functionality
   };
+
+  const {value} = useAppSelector((state: RootState)=> state.state )
+  console.log("The value:",value)
 
   return (
     <div className="w-full">

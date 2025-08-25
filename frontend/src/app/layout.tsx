@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Montserrat, Open_Sans } from "next/font/google";
 import "./globals.css";
+import StoreProvider from "@/store/StoreProvider";
+import { Toaster } from "sonner";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -27,7 +29,10 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${openSans.variable} font-open_sans antialiased`}
       >
-        {children}
+        <StoreProvider>
+          <Toaster/>
+          {children}
+          </StoreProvider>
       </body>
     </html>
   );
