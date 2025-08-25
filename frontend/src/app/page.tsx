@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="py-20 px-20 border-2">
+    <div className="py-20 px-20 border-2 bg-white">
       <h1 className="text-7xl text-center font-montserratfont-mono pb-7">Hello to the Video Chat</h1>
       <p className="max-w-[600px] text-center mx-auto font-open_sans">
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Neque
