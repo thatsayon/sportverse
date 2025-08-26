@@ -26,7 +26,7 @@ import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
 import { useDispatch } from "react-redux";
 import { setEmail, setUser, setUserQuery } from "@/store/Slices/stateSlice";
 import { toast } from "sonner";
-import { useStateSlice } from "@/store/hooks/sliceHook";
+import { setCookie } from "@/hooks/cookie";
 
 export function SignUpForm() {
   const dispatch = useDispatch();
@@ -34,12 +34,12 @@ export function SignUpForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signUp, { isLoading }] = useSignUpMutation();
 
-  const [selected, setSelected] = useState<"Student" | "Teacher" | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"student" | "teacher" | null>(null);
 
-  const handleChange = (value: "Student" | "Teacher" | null) => {
-    setSelected(value); // Set the selected value to the clicked option
+  const handleRoleChange = (value: "student" | "teacher") => {
+    form.setValue("role", value)
+    setSelectedRole(value)
   };
-
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -49,6 +49,7 @@ export function SignUpForm() {
       password: "",
       confirm_password: "",
       agree_terms: false,
+      role: undefined, // optional default
     },
   });
 
@@ -57,37 +58,33 @@ export function SignUpForm() {
   const router = useRouter();
 
   const onSubmit = async (data: SignUpFormData) => {
-    console.log("Sign up data:", data);
+    if (!selectedRole) {
+      toast.error("Please select a role");
+      return;
+    }
+
     try {
-      // Transform form data to match API requirements
-      const formatedData = {
+      const formattedData = {
         full_name: data.full_name,
-        password: data.password,
         email: data.email,
+        password: data.password,
+        role: selectedRole, // include selected role
       };
 
-      const result = await signUp(formatedData).unwrap();
+      const result = await signUp(formattedData).unwrap();
 
-      console.log("signup response:", result);
-
-      // Check if the response indicates success (either by success field or message)
-      if (result.success || result.message?.includes("successful")) {
-        console.log("Signup successful:", result);
+      if (result.success) {
+        setCookie("verificationToken", result.verificationToken, 7);
         dispatch(setEmail(result?.user?.email ?? ""));
         dispatch(setUserQuery("signup"));
-        // After successful signup, redirect to pricing page
         router.push("/forget-password/verify-code");
       } else {
-        console.error("Signup failed:", result.message);
-        toast.success(result.message || "Signup failed");
+        toast.error(result.message || "Signup failed");
       }
     } catch (error) {
       console.error("Signup error:", error);
-      if (error instanceof Error) {
-        toast.error(`Some error occurs: ${error.message}`);
-      } else {
-        toast.error("Some unknown error occurred");
-      }
+      if (error instanceof Error) toast.error(`Error: ${error.message}`);
+      else toast.error("Unknown error occurred");
     }
   };
 
@@ -109,32 +106,32 @@ export function SignUpForm() {
           <div className="flex items-center justify-center gap-4 mt-4">
             {/* ShadCN Toggle component */}
             <div
-              value={selected}
-              onChange={handleChange}
+              value={selectedRole}
+              onChange={handleRoleChange}
               className="flex items-center border-2 p-1 rounded-md text-lg font-semibold"
             >
               {/* Student Option */}
-              <div
-                className={`py-2 px-3 rounded-md cursor-pointer ${
-                  selected === "Student"
-                    ? "bg-[#118AB2] text-white"
-                    : "bg-white text-[#808080]"
-                }`}
-                onClick={() => handleChange("Student")}
-              >
-                Student
-              </div>
-
-              {/* Teacher Option */}
-              <div
-                className={`py-2 px-3 rounded-md cursor-pointer ${
-                  selected === "Teacher"
-                    ? "bg-[#118AB2] text-white"
-                    : "bg-white text-[#808080]"
-                }`}
-                onClick={() => handleChange("Teacher")}
-              >
-                Teacher
+              <div className="flex items-center border-2 p-1 rounded-md text-lg font-semibold">
+                <div
+                  className={`py-2 px-3 rounded-md cursor-pointer ${
+                    selectedRole === "student"
+                      ? "bg-[#118AB2] text-white"
+                      : "bg-white text-[#808080]"
+                  }`}
+                  onClick={() => handleRoleChange("student")}
+                >
+                  Student
+                </div>
+                <div
+                  className={`py-2 px-3 rounded-md cursor-pointer ${
+                    selectedRole === "teacher"
+                      ? "bg-[#118AB2] text-white"
+                      : "bg-white text-[#808080]"
+                  }`}
+                  onClick={() => handleRoleChange("teacher")}
+                >
+                  Teacher
+                </div>
               </div>
             </div>
           </div>

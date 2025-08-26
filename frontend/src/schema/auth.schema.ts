@@ -5,8 +5,7 @@ export const signUpSchema = z
     full_name: z
       .string()
       .min(2, "Username must be at least 2 characters")
-      .max(50, "Username must be less than 50 characters")
-      ,
+      .max(50, "Username must be less than 50 characters"),
     email: z
       .string()
       .min(1, "Email is required")
@@ -19,12 +18,12 @@ export const signUpSchema = z
         "Password must contain at least one uppercase letter, one lowercase letter, and one number"
       ),
     confirm_password: z.string().min(1, "Please confirm your password"),
+    role: z.enum(["student", "teacher"], {
+      errorMap: () => ({ message: "Role must be either 'student' or 'teacher'" }),
+    }),
     agree_terms: z
       .boolean()
-      .refine(
-        (val) => val === true,
-        "You must accept the terms and conditions"
-      ),
+      .refine((val) => val === true, "You must accept the terms and conditions"),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords don't match",

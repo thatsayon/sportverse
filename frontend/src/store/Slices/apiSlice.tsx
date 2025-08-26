@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { Verification } from "next/dist/lib/metadata/types/metadata-types";
 
 const removeCookie = (name: string) => {
   if (typeof window === "undefined") return;
@@ -36,22 +37,51 @@ export interface ForgotPasswordRequest {
 
 export interface VerifyCodeRequest {
   otp: string;
+  verificationToken: string | null;
+}
+export interface forgetCodeRequest {
+  otp: string;
+  passResetToken: string | null;
 }
 
 export interface ResetPasswordRequest {
-  email: string;
   new_password: string;
-  code: string;
+  passwordResetVerified: string | null;
 }
 
 export interface SignUpResponse {
   success?: boolean;
   message: string;
   user?: User;
+  verificationToken: string;
 }
 
 export interface LoginResponse {
   access_token: string;
+}
+export interface verifyEmailCodeResponse {
+  access_token: string;
+}
+export interface verifyForgotPasswordCodeResponse {
+  message: string;
+  passwordResetVerified: string;
+}
+export interface requestForgotPasswordCodeResponse {
+  success: boolean;
+  message: string;
+  user:{
+    id: string;
+    email: string;
+  };
+  passResetToken: string;
+
+}
+
+export interface resendRegistrationCodeRequesrt{
+  verificationToken: string | null;
+}
+export interface resendPasswordCodeRequesrt{
+  passResetToken: string | null;
 }
 
 // Create the API slice
@@ -124,17 +154,25 @@ export const apiSlice = createApi({
     }),
 
     // Forgot Password endpoints
-    requestForgotPasswordCode: builder.mutation<string, ForgotPasswordRequest>({
+    requestForgotPasswordCode: builder.mutation<requestForgotPasswordCodeResponse, ForgotPasswordRequest>({
       query: (data) => ({
-        url: "/api/forget-password/",
+        url: "/auth/forget-password/",
         method: "POST",
         body: data,
       }),
     }),
 
-    verifyForgotPasswordCode: builder.mutation<string, VerifyCodeRequest>({
+    verifyEmailCode: builder.mutation<verifyEmailCodeResponse, VerifyCodeRequest>({
       query: (data) => ({
         url: "/auth/verify-otp/",
+        method: "POST",
+        body: data,
+        credentials: "include"
+      }),
+    }),
+    verifyForgotPasswordCode: builder.mutation<verifyForgotPasswordCodeResponse, forgetCodeRequest>({
+      query: (data) => ({
+        url: "/auth/forget-password-otp-verify/",
         method: "POST",
         body: data,
       }),
@@ -142,12 +180,26 @@ export const apiSlice = createApi({
 
     resetPassword: builder.mutation<string, ResetPasswordRequest>({
       query: (data) => ({
-        url: "/api/forget-password/reset",
+        url: "/auth/forget-password-set/",
         method: "POST",
         body: data,
-        credentials: "include",
       }),
     }),
+    resendRegistrationCode: builder.mutation<string, resendRegistrationCodeRequesrt>({
+      query:(data)=>({
+        url: "/auth/resend-registration-otp/",
+        method: "POST",
+        body: data
+      })
+    }),
+    resendPasswordCode: builder.mutation<string, resendPasswordCodeRequesrt>({
+ query:(data)=>({
+        url: "/auth/resend-forget-password-otp/",
+        method: "POST",
+        body: data
+      })
+    }),
+
 
     // User profile endpoint
     getUserProfile: builder.query<User, void>({
@@ -157,6 +209,7 @@ export const apiSlice = createApi({
       }),
       providesTags: ["User"],
     }),
+    
   }),
 });
 
@@ -171,4 +224,7 @@ export const {
   useVerifyForgotPasswordCodeMutation,
   useResetPasswordMutation,
   useGetUserProfileQuery,
+  useVerifyEmailCodeMutation,
+  useResendPasswordCodeMutation,
+  useResendRegistrationCodeMutation
 } = apiSlice;

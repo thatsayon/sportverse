@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { useResetPasswordMutation } from "@/store/Slices/apiSlice";
 import { z } from "zod";
+import { getCookie } from "@/hooks/cookie";
 
 // Password validation schema
 const resetPasswordSchema = z.object({
@@ -47,14 +48,16 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     // Get email and code from sessionStorage
     
-    const storedCode = sessionStorage.getItem('verificationCode');
+    const passwordResetVerified = getCookie("passwordResetVerified")
     
-    if (!storedCode) {
-      router.push('/forget-password');
+    if (!passwordResetVerified) {
+      router.push('/login');
       return;
     }
-    setVerificationCode(storedCode);
+    // setVerificationCode(storedCode);
   }, [router]);
+
+
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -67,11 +70,10 @@ export default function ResetPasswordPage() {
   const onSubmit = async (data: ResetPasswordFormData) => {
     try {
       console.log("Resetting password for:", email);
-      
-      const result = await resetPassword({
-        email,
+      const passwordResetVerified = getCookie("passwordResetVerified")
+      const result = await resetPassword({        
         new_password: data.newPassword,
-        code: verificationCode,
+        passwordResetVerified: passwordResetVerified,
       }).unwrap();
       
       console.log("Password reset successful:", result);

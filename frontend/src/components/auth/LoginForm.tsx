@@ -29,15 +29,10 @@ import { toast } from "sonner";
 import { Label } from "../ui/label";
 import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
 import { useRouter } from "next/navigation";
+import { setCookie } from "@/hooks/cookie";
 
 // Cookie utility function
-const setCookie = (name: string, value: string, days: number = 7) => {
-  if (typeof window === "undefined") return;
 
-  const expires = new Date();
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
-};
 
 // Main function component
 
@@ -64,7 +59,7 @@ export function LoginForm() {
 
       const result = await login(data).unwrap();
 
-      if (result) {
+      if (result.access_token) {
         console.log("Login successful:", result);
 
         // Store tokens in cookies
@@ -74,8 +69,11 @@ export function LoginForm() {
         // Store login data in sessionStorage for immediate access
         sessionStorage.setItem("isLoggedIn", "true");
         sessionStorage.setItem("userEmail", data.email);
+        toast.success("Login successful!");
+      }else{
+        toast.error("Login Failed!");
+
       }
-      toast.success("Login successful!");
     } catch (error) {
       console.error("Login error:", error);
       alert("Login failed. Please check your credentials and try again.");

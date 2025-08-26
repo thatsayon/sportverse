@@ -7,18 +7,29 @@ import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useVerifyForgotPasswordCodeMutation } from "@/store/Slices/apiSlice";
+import {
+  useResendPasswordCodeMutation,
+  useResendRegistrationCodeMutation,
+  useVerifyEmailCodeMutation,
+  useVerifyForgotPasswordCodeMutation,
+} from "@/store/Slices/apiSlice";
 import { useStateSlice } from "@/store/hooks/sliceHook";
+import { getCookie, removeCookie, setCookie } from "@/hooks/cookie";
+import { toast } from "sonner";
 
 export default function VerifyCodePage() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(10);
   const [email, setEmail] = useState("");
   const { userQuery, user } = useStateSlice();
-  const [verifyCode, { isLoading }] = useVerifyForgotPasswordCodeMutation();
+  const [verifyCode, { isLoading }] = useVerifyEmailCodeMutation();
+  const [verifyForgetCode, { isLoading: forgetLoading }] =
+    useVerifyForgotPasswordCodeMutation();
   const router = useRouter();
+  const [resendPasswordCode] = useResendPasswordCodeMutation();
+  const [resendregistrationCode] = useResendRegistrationCodeMutation();
 
-  console.log("userQuery is:",userQuery)
+  console.log("userQuery is:", userQuery);
 
   useEffect(() => {
     if (timeLeft === 0) return;
@@ -33,9 +44,9 @@ export default function VerifyCodePage() {
   useEffect(() => {
     if (userQuery === "signup" || userQuery === "forget") {
       return;
-    }else{
-      router.push("/login")
-      return
+    } else {
+      router.push("/login");
+      return;
     }
   }, []);
 
@@ -67,25 +78,41 @@ export default function VerifyCodePage() {
       alert("Please enter the complete 6-digit code");
       return;
     }
+    const verificationToken = getCookie("verificationToken");
+    const passResetToken = getCookie("passResetToken");
 
+    console.log("verificationToken:", verificationToken);
     try {
       console.log("Verifying code:", fullCode);
 
-      const result = await verifyCode({
-        otp: fullCode,
-      }).unwrap();
-
-      console.log("Code verification successful:", result);
-      if (result) {
-        // Store code in sessionStorage for next step
-        sessionStorage.setItem("verificationCode", fullCode);
-
-        if(userQuery === "signup"){
+      if (userQuery === "signup") {
+        const result = await verifyCode({
+          otp: fullCode,
+          verificationToken: verificationToken,
+        }).unwrap();
+        if (result.access_token) {
+          // Store code in sessionStorage for next step
+          // sessionStorage.setItem("verificationCode", fullCode);
+          // setCookie("passResetToken", result.passResetToken, 7)
+          removeCookie("verificationToken");
           // Redirect to success page
-        router.push("/forget-password/success");
-        }else{
-          // Redirect to reset password page
-        router.push("/forget-password/reset-password");
+          router.push("/forget-password/success");
+        }
+      }
+      if (userQuery === "forget") {
+        const result = await verifyForgetCode({
+          otp: fullCode,
+          passResetToken: passResetToken,
+        }).unwrap();
+        if (result.passwordResetVerified) {
+          // Store code in sessionStorage for next step
+          // sessionStorage.setItem("verificationCode", fullCode);
+          // setCookie("passResetToken", result.passResetToken, 7)
+          removeCookie("passResetToken");
+          setCookie("passwordResetVerified", result.passwordResetVerified, 7);
+
+          // Redirect to success page
+          router.push("/forget-password/reset-password");
         }
       }
     } catch (error) {
@@ -95,29 +122,52 @@ export default function VerifyCodePage() {
   };
 
   const handleResend = async () => {
-    try {
-      // Re-request the code
-      const response = await fetch(
-        "https://127702b1a191.ngrok-free.app/api/auth/forget-password/request-code",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      if (response.ok) {
-        alert("Verification code has been resent to your email");
-      } else {
-        alert("Failed to resend code. Please try again.");
+    const verificationToken = getCookie("verificationToken");
+    const passResetToken = getCookie("passResetToken");
+    if (userQuery === "signup") {
+      const response = await resendregistrationCode({
+        verificationToken: verificationToken,
+      });
+      if(response.data){
+        toast.success("OTP has been resended to your eamil")
+        setTimeLeft(10)
       }
-    } catch (error) {
-      console.error("Resend error:", error);
-      alert("Failed to resend code. Please try again.");
+    }
+    if (userQuery === "forget") {
+      const response = await resendPasswordCode({
+        passResetToken: passResetToken,
+      });
+      if(response.data){
+        toast.success("OTP has been resended to your eamil")
+        setTimeLeft(10)
+      }
     }
   };
+
+  // const handleResend = async () => {
+  //   try {
+  //     // Re-request the code
+  //     const response = await fetch(
+  //       "https://127702b1a191.ngrok-free.app/api/auth/forget-password/request-code",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ email }),
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       alert("Verification code has been resent to your email");
+  //     } else {
+  //       alert("Failed to resend code. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Resend error:", error);
+  //     alert("Failed to resend code. Please try again.");
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-8">
@@ -139,7 +189,7 @@ export default function VerifyCodePage() {
             Verify Identity
           </h2>
           <p className="text-gray-600">
-            Please input the verification code send to <br /> your email
+            Please input the verification code send to <br /> your email{" "}
             {user.email}
           </p>
         </div>
@@ -170,22 +220,15 @@ export default function VerifyCodePage() {
             {isLoading ? "VERIFYING..." : "VERIFY"}
           </Button>
           {/* Resend Link */}
-          <Button className="w-full mt-4 py-4" variant={"outline"}>
+          <Button
+            onClick={handleResend}
+            disabled={timeLeft > 0}
+            className="w-full mt-4 py-4"
+            variant={"outline"}
+          >
             {timeLeft > 0 ? `Resend code in ${timeLeft}s` : "Resend Code"}
           </Button>
         </div>
-
-        {/* <div className="text-center">
-          <p className="text-sm text-gray-600">
-            You have not received the email?{" "}
-            <button
-              onClick={handleResend}
-              className="text-purple-600 hover:text-purple-800 underline"
-            >
-              Resend
-            </button>
-          </p>
-        </div> */}
 
         {/* Back to Login */}
         <div className="text-center mt-6">

@@ -5,12 +5,15 @@ import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { useStateSlice } from "@/store/hooks/sliceHook";
+import { useDispatch } from "react-redux";
+import { setUserQuery } from "@/store/Slices/stateSlice";
 
 export default function ForgotPasswordSuccessPage() {
   const router = useRouter();
   const {userQuery} = useStateSlice()
-
+const dispatch = useDispatch()
   const handleSignIn = () => {
+    dispatch(setUserQuery(""))
    if(userQuery === "signup"){
      router.push("/dashboard");
    }else{

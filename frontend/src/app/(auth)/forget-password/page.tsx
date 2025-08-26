@@ -20,6 +20,9 @@ import {
 import { useRequestForgotPasswordCodeMutation } from "@/store/Slices/apiSlice";
 import { z } from "zod";
 import { useStateSlice } from "@/store/hooks/sliceHook";
+import { useDispatch } from "react-redux";
+import { setUserQuery } from "@/store/Slices/stateSlice";
+import { setCookie } from "@/hooks/cookie";
 
 // Email validation schema
 const emailSchema = z.object({
@@ -36,6 +39,7 @@ interface ForgotPasswordFormData {
 export default function ForgotPasswordPage() {
   const [requestCode, { isLoading }] = useRequestForgotPasswordCodeMutation();
   const router = useRouter();
+  const dispatch = useDispatch()
   const {userQuery} = useStateSlice()
 
   console.log("userQuery is:",userQuery)
@@ -54,11 +58,12 @@ export default function ForgotPasswordPage() {
       
       console.log("Code request successful:", result);
       
-      // Store email in sessionStorage for next steps
-      sessionStorage.setItem('forgotPasswordEmail', data.email);
-      
+      if(result.success){
+        dispatch(setUserQuery("forget"))
+        setCookie("passResetToken", result.passResetToken, 7)
+        router.push("/forget-password/verify-code");
+      }
       // Redirect to verification code page
-      router.push("/forget-password/verify-code");
     } catch (error) {
       console.error("Code request error:", error);
       alert("Failed to send verification code. Please try again.");
