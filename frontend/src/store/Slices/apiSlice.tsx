@@ -23,11 +23,9 @@ export interface CreateUserRequest {
 }
 
 export interface SignUpRequest {
-  username: string;
+  full_name: string;
   email: string;
   password: string;
-  confirm_password: string;
-  agree_terms: boolean;
 }
 
 export interface LoginRequest {
@@ -59,8 +57,7 @@ export interface SignUpResponse {
 }
 
 export interface LoginResponse {
-  access: string;
-  refresh: string;
+  access_token: string;
 }
 
 
@@ -68,7 +65,7 @@ export interface LoginResponse {
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://gamplandjango-2.onrender.com/", // Your actual API base URL
+    baseUrl: "http://127.0.0.1:8000/", // Your actual API base URL
     prepareHeaders: (headers) => {
       // Add any default headers here (e.g., authorization)
       headers.set("Content-Type", "application/json");
@@ -100,7 +97,7 @@ export const apiSlice = createApi({
 
     signUp: builder.mutation<SignUpResponse, SignUpRequest>({
       query: (credentials) => ({
-        url: "/api/signup/",
+        url: "/auth/register/",
         method: "POST",
         body: credentials,
       }),
@@ -108,14 +105,13 @@ export const apiSlice = createApi({
 
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
-        url: "/api/login/",
+        url: "/auth/login/",
         method: "POST",
         body: credentials,
         credentials: "include",
       }),
       // No cache invalidation needed for login
     }),
-
     logout: builder.mutation<{ success: boolean }, void>({
       // No API call needed for logout, just clear cookies and session
       queryFn: async () => {

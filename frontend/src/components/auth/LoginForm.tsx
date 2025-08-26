@@ -28,6 +28,7 @@ import { loginSchema, type LoginFormData } from "@/schema/auth.schema";
 import { toast } from "sonner";
 import { Label } from "../ui/label";
 import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
+import { useRouter } from "next/navigation";
 
 // Cookie utility function
 const setCookie = (name: string, value: string, days: number = 7) => {
@@ -45,6 +46,7 @@ export function LoginForm() {
 
   const [login, { isLoading }] = useLoginMutation();
   //   const [getUserPackage] = useLazyGetUserpackageQuery();
+ 
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -54,11 +56,11 @@ export function LoginForm() {
     },
   });
 
-  // const router = useRouter();
+  const router = useRouter();
 
   const onSubmit = async (data: LoginFormData) => {
+    console.log("Login data:", data);
     try {
-      console.log("Login data:", data);
 
       const result = await login(data).unwrap();
 
@@ -66,9 +68,8 @@ export function LoginForm() {
         console.log("Login successful:", result);
 
         // Store tokens in cookies
-        setCookie("access_token", result.access, 7); // 7 days expiry
-        setCookie("refresh_token", result.refresh, 7);
-        setCookie("token_type", "bearer", 7);
+        setCookie("access_token", result.access_token, 7); // 7 days expiry
+       router.push("/dashboard")
 
         // Store login data in sessionStorage for immediate access
         sessionStorage.setItem("isLoggedIn", "true");
@@ -172,7 +173,7 @@ export function LoginForm() {
 
             <div className="flex items-center justify-end">
               <Link
-                href="/forgot-password"
+                href="/forget-password"
                 className="text-sm text-red-600 hover:underline"
               >
                 Forgot Password?
