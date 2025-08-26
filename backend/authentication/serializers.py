@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
+from .models import ROLE_CHOICES
 import uuid
 
 User = get_user_model()
@@ -12,10 +13,11 @@ User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    role = serializers.ChoiceField(choices=ROLE_CHOICES, required=True)
 
     class Meta:
         model = User
-        fields = ("email", "password", "full_name")
+        fields = ("email", "password", "full_name", "role")
 
     def validate_password(self, value):
         validate_password(value)
@@ -30,6 +32,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         email = validated_data.get("email")
         full_name = validated_data.get("full_name", "").strip()
         password = validated_data.get("password")
+        role = validated_data.get("role")
 
         username = self.generate_username(full_name)
 
@@ -38,6 +41,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             username=username,
             full_name=full_name,
             password=password,
+            role=role,
             is_active=False,  
         )
         return user
