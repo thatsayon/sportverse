@@ -12,7 +12,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.core.mail import EmailMultiAlternatives
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 
 from urllib.parse import urlencode
 from .models import (
@@ -24,7 +24,8 @@ from .serializers import (
     UserLoginSerializer,
 )
 from .tasks import (
-    send_confirmation_email_task
+    send_confirmation_email_task,
+    send_password_reset_email_task,
 )
 from .utils import (
     generate_otp, 
@@ -80,8 +81,8 @@ class UserRegistrationView(APIView):
                     key="verificationToken",
                     value=verificationToken,
                     httponly=True,
-                    secure=True,
-                    samesite="Strict",
+                    secure=False,
+                    samesite="Lax",
                     max_age=60*5,
                     path='/',
                 )
@@ -231,6 +232,65 @@ class VerifyOTP(APIView):
 
         return response 
         
+class ForgetPassView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response(
+                {"message": "email is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = get_object_or_404(User, email=email)
+
+        otp = generate_otp()
+
+        OTP.objects.create(
+            user=user,
+            otp=otp,
+            created_at=now()
+        )
+
+        send_password_reset_email_task.delay(
+            user.email,
+            user.full_name,
+            otp
+        )
+
+        passResetToken = create_otp_token(user.id)
+
+        response = Response(
+            {
+                "success": True,
+                "message": "OTP send successfully",
+                "user": {
+                    "id": str(user.id),
+                    "email": user.email
+                }
+            }
+        )
+        
+        response.set_cookie(
+            key="passResetToken",
+            value=passResetToken,
+            httponly=True,
+            secure=True,
+            samesite="Strict",
+            max_age=60*5,
+            path='/',
+        )
+
+        return response
+
+class ForgetPassOTPVerifyView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        return Response({"msg": "working"})
+
+
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
 
