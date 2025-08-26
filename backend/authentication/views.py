@@ -147,7 +147,7 @@ class UserLogoutView(APIView):
 
     def post(self, request):
         try:
-            refresh_token = request.COOKIES.get('refresh_token')
+            refresh_token = request.data.get('refresh_token')
             if not refresh_token:
                 pass
         except TokenError:
@@ -165,7 +165,7 @@ class VerifyToken(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        otp_token = request.COOKIES.get('verificationToken')
+        otp_token = request.data.get('verificationToken')
         if not otp_token:
             return Response({"error": "No token found"})
         
@@ -187,7 +187,7 @@ class VerifyOTP(APIView):
         otp = request.data.get('otp')
 
         # Retrieve the OTP token from cookies
-        otp_token = request.COOKIES.get('verificationToken')
+        otp_token = request.data.get('verificationToken')
         if not otp_token or not otp:
             return Response({"error": "OTP token and OTP are required."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -271,7 +271,8 @@ class ForgetPassView(APIView):
                 "user": {
                     "id": str(user.id),
                     "email": user.email
-                }
+                },
+                "passResetToken": passResetToken
             }
         )
         
@@ -290,9 +291,132 @@ class ForgetPassView(APIView):
 class ForgetPassOTPVerifyView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request):
+    def post(self, request): 
+        otp = request.data.get("otp")
+        reset_token = request.data.get("passResetToken")
+        
+        if not otp or not reset_token:
+            return Response({"error": "OTP and reset token are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        decoded = decode_otp_token(reset_token)
+        if not decoded:
+            return Response({"error": "Invalid or expired reset token."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user_id = decoded.get("user_id")
+
+        user = get_object_or_404(User, id=user_id)
+
+        otp_instance = user.otps.filter(otp=otp).first()
+        if not otp_instance or not otp_instance.is_valid():
+            return Response({"error": "Invalid or expired OTP."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # If OTP is valid, generate a verified token indicating that the OTP step is complete.
+        verified_payload = {"user_id": str(user.id), "verified": True}
+        verified_token = create_otp_token(verified_payload)
+        
+        # Optionally, delete the used OTP instance to prevent reuse.
+        otp_instance.delete()
+        
+        response = Response(
+            {
+                "message": "OTP verified. You can now reset your password.",
+                "passwordResetVerified": verified_token
+            }, 
+            status=status.HTTP_200_OK
+        )
+        response.set_cookie(
+            key="passwordResetVerified",
+            value=verified_token,
+            httponly=True,
+            secure=True,
+            samesite="None",
+            max_age=60*5  # verified token valid for 5 minutes
+        )
+        return response
         return Response({"msg": "working"})
 
+class ForgettedPasswordSetView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        new_password = request.data.get("new_password")
+        verified_token = request.data.get("passwordResetVerified")
+        
+        if not new_password or not verified_token:
+            return Response({"error": "New password and verified token are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        decoded = decode_otp_token(verified_token)
+        if not decoded or not decoded.get("verified"):
+            return Response({"error": "Invalid or expired verified token."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user_id = decoded.get("user_id")
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Set the new password
+        user.set_password(new_password)
+        user.save()
+        
+        response = Response({"message": "Password reset successfully."}, status=status.HTTP_200_OK)
+        # Remove the verified token (and optionally the original reset token)
+        response.delete_cookie("passResetToken", path='/', samesite="None")
+        response.delete_cookie("passwordResetToken", path='/', samesite="None")
+        return response
+
+class ResendRegistrationOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        verification_token = request.data.get("verificationToken")
+        if not verification_token:
+            return Response({"error": "No verification token found."}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded = decode_otp_token(verification_token)
+        if not decoded:
+            return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_id = decoded.get("user_id")
+        user = get_object_or_404(User, id=user_id)
+
+        if user.is_active:
+            return Response({"message": "User already verified."}, status=status.HTTP_400_BAD_REQUEST)
+
+        otp = generate_otp()
+        OTP.objects.create(user=user, otp=otp, created_at=now())
+
+        send_confirmation_email_task.delay(user.email, user.full_name, otp)
+
+        return Response(
+            {"message": "OTP resent successfully to your email."},
+            status=status.HTTP_200_OK
+        )
+
+class ResendForgetPassOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        reset_token = request.data.get("passResetToken")
+        if not reset_token:
+            return Response({"error": "No reset token found."}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded = decode_otp_token(reset_token)
+        if not decoded:
+            return Response({"error": "Invalid or expired reset token."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_id = decoded.get("user_id")
+        user = get_object_or_404(User, id=user_id)
+
+        otp = generate_otp()
+        OTP.objects.create(user=user, otp=otp, created_at=now())
+
+        send_password_reset_email_task.delay(user.email, user.full_name, otp)
+
+        return Response(
+            {"message": "Password reset OTP resent successfully to your email."},
+            status=status.HTTP_200_OK
+        )
 
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]

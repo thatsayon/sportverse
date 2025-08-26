@@ -6,6 +6,9 @@ from .views import (
     VerifyOTP,
     ForgetPassView,
     ForgetPassOTPVerifyView,
+    ForgettedPasswordSetView,
+    ResendRegistrationOTPView,
+    ResendForgetPassOTPView,
     GoogleLoginView,
 )
 
@@ -16,5 +19,8 @@ urlpatterns = [
     path("verify-otp/", VerifyOTP.as_view(), name='Verify OTP'),
     path("forget-password/", ForgetPassView.as_view(), name='Forget Password'),
     path("forget-password-otp-verify/", ForgetPassOTPVerifyView.as_view(), name='Forget Password OTP Verify'),
+    path("forget-password-set/", ForgettedPasswordSetView.as_view(), name='Forget Password Set'),
+    path("resend-registration-otp/", ResendRegistrationOTPView.as_view(), name='Resend Registration OTP'),
+    path("resend-forget-password-otp/", ResendForgetPassOTPView.as_view(), name='Resend Forget Pass OTP'),
     path("google/", GoogleLoginView.as_view(), name='Google')
 ]
