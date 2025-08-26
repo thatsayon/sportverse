@@ -4,12 +4,18 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
+import { useStateSlice } from "@/store/hooks/sliceHook";
 
 export default function ForgotPasswordSuccessPage() {
   const router = useRouter();
+  const {userQuery} = useStateSlice()
 
   const handleSignIn = () => {
-    router.push("/login");
+   if(userQuery === "signup"){
+     router.push("/dashboard");
+   }else{
+    router.push("/login")
+   }
   };
 
   return (
@@ -23,7 +29,9 @@ export default function ForgotPasswordSuccessPage() {
       <div className="max-w-md w-full text-center">
         <div className="mb-8">
           <p className="text-gray-600 mb-6">
-            Your password has been updated, please change your password regularly.
+           {
+            userQuery === "signup" ?"You email have been verified.":" Your password has been updated, please change your password regularly."
+           }
           </p>
           
           <h1 className="text-2xl font-bold text-gray-800 mb-8">Congratulations</h1>
@@ -32,7 +40,9 @@ export default function ForgotPasswordSuccessPage() {
             onClick={handleSignIn}
             className="w-full py-4"
           >
-            SIGN IN
+            {
+              userQuery === "signup" ? "Dashboad":"Sign In"
+            }
           </Button>
         </div>
       </div>

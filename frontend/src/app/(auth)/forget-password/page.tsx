@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { useRequestForgotPasswordCodeMutation } from "@/store/Slices/apiSlice";
 import { z } from "zod";
+import { useStateSlice } from "@/store/hooks/sliceHook";
 
 // Email validation schema
 const emailSchema = z.object({
@@ -29,10 +30,15 @@ interface ForgotPasswordFormData {
   email: string;
 }
 
+
+
+
 export default function ForgotPasswordPage() {
   const [requestCode, { isLoading }] = useRequestForgotPasswordCodeMutation();
   const router = useRouter();
+  const {userQuery} = useStateSlice()
 
+  console.log("userQuery is:",userQuery)
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(emailSchema),
     defaultValues: {
@@ -52,7 +58,7 @@ export default function ForgotPasswordPage() {
       sessionStorage.setItem('forgotPasswordEmail', data.email);
       
       // Redirect to verification code page
-      router.push("/forgot-password/verify-code");
+      router.push("/forget-password/verify-code");
     } catch (error) {
       console.error("Code request error:", error);
       alert("Failed to send verification code. Please try again.");

@@ -1,7 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-
-
 const removeCookie = (name: string) => {
   if (typeof window === "undefined") return;
 
@@ -10,10 +8,8 @@ const removeCookie = (name: string) => {
 
 // Define types for our dummy data
 export interface User {
-  id: number;
-  name: string;
+  id: string;
   email: string;
-  role: string;
 }
 
 export interface CreateUserRequest {
@@ -26,6 +22,7 @@ export interface SignUpRequest {
   full_name: string;
   email: string;
   password: string;
+  role?: "student" | "teacher"
 }
 
 export interface LoginRequest {
@@ -38,8 +35,7 @@ export interface ForgotPasswordRequest {
 }
 
 export interface VerifyCodeRequest {
-  email: string;
-  code: string;
+  otp: string;
 }
 
 export interface ResetPasswordRequest {
@@ -51,15 +47,12 @@ export interface ResetPasswordRequest {
 export interface SignUpResponse {
   success?: boolean;
   message: string;
-  status?: string;
   user?: User;
-  token?: string;
 }
 
 export interface LoginResponse {
   access_token: string;
 }
-
 
 // Create the API slice
 export const apiSlice = createApi({
@@ -133,7 +126,7 @@ export const apiSlice = createApi({
     // Forgot Password endpoints
     requestForgotPasswordCode: builder.mutation<string, ForgotPasswordRequest>({
       query: (data) => ({
-        url: "/api/forgot-password/",
+        url: "/api/forget-password/",
         method: "POST",
         body: data,
       }),
@@ -141,7 +134,7 @@ export const apiSlice = createApi({
 
     verifyForgotPasswordCode: builder.mutation<string, VerifyCodeRequest>({
       query: (data) => ({
-        url: "/api/forgot-password/verify-code",
+        url: "/auth/verify-otp/",
         method: "POST",
         body: data,
       }),
@@ -149,7 +142,7 @@ export const apiSlice = createApi({
 
     resetPassword: builder.mutation<string, ResetPasswordRequest>({
       query: (data) => ({
-        url: "/api/forgot-password/reset",
+        url: "/api/forget-password/reset",
         method: "POST",
         body: data,
         credentials: "include",

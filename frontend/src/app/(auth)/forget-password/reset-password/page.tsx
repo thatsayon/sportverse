@@ -44,19 +44,17 @@ export default function ResetPasswordPage() {
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
   const router = useRouter();
 
-//   useEffect(() => {
-//     // Get email and code from sessionStorage
-//     const storedEmail = sessionStorage.getItem('forgotPasswordEmail');
-//     const storedCode = sessionStorage.getItem('verificationCode');
+  useEffect(() => {
+    // Get email and code from sessionStorage
     
-//     if (!storedEmail || !storedCode) {
-//       router.push('/forgot-password');
-//       return;
-//     }
+    const storedCode = sessionStorage.getItem('verificationCode');
     
-//     setEmail(storedEmail);
-//     setVerificationCode(storedCode);
-//   }, [router]);
+    if (!storedCode) {
+      router.push('/forget-password');
+      return;
+    }
+    setVerificationCode(storedCode);
+  }, [router]);
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -83,7 +81,7 @@ export default function ResetPasswordPage() {
       sessionStorage.removeItem('verificationCode');
       
       // Redirect to success page
-      router.push("/forgot-password/success");
+      router.push("/forget-password/success");
     } catch (error) {
       console.error("Password reset error:", error);
       alert("Failed to reset password. Please try again.");

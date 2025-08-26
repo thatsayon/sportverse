@@ -23,8 +23,13 @@ import { signUpSchema, type SignUpFormData } from "@/schema/auth.schema";
 import Link from "next/link";
 import Image from "next/image";
 import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
-export function SignUpForm() {
+import { useDispatch } from "react-redux";
+import { setEmail, setUser, setUserQuery } from "@/store/Slices/stateSlice";
+import { toast } from "sonner";
+import { useStateSlice } from "@/store/hooks/sliceHook";
 
+export function SignUpForm() {
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signUp, { isLoading }] = useSignUpMutation();
@@ -34,6 +39,7 @@ export function SignUpForm() {
   const handleChange = (value: "Student" | "Teacher" | null) => {
     setSelected(value); // Set the selected value to the clicked option
   };
+
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -54,43 +60,34 @@ export function SignUpForm() {
     console.log("Sign up data:", data);
     try {
       // Transform form data to match API requirements
-      const formatedData ={
+      const formatedData = {
         full_name: data.full_name,
         password: data.password,
-        email: data.email
-      }
+        email: data.email,
+      };
 
       const result = await signUp(formatedData).unwrap();
 
       console.log("signup response:", result);
 
-      console.log("API Response:", result);
-
       // Check if the response indicates success (either by success field or message)
-      if (
-        result.success ||
-        result.message?.includes("successfully") ||
-        result.status === "success"
-      ) {
+      if (result.success || result.message?.includes("successful")) {
         console.log("Signup successful:", result);
+        dispatch(setEmail(result?.user?.email ?? ""));
+        dispatch(setUserQuery("signup"));
         // After successful signup, redirect to pricing page
-        router.push("/login");
+        router.push("/forget-password/verify-code");
       } else {
         console.error("Signup failed:", result.message);
-        alert(result.message || "Signup failed");
+        toast.success(result.message || "Signup failed");
       }
     } catch (error) {
       console.error("Signup error:", error);
-      // If the error contains a success message, treat it as success
-      if (error && typeof error === "object" && "data" in error) {
-        const errorData = (error as { data?: { message?: string } }).data;
-        if (errorData?.message?.includes("successfully")) {
-          console.log("Signup successful despite error wrapper:", errorData);
-          router.push("/login");
-          return;
-        }
+      if (error instanceof Error) {
+        toast.error(`Some error occurs: ${error.message}`);
+      } else {
+        toast.error("Some unknown error occurred");
       }
-      alert("Signup failed. Please try again.");
     }
   };
 
@@ -111,7 +108,11 @@ export function SignUpForm() {
           <h2 className="text-3xl font-medium">Create your account</h2>
           <div className="flex items-center justify-center gap-4 mt-4">
             {/* ShadCN Toggle component */}
-            <div value={selected} onChange={handleChange} className="flex items-center border-2 p-1 rounded-md text-lg font-semibold">
+            <div
+              value={selected}
+              onChange={handleChange}
+              className="flex items-center border-2 p-1 rounded-md text-lg font-semibold"
+            >
               {/* Student Option */}
               <div
                 className={`py-2 px-3 rounded-md cursor-pointer ${
@@ -295,14 +296,14 @@ export function SignUpForm() {
           <div className="w-full h-[2px] bg-[#C4C3C3]" />
         </div>
         <div className="flex items-center justify-center gap-6">
-            <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
-          <GoogleIcon size={22} />
-          Continue with Google
-        </Button>
-        <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
-          <AppleIcon size={24} />
-          Continue with Apple
-        </Button>
+          <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
+            <GoogleIcon size={22} />
+            Continue with Google
+          </Button>
+          <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
+            <AppleIcon size={24} />
+            Continue with Apple
+          </Button>
         </div>
 
         {/* <SocialLogin title="Or Login With" /> */}

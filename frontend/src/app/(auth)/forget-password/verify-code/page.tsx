@@ -8,13 +8,17 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useVerifyForgotPasswordCodeMutation } from "@/store/Slices/apiSlice";
+import { useStateSlice } from "@/store/hooks/sliceHook";
 
 export default function VerifyCodePage() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(60);
   const [email, setEmail] = useState("");
+  const { userQuery, user } = useStateSlice();
   const [verifyCode, { isLoading }] = useVerifyForgotPasswordCodeMutation();
   const router = useRouter();
+
+  console.log("userQuery is:",userQuery)
 
   useEffect(() => {
     if (timeLeft === 0) return;
@@ -26,15 +30,14 @@ export default function VerifyCodePage() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  //   useEffect(() => {
-  //     // Get email from sessionStorage
-  //     const storedEmail = sessionStorage.getItem('forgotPasswordEmail');
-  //     if (!storedEmail) {
-  //       router.push('/forgot-password');
-  //       return;
-  //     }
-  //     setEmail(storedEmail);
-  //   }, [router]);
+  useEffect(() => {
+    if (userQuery === "signup" || userQuery === "forget") {
+      return;
+    }else{
+      router.push("/login")
+      return
+    }
+  }, []);
 
   const handleCodeChange = (index: number, value: string) => {
     if (value.length > 1) return; // Only allow single digit
@@ -69,17 +72,22 @@ export default function VerifyCodePage() {
       console.log("Verifying code:", fullCode);
 
       const result = await verifyCode({
-        email,
-        code: fullCode,
+        otp: fullCode,
       }).unwrap();
 
       console.log("Code verification successful:", result);
+      if (result) {
+        // Store code in sessionStorage for next step
+        sessionStorage.setItem("verificationCode", fullCode);
 
-      // Store code in sessionStorage for next step
-      sessionStorage.setItem("verificationCode", fullCode);
-
-      // Redirect to reset password page
-      router.push("/forgot-password/reset-password");
+        if(userQuery === "signup"){
+          // Redirect to success page
+        router.push("/forget-password/success");
+        }else{
+          // Redirect to reset password page
+        router.push("/forget-password/reset-password");
+        }
+      }
     } catch (error) {
       console.error("Code verification error:", error);
       alert("Invalid verification code. Please try again.");
@@ -90,7 +98,7 @@ export default function VerifyCodePage() {
     try {
       // Re-request the code
       const response = await fetch(
-        "https://127702b1a191.ngrok-free.app/api/auth/forgot-password/request-code",
+        "https://127702b1a191.ngrok-free.app/api/auth/forget-password/request-code",
         {
           method: "POST",
           headers: {
@@ -132,7 +140,7 @@ export default function VerifyCodePage() {
           </h2>
           <p className="text-gray-600">
             Please input the verification code send to <br /> your email
-            johndoe@example
+            {user.email}
           </p>
         </div>
 

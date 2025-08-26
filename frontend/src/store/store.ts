@@ -1,21 +1,41 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore, combineReducers } from '@reduxjs/toolkit'
+import { setupListeners } from '@reduxjs/toolkit/query'
+import storage from 'redux-persist/lib/storage' // defaults to localStorage for web
+import { persistReducer, persistStore } from 'redux-persist'
+
 import stateReducer from "./Slices/stateSlice"
-import {apiSlice} from "./Slices/apiSlice"
+import { apiSlice } from "./Slices/apiSlice"
 
-
-export const makeStore = () => {
-  return configureStore({
-    reducer: {
-        state: stateReducer,
-        [apiSlice.reducerPath]: apiSlice.reducer
-    },
-    middleware: (getDefaultMiddleware)=>
-        getDefaultMiddleware().concat(apiSlice.middleware)
-  })
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: ['state'], // ✅ only persist your custom state slice
 }
 
-// Infer the type of makeStore
+const rootReducer = combineReducers({
+  state: stateReducer,
+  [apiSlice.reducerPath]: apiSlice.reducer, // RTK Query state is NOT persisted
+})
+
+const persistedReducer = persistReducer(persistConfig, rootReducer)
+
+export const makeStore = () => {
+  const store = configureStore({
+    reducer: persistedReducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false, // ⚠️ redux-persist uses non-serializable values
+      }).concat(apiSlice.middleware),
+  })
+
+  setupListeners(store.dispatch)
+  return store
+}
+
+// Types
 export type AppStore = ReturnType<typeof makeStore>
-// Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<AppStore['getState']>
 export type AppDispatch = AppStore['dispatch']
+
+// Persistor
+export const makePersistor = (store: AppStore) => persistStore(store)
