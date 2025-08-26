@@ -72,7 +72,11 @@ class UserRegistrationView(APIView):
                     {
                         "success": True,
                         "message": "User registration successful. OTP will be sent to email.",
-                        "user": {"id": str(user.id), "email": user.email},
+                        "user": {
+                            "id": str(user.id), 
+                            "email": user.email
+                        },
+                        "verificationToken": verificationToken,
                     },
                     status=status.HTTP_201_CREATED
                 )
@@ -80,11 +84,10 @@ class UserRegistrationView(APIView):
                 response.set_cookie(
                     key="verificationToken",
                     value=verificationToken,
-                    httponly=True,
+                    httponly=False,
                     secure=False,
-                    samesite="Lax",
-                    max_age=60*5,
-                    path='/',
+                    samesite="None",
+                    max_age=60*5
                 )
                 return response
         except Exception as e:
