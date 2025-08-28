@@ -12,7 +12,7 @@ import {
   useResendRegistrationCodeMutation,
   useVerifyEmailCodeMutation,
   useVerifyForgotPasswordCodeMutation,
-} from "@/store/Slices/apiSlice";
+} from "@/store/Slices/apiSlices/apiSlice";
 import { useStateSlice } from "@/store/hooks/sliceHook";
 import { getCookie, removeCookie, setCookie } from "@/hooks/cookie";
 import { toast } from "sonner";

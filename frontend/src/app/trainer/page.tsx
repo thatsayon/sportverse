@@ -1,10 +1,14 @@
 import TrainerProfile from '@/components/Student/TrainerProfile'
+import HomePage from '@/components/Trainer/HomePage'
+import DocUpload from '@/components/Trainer/UploadFormData'
 import React from 'react'
 
 function page() {
   return (
     <div>
-      <TrainerProfile/>
+      {/* <TrainerProfile/> */}
+      <DocUpload/>
+      {/* <HomePage/> */}
     </div>
   )
 }

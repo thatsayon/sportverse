@@ -17,11 +17,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useRequestForgotPasswordCodeMutation } from "@/store/Slices/apiSlice";
+import { useRequestForgotPasswordCodeMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { z } from "zod";
 import { useStateSlice } from "@/store/hooks/sliceHook";
 import { useDispatch } from "react-redux";
-import { setUserQuery } from "@/store/Slices/stateSlice";
+import { setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { setCookie } from "@/hooks/cookie";
 
 // Email validation schema

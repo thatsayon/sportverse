@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useResetPasswordMutation } from "@/store/Slices/apiSlice";
+import { useResetPasswordMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { z } from "zod";
 import { getCookie } from "@/hooks/cookie";
 

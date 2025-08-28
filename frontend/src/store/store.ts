@@ -3,8 +3,8 @@ import { setupListeners } from '@reduxjs/toolkit/query'
 import storage from 'redux-persist/lib/storage' // defaults to localStorage for web
 import { persistReducer, persistStore } from 'redux-persist'
 
-import stateReducer from "./Slices/stateSlice"
-import { apiSlice } from "./Slices/apiSlice"
+import stateReducer from "./Slices/stateSlices/stateSlice"
+import { apiSlice } from "./Slices/apiSlices/apiSlice"
 
 const persistConfig = {
   key: 'root',

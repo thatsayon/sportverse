@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useSignUpMutation } from "@/store/Slices/apiSlice";
+import { useSignUpMutation } from "@/store/Slices/apiSlices/apiSlice";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
 import { useDispatch } from "react-redux";
-import { setEmail, setUser, setUserQuery } from "@/store/Slices/stateSlice";
+import { setEmail, setUser, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { toast } from "sonner";
 import { setCookie } from "@/hooks/cookie";
 

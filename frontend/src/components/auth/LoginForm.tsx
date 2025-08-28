@@ -12,7 +12,7 @@ import Image from "next/image";
 import {
   //   useLazyGetUserpackageQuery,
   useLoginMutation,
-} from "@/store/Slices/apiSlice";
+} from "@/store/Slices/apiSlices/apiSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
