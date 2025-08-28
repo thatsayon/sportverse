@@ -10,7 +10,9 @@ click==8.2.1
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
 click-repl==0.3.0
+cloudinary==1.44.1
 Django==5.2.5
+django-cloudinary-storage==0.3.0
 django-cors-headers==4.7.0
 django-environ==0.12.0
 djangorestframework==3.16.1
@@ -18,6 +20,7 @@ djangorestframework_simplejwt==5.5.1
 idna==3.10
 kombu==5.5.4
 packaging==25.0
+pillow==11.3.0
 prompt_toolkit==3.0.51
 psycopg2-binary==2.9.10
 pycryptodome==3.23.0
