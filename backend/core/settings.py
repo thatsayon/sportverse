@@ -1,5 +1,8 @@
 from pathlib import Path
 from datetime import timedelta
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 import environ
 import os
 
@@ -65,6 +68,8 @@ INSTALLED_APPS += [
 INSTALLED_APPS += [
     'rest_framework',
     'corsheaders',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -202,3 +207,19 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 AGORA_APP_ID = env('AGORA_APP_ID')
 AGORA_APP_CERTIFICATE = env('AGORA_APP_CERTIFICATE')
+
+
+# cloudinary setup
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'derjxccji',
+    'API_KEY': '676927365482216',
+    'API_SECRET': 'ZbLQhVXtGwI_diAXHCtnqvJOfD0',
+}
+
+cloudinary.config(
+    cloud_name = CLOUDINARY_STORAGE['CLOUD_NAME'], 
+    api_key = CLOUDINARY_STORAGE['API_KEY'], 
+    api_secret = CLOUDINARY_STORAGE['API_SECRET']
+)
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
+
+from account.models import Teacher
 from .models import ROLE_CHOICES
 import uuid
 
@@ -60,5 +62,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['full_name'] = user.full_name
         token['email'] = user.email
         token['profile_pic'] = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+        token['role'] = user.role
+        if user.role == "teacher":
+            try:
+                teacher_profile = Teacher.objects.get(user=user)
+                token['verification_status'] = teacher_profile.status
+            except Teacher.DoesNotExist:
+                token['verification_status'] = "unverified"  # fallback
 
         return token
