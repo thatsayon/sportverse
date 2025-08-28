@@ -19,7 +19,7 @@ import { toast } from "sonner";
 
 export default function VerifyCodePage() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [email, setEmail] = useState("");
   const { userQuery, user } = useStateSlice();
   const [verifyCode, { isLoading }] = useVerifyEmailCodeMutation();
@@ -130,7 +130,7 @@ export default function VerifyCodePage() {
       });
       if(response.data){
         toast.success("OTP has been resended to your eamil")
-        setTimeLeft(10)
+        setTimeLeft(60)
       }
     }
     if (userQuery === "forget") {
@@ -139,35 +139,10 @@ export default function VerifyCodePage() {
       });
       if(response.data){
         toast.success("OTP has been resended to your eamil")
-        setTimeLeft(10)
+        setTimeLeft(60)
       }
     }
   };
-
-  // const handleResend = async () => {
-  //   try {
-  //     // Re-request the code
-  //     const response = await fetch(
-  //       "https://127702b1a191.ngrok-free.app/api/auth/forget-password/request-code",
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({ email }),
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       alert("Verification code has been resent to your email");
-  //     } else {
-  //       alert("Failed to resend code. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Resend error:", error);
-  //     alert("Failed to resend code. Please try again.");
-  //   }
-  // };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-8">
