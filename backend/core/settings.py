@@ -55,8 +55,10 @@ INSTALLED_APPS = [
 
 # in build apps
 INSTALLED_APPS += [
+    'account',
     'authentication',
-    'communication'
+    'communication',
+    'map'
 ]
 
 # third party apps
