@@ -1,5 +1,5 @@
 import TrainerProfile from '@/components/Shared/TrainerProfile'
-import HomePage from '@/components/Trainer/HomePage'
+import HomePage from '@/components/Shared/HomePage'
 
 import DocUpload from '@/components/Trainer/UploadFormData'
 import React from 'react'

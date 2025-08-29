@@ -34,11 +34,11 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: "Home", href: "/trainer", active: true },
-    { name: "Virtual Training", href: "/trainer/virtual-training" },
-    { name: "Video Library", href: "/trainer/video-library" },
-    { name: "In-Person", href: "/trainer/in-person" },
-    { name: "Pricing", href: "/trainer/pricing" },
+    { name: "Home", href: "/student", active: true },
+    { name: "Virtual Training", href: "/student/virtual-training" },
+    { name: "Video Library", href: "/student/video-library" },
+    { name: "In-Person", href: "/student/in-person" },
+    { name: "Pricing", href: "/student/pricing" },
   ];
 
   const toggleMobileMenu = () => {

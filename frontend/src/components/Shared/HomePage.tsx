@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Navigation from "./Navbar";
-import Footer from "../Shared/Footer";
+import Navigation from "../Trainer/Navbar";
+import Footer from "./Footer";
 import Image from "next/image";
 import Link from "next/link";
 

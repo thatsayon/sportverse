@@ -1,10 +1,10 @@
-import SportSelection from '@/components/Student/SportSelection'
+import Pricing from '@/components/Landing/Pricing'
 import React from 'react'
 
 function page() {
   return (
     <div>
-      <SportSelection/>
+      <Pricing/>
     </div>
   )
 }

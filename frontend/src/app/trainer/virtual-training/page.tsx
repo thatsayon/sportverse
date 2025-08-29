@@ -1,9 +1,9 @@
-import VirtualTraining from '@/components/Shared/VirtualTraining'
+import VirtualTraining from '@/components/Trainer/VirtualTraining'
 import React from 'react'
 
 function page() {
   return (
-    <div className='px-6 md:px-10 lg:px-16 py-6 md:py-10 lg:py-20'>
+    <div className='px-6 md:px-10 lg:px-16 py-6 md:py-10 lg:py-12'>
       <VirtualTraining/>
     </div>
   )
