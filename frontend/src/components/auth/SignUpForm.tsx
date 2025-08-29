@@ -107,11 +107,11 @@ export function SignUpForm() {
             {/* ShadCN Toggle component */}
             <div
               value={selectedRole}
-              onChange={handleRoleChange}
+              // onChange={handleRoleChange}
               className="flex items-center border-2 p-1 rounded-md text-lg font-semibold"
             >
               {/* Student Option */}
-              <div className="flex items-center border-2 p-1 rounded-md text-lg font-semibold">
+              <div className="flex items-center p-1 rounded-md text-lg font-semibold">
                 <div
                   className={`py-2 px-3 rounded-md cursor-pointer ${
                     selectedRole === "student"

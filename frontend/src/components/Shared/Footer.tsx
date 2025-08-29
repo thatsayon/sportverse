@@ -1,203 +1,172 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import { ArrowRight, Users, Video, Dumbbell } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import Navigation from '../Shared/Navbar'
-import Footer from './Footer'
+import React from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
-const HomePage: React.FC = () => {
-  const trainingOptions = [
-    {
-      icon: Users,
-      title: 'In-Person Training',
-      description: 'Search trainers by city/ZIP & book physically',
-      buttonText: 'Get Started',
-      buttonVariant: 'default' as const,
-      iconColor: 'text-orange-500',
-      bgColor: 'bg-orange-50',
-      image: '/api/placeholder/300/200' // Sports team training image
-    },
-    {
-      icon: Video,
-      title: 'Virtual Training',
-      description: 'Book online live training sessions',
-      buttonText: 'Get Started',
-      buttonVariant: 'secondary' as const,
-      iconColor: 'text-blue-500',
-      bgColor: 'bg-blue-50',
-      image: '/api/placeholder/300/200' // Virtual training session image
-    },
-    {
-      icon: Dumbbell,
-      title: 'Self-Guided Videos',
-      description: 'Video library (self-paced programs)',
-      buttonText: 'Get Started',
-      buttonVariant: 'outline' as const,
-      iconColor: 'text-green-500',
-      bgColor: 'bg-green-50',
-      image: '/api/placeholder/300/200', // Video library on laptop image
-      badge: 'Pro Only'
-    }
-  ]
+interface FooterProps {
+  className?: string;
+}
+
+const Footer: React.FC<FooterProps> = ({ className = "" }) => {
+  const quickLinks = [
+    { name: "About", href: "/about" },
+    { name: "FAQ", href: "/faq" },
+    { name: "Contact", href: "/contact" },
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms", href: "/terms" },
+  ];
+
+  const supportLinks = [
+    { name: "Help Center", href: "/help" },
+    { name: "Contact Us", href: "/contact" },
+    { name: "Booking Support", href: "/support" },
+  ];
+
+  const accountLinks = [
+    { name: "My Profile", href: "/profile" },
+    { name: "My Sessions", href: "/sessions" },
+    { name: "Progress Tracking", href: "/progress" },
+    { name: "Settings", href: "/settings" },
+  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2
-      }
-    }
-  }
+        staggerChildren: 0.1,
+      },
+    },
+  };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    }
-  }
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    },
-    hover: {
-      y: -8,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    }
-  }
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <main>
-        {/* Hero Section */}
-        <motion.section 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="bg-white py-16 lg:py-24"
+    <footer className={`bg-slate-900 text-white ${className}`}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-12"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-36">
+          {/* Brand Section */}
+          <motion.div variants={itemVariants} className="lg:col-span-1">
+            <div className="flex items-center space-x-2 mb-8">
+              <Link href="/" className="flex items-center space-x-2">
+              <Image
+              src={"/image/logo.png"}
+              alt="logo image"
+              width={48}
+              height={48}
+              className="rounded-sm"
+              />
+                <span className="text-3xl font-bold bg-gradient-to-r from-[#FF7442] to-[#994628] bg-clip-text text-transparent">
+                  SportVerse
+                </span>
+              </Link>
+            </div>
+            <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
+              SportVerse is your all-in-one online sports training platform,
+              dedicated to helping athletes of all levels improve their game in
+              basketball, football, and beyond.
+            </p>
+          </motion.div>
+
+          {/* Quick Links */}
+          <motion.div variants={itemVariants}>
+            <h3 className="text-white font-semibold text-lg mb-4">
+              Quick Links
+            </h3>
+            <ul className="space-y-2">
+              {quickLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Support */}
+          <motion.div variants={itemVariants}>
+            <h3 className="text-white font-semibold text-lg mb-4">Support</h3>
+            <ul className="space-y-2">
+              {supportLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Account */}
+          <motion.div variants={itemVariants}>
+            <h3 className="text-white font-semibold text-lg mb-4">Account</h3>
+            <ul className="space-y-2">
+              {accountLinks.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </div>
+
+        {/* Bottom Section */}
+        <motion.div
+          variants={itemVariants}
+          className="border-t border-gray-800 mt-12 pt-8"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <motion.h1 
-                variants={itemVariants}
-                className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6"
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+            <p className="text-gray-400 text-sm text-center sm:text-left">
+              © 2025 SportVerse. All rights reserved.
+            </p>
+            <div className="flex items-center space-x-6">
+              <Link
+                href="/privacy"
+                className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
               >
-                How do you want to train?
-              </motion.h1>
-              <motion.p 
-                variants={itemVariants}
-                className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
               >
-                Choose from our comprehensive training options designed to help you 
-                achieve your fitness goals
-              </motion.p>
+                Terms of Service
+              </Link>
+              <Link
+                href="/cookies"
+                className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
+              >
+                Cookie Policy
+              </Link>
             </div>
           </div>
-        </motion.section>
+        </motion.div>
+      </motion.div>
+    </footer>
+  );
+};
 
-        {/* Training Options Section */}
-        <section className="py-16 lg:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-100px" }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            >
-              {trainingOptions.map((option, index) => {
-                const IconComponent = option.icon
-                return (
-                  <motion.div
-                    key={option.title}
-                    variants={cardVariants}
-                    whileHover="hover"
-                    className="group cursor-pointer"
-                    onClick={() => {
-                      // Handle card click navigation here
-                      console.log(`Clicked on ${option.title}`)
-                    }}
-                  >
-                    <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-                      {/* Image Section */}
-                      <div className="relative h-48 overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-                          {/* Placeholder for actual images */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <IconComponent className={`w-20 h-20 ${option.iconColor} opacity-20`} />
-                          </div>
-                        </div>
-                        
-                        {option.badge && (
-                          <Badge className="absolute top-4 right-4 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold">
-                            {option.badge}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Content Section */}
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <motion.div 
-                            whileHover={{ scale: 1.05 }}
-                            className={`${option.bgColor} p-2 rounded-lg shadow-sm`}
-                          >
-                            <IconComponent className={`w-5 h-5 ${option.iconColor}`} />
-                          </motion.div>
-                          <CardTitle className="text-xl font-semibold text-gray-900">
-                            {option.title}
-                          </CardTitle>
-                        </div>
-                        <CardDescription className="text-gray-600 text-base leading-relaxed">
-                          {option.description}
-                        </CardDescription>
-                      </CardHeader>
-
-                      <CardContent className="pt-0">
-                        <Button 
-                          variant={option.buttonVariant}
-                          className="w-full group-hover:shadow-md transition-all duration-300"
-                          size="lg"
-                        >
-                          {option.buttonText}
-                          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )
-              })}
-            </motion.div>
-          </div>
-        </section>
-
-
-      </main>
-
-      <Footer />
-    </div>
-  )
-}
-
-export default HomePage
+export default Footer;
