@@ -38,11 +38,14 @@ const DocUpload: React.FC = () => {
   });
   const [errors, setErrors] = useState<Errors>({});
 
-  // api import 
-  const [uploadDoc, {isLoading}] = useUploadDocMutation()
+  // api import
+  const [uploadDoc, { isLoading }] = useUploadDocMutation();
 
   // Handle input change for form fields
-  const handleInputChange = (field: keyof FormData, value: string | File | null) => {
+  const handleInputChange = (
+    field: keyof FormData,
+    value: string | File | null
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -58,7 +61,10 @@ const DocUpload: React.FC = () => {
   };
 
   // Handle file uploads and preview generation
-  const handlePhotoChange = (files: FileList | null, fieldName: keyof FormData) => {
+  const handlePhotoChange = (
+    files: FileList | null,
+    fieldName: keyof FormData
+  ) => {
     if (files && files[0]) {
       const file = files[0];
 
@@ -154,17 +160,28 @@ const DocUpload: React.FC = () => {
 
       // Compress files before uploading
       const compressedPhoto = await imageCompression(photoFile, options);
-      const compressedFrontSide = await imageCompression(frontSideFile, options);
+      const compressedFrontSide = await imageCompression(
+        frontSideFile,
+        options
+      );
       const compressedBackSide = await imageCompression(backSideFile, options);
 
       console.log("Original Photo Size:", photoFile.size / 1024, "KB");
       console.log("Compressed Photo Size:", compressedPhoto.size / 1024, "KB");
 
       console.log("Original Front Side Size:", frontSideFile.size / 1024, "KB");
-      console.log("Compressed Front Side Size:", compressedFrontSide.size / 1024, "KB");
+      console.log(
+        "Compressed Front Side Size:",
+        compressedFrontSide.size / 1024,
+        "KB"
+      );
 
       console.log("Original Back Side Size:", backSideFile.size / 1024, "KB");
-      console.log("Compressed Back Side Size:", compressedBackSide.size / 1024, "KB");
+      console.log(
+        "Compressed Back Side Size:",
+        compressedBackSide.size / 1024,
+        "KB"
+      );
 
       // Prepare formData to send to the backend
       const formDataToSend = new FormData();
@@ -174,14 +191,14 @@ const DocUpload: React.FC = () => {
       formDataToSend.append("city", formData.city);
       formDataToSend.append("zip_code", formData.zip_code);
 
-      console.log("formated data:",formDataToSend)
-      console.log("formated data 1:",formData)
+      console.log("formated data:", formDataToSend);
+      console.log("formated data 1:", formData);
 
-    //   Send to backend (replace URL with your backend endpoint)
+      //   Send to backend (replace URL with your backend endpoint)
 
-    //   const response = await uploadDoc(formDataToSend).unwrap()
-const accessToken = getCookie("access_token")
-   const response = await fetch("http://127.0.0.1:8000/account/teacher-verification/", {
+      //   const response = await uploadDoc(formDataToSend).unwrap()
+      const accessToken = getCookie("access_token");
+      const response = await fetch("http://127.0.0.1:8000/account/teacher-verification/", {
     method: "POST",
     body: formDataToSend,  // Send the FormData with files
     // Don't manually set Content-Type, let the browser do it for multipart/form-data
@@ -189,27 +206,25 @@ const accessToken = getCookie("access_token")
         "Authorization": `Bearer ${accessToken}`, // If you have an authorization token to send
         // No need to set "Content-Type" here since FormData handles it automatically
     }
-})
+});
 
-      if(response){
+      if (response) {
         toast.success("Documents uploaded successfully!");
 
-    //   Reset form after successful submission
-      setFormData({
-        city: "",
-        zip_code: "",
-        picture: null,
-        id_front: null,
-        id_back: null,
-      });
-      setPhotoPreview(null);
-      setFrontSidePreview(null);
-      setBackSidePreview(null);
-      setErrors({});
-      
-      // will impliment push to a different route
+        //   Reset form after successful submission
+        setFormData({
+          city: "",
+          zip_code: "",
+          picture: null,
+          id_front: null,
+          id_back: null,
+        });
+        setPhotoPreview(null);
+        setFrontSidePreview(null);
+        setBackSidePreview(null);
+        setErrors({});
 
-      
+        // will impliment push to a different route
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -226,7 +241,9 @@ const accessToken = getCookie("access_token")
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white">
-      <form onSubmit={onSubmit}> {/* Wrap the content in a <form> element */}
+      <form onSubmit={onSubmit}>
+        {" "}
+        {/* Wrap the content in a <form> element */}
         <div className="text-center mb-8">
           <h2 className="text-lg font-medium text-gray-900 mb-6">
             Please fill the necessary documents to continue
@@ -274,7 +291,6 @@ const accessToken = getCookie("access_token")
             <p className="text-sm text-red-500 mb-4">{errors.picture}</p>
           )}
         </div>
-
         <div>
           {/* City Name and ZIP Code Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -374,7 +390,9 @@ const accessToken = getCookie("access_token")
                     type="file"
                     accept="image/*,.pdf"
                     className="hidden"
-                    onChange={(e) => handlePhotoChange(e.target.files, "id_front")}
+                    onChange={(e) =>
+                      handlePhotoChange(e.target.files, "id_front")
+                    }
                   />
                 </div>
                 {errors.id_front && (
@@ -438,7 +456,9 @@ const accessToken = getCookie("access_token")
                     type="file"
                     accept="image/*,.pdf"
                     className="hidden"
-                    onChange={(e) => handlePhotoChange(e.target.files, "id_back")}
+                    onChange={(e) =>
+                      handlePhotoChange(e.target.files, "id_back")
+                    }
                   />
                 </div>
                 {errors.id_back && (
