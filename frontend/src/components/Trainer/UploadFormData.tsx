@@ -10,7 +10,7 @@ import { getCookie } from "@/hooks/cookie";
 // Define types for form data and errors
 interface FormData {
   picture: File | null;
-  in_front: File | null;
+  id_front: File | null;
   id_back: File | null;
   city: string;
   zip_code: string;
@@ -18,7 +18,7 @@ interface FormData {
 
 interface Errors {
   picture?: string;
-  in_front?: string;
+  id_front?: string;
   id_back?: string;
   city?: string;
   zip_code?: string;
@@ -31,7 +31,7 @@ const DocUpload: React.FC = () => {
   const [backSidePreview, setBackSidePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     picture: null,
-    in_front: null,
+    id_front: null,
     id_back: null,
     city: "",
     zip_code: "",
@@ -76,7 +76,7 @@ const DocUpload: React.FC = () => {
         const result = e.target?.result as string;
         if (fieldName === "picture") {
           setPhotoPreview(result);
-        } else if (fieldName === "in_front") {
+        } else if (fieldName === "id_front") {
           setFrontSidePreview(result);
         } else if (fieldName === "id_back") {
           setBackSidePreview(result);
@@ -93,7 +93,7 @@ const DocUpload: React.FC = () => {
   const removeImage = (fieldName: keyof FormData) => {
     if (fieldName === "picture") {
       setPhotoPreview(null);
-    } else if (fieldName === "in_front") {
+    } else if (fieldName === "id_front") {
       setFrontSidePreview(null);
     } else if (fieldName === "id_back") {
       setBackSidePreview(null);
@@ -117,8 +117,8 @@ const DocUpload: React.FC = () => {
       newErrors.picture = "Photo is required";
     }
 
-    if (!formData.in_front) {
-      newErrors.in_front = "Front side image is required";
+    if (!formData.id_front) {
+      newErrors.id_front = "Front side image is required";
     }
 
     if (!formData.id_back) {
@@ -142,7 +142,7 @@ const DocUpload: React.FC = () => {
     try {
       // Get the files from form data
       const photoFile = formData.picture!;
-      const frontSideFile = formData.in_front!;
+      const frontSideFile = formData.id_front!;
       const backSideFile = formData.id_back!;
 
       // Compression options
@@ -169,7 +169,7 @@ const DocUpload: React.FC = () => {
       // Prepare formData to send to the backend
       const formDataToSend = new FormData();
       formDataToSend.append("picture", compressedPhoto);
-      formDataToSend.append("in_front", compressedFrontSide);
+      formDataToSend.append("id_front", compressedFrontSide);
       formDataToSend.append("id_back", compressedBackSide);
       formDataToSend.append("city", formData.city);
       formDataToSend.append("zip_code", formData.zip_code);
@@ -199,7 +199,7 @@ const accessToken = getCookie("access_token")
         city: "",
         zip_code: "",
         picture: null,
-        in_front: null,
+        id_front: null,
         id_back: null,
       });
       setPhotoPreview(null);
@@ -333,7 +333,7 @@ const accessToken = getCookie("access_token")
                       <button
                         type="button"
                         className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600"
-                        onClick={() => removeImage("in_front")}
+                        onClick={() => removeImage("id_front")}
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -362,7 +362,7 @@ const accessToken = getCookie("access_token")
                       <button
                         type="button"
                         className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                        onClick={() => triggerFileInput("in_front")}
+                        onClick={() => triggerFileInput("id_front")}
                       >
                         Browse file
                       </button>
@@ -370,15 +370,15 @@ const accessToken = getCookie("access_token")
                   )}
 
                   <input
-                    id="in_front"
+                    id="id_front"
                     type="file"
                     accept="image/*,.pdf"
                     className="hidden"
-                    onChange={(e) => handlePhotoChange(e.target.files, "in_front")}
+                    onChange={(e) => handlePhotoChange(e.target.files, "id_front")}
                   />
                 </div>
-                {errors.in_front && (
-                  <p className="text-sm text-red-500 mt-1">{errors.in_front}</p>
+                {errors.id_front && (
+                  <p className="text-sm text-red-500 mt-1">{errors.id_front}</p>
                 )}
               </div>
 
