@@ -1,9 +1,9 @@
 import { apiSlice } from "./apiSlice";
 
 interface uploadDocResponse {
-  picture: string;
-  in_front: string;
-  id_back: string;
+  picture: File;
+  in_front: File;
+  id_back: File;
   city: string;
   zip_code: string;
 }

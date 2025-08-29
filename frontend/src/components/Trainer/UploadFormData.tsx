@@ -5,6 +5,7 @@ import Image from "next/image";
 import imageCompression from "browser-image-compression"; // Import image compression
 import { useUploadDocMutation } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { toast } from "sonner";
+import { getCookie } from "@/hooks/cookie";
 
 // Define types for form data and errors
 interface FormData {
@@ -178,9 +179,19 @@ const DocUpload: React.FC = () => {
 
     //   Send to backend (replace URL with your backend endpoint)
 
-      const response = await uploadDoc(formDataToSend).unwrap()
+    //   const response = await uploadDoc(formDataToSend).unwrap()
+const accessToken = getCookie("access_token")
+   const response = await fetch("http://127.0.0.1:8000/account/teacher-verification/", {
+    method: "POST",
+    body: formDataToSend,  // Send the FormData with files
+    // Don't manually set Content-Type, let the browser do it for multipart/form-data
+    headers: {
+        "Authorization": `Bearer ${accessToken}`, // If you have an authorization token to send
+        // No need to set "Content-Type" here since FormData handles it automatically
+    }
+})
 
-      if(response.picture){
+      if(response){
         toast.success("Documents uploaded successfully!");
 
     //   Reset form after successful submission
