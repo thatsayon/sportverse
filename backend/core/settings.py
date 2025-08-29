@@ -61,7 +61,8 @@ INSTALLED_APPS += [
     'account',
     'authentication',
     'communication',
-    'map'
+    'map',
+    'teacher',
 ]
 
 # third party apps
