@@ -18,10 +18,10 @@ class Teacher(models.Model):
         editable=False,
         unique=True
     )
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name="teachers"
+        related_name="teacher"
     )
     status = models.CharField(
         max_length=20,
