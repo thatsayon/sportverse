@@ -67,3 +67,5 @@ celeryd.pid
 *.swp
 *.swo
 
+# CSV
+*.csv
