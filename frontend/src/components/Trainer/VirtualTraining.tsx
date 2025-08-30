@@ -73,7 +73,7 @@ function VirtualTraining() {
   return (
     <div>
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-semibold font-montserrat mb-2">
+        <h2 className="text-4xl font-semibold font-montserrat mb-2">
           Virtual Trainers
         </h2>
         <p>Browse professional trainers through visiting their profile</p>
