@@ -63,6 +63,7 @@ INSTALLED_APPS += [
     'communication',
     'map',
     'teacher',
+    'controlpanel',
 ]
 
 # third party apps

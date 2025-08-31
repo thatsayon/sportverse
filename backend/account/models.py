@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from cloudinary.models import CloudinaryField
+
+from controlpanel.models import Sport
+
 import uuid
 
 User = get_user_model()
@@ -52,3 +55,25 @@ class Document(models.Model):
 
     def __str__(self):
         return f"{self.teacher}"
+
+class Student(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        unique=True
+    )
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="student"
+    )
+    favorite_sports = models.ManyToManyField(
+        Sport,
+        related_name='students',
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - {self.favorite_sports}"
+
