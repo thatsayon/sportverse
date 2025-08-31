@@ -30,14 +30,6 @@ const getStatusStyles = (status: visitorType["status"]) => {
   }
 };
 
-// Generate initials for fallback avatar
-// const getInitials = (name: string): string =>
-//   name
-//     .split(" ")
-//     .map((word) => word.charAt(0))
-//     .join("")
-//     .toUpperCase();
-
 const VisitorTable: React.FC = () => {
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const handleEdit = (id: string) => {

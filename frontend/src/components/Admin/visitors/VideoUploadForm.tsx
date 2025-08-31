@@ -1,28 +1,47 @@
-"use client"
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Upload, Video, ChevronDown } from 'lucide-react';
+"use client";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Upload, Video, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 // Form validation schema
+
 const formSchema = z.object({
-  title: z.string().min(1, 'Title is required').min(3, 'Title must be at least 3 characters'),
-  sport: z.enum(['Basketball', 'Football'], {
-    required_error: 'Please select a sport',
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .min(3, "Title must be at least 3 characters"),
+    
+  sport: z.enum(["Basketball", "Football"]).refine((val) => val, {
+    message: "Please select a sport",
   }),
-  consumer: z.enum(['Student', 'Trainers'], {
-    required_error: 'Please select a consumer type',
+
+  consumer: z.enum(["Student", "Trainers"]).refine((val) => val, {
+    message: "Please select a consumer type",
   }),
-  description: z.string().min(1, 'Description is required').min(10, 'Description must be at least 10 characters'),
-  video: z.instanceof(File, { message: 'Video file is required' }).refine(
-    (file) => file.size <= 100 * 1024 * 1024, // 100MB limit
-    'Video file must be less than 100MB'
-  ).refine(
-    (file) => ['video/mp4', 'video/webm', 'video/quicktime'].includes(file.type),
-    'Only MP4, WebM, and MOV video files are supported'
-  ),
+
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .min(10, "Description must be at least 10 characters"),
+
+  video: z
+    .instanceof(File, { message: "Video file is required" })
+    .refine(
+      (file) => file.size <= 100 * 1024 * 1024, // 100MB limit
+      "Video file must be less than 100MB"
+    )
+    .refine(
+      (file) =>
+        ["video/mp4", "video/webm", "video/quicktime"].includes(file.type),
+      "Only MP4, WebM, and MOV video files are supported"
+    ),
 });
+
+
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -55,14 +74,17 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const uploadToCloudinary = async (file: File): Promise<string> => {
     // Simulate upload progress
     setUploadProgress(0);
-    
+
     return new Promise((resolve) => {
       const interval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 100) {
             clearInterval(interval);
             // Return a mock Cloudinary URL
-            const mockUrl = `https://res.cloudinary.com/demo/video/upload/v${Date.now()}/${file.name.replace(/\.[^/.]+$/, '')}.mp4`;
+            const mockUrl = `https://res.cloudinary.com/demo/video/upload/v${Date.now()}/${file.name.replace(
+              /\.[^/.]+$/,
+              ""
+            )}.mp4`;
             resolve(mockUrl);
             return 100;
           }
@@ -75,32 +97,32 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const handleFormSubmit = async (data: FormData) => {
     try {
       setIsUploading(true);
-      
+
       // Upload video to Cloudinary
       const videoUrl = await uploadToCloudinary(data.video);
-      
+
       // Prepare final data
       const finalData = {
         ...data,
         videoUrl,
       };
-      
+
       // Call the onSubmit callback or make API call
       if (onSubmit) {
         onSubmit(finalData);
       } else {
         // Mock API call
-        console.log('Submitting to backend:', finalData);
+        console.log("Submitting to backend:", finalData);
         alert(`Form submitted successfully!\nVideo URL: ${videoUrl}`);
       }
-      
+
       // Reset form
       reset();
       setSelectedFile(null);
       setUploadProgress(0);
     } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      console.error("Upload failed:", error);
+      alert("Upload failed. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -109,9 +131,9 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   };
@@ -125,7 +147,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
     if (files && files[0]) {
       const file = files[0];
       setSelectedFile(file);
-      setValue('video', file, { shouldValidate: true });
+      setValue("video", file, { shouldValidate: true });
     }
   };
 
@@ -134,18 +156,18 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
     if (files && files[0]) {
       const file = files[0];
       setSelectedFile(file);
-      setValue('video', file, { shouldValidate: true });
+      setValue("video", file, { shouldValidate: true });
     }
   };
 
-  const CustomDropdown = ({ 
-    value, 
-    options, 
-    placeholder, 
-    onSelect, 
-    isOpen, 
+  const CustomDropdown = ({
+    value,
+    options,
+    placeholder,
+    onSelect,
+    isOpen,
     setIsOpen,
-    error 
+    error,
   }: {
     value: string;
     options: string[];
@@ -158,14 +180,18 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
     <div className="relative">
       <div
         className={`w-full px-3 py-2 border rounded-md cursor-pointer flex items-center justify-between ${
-          error ? 'border-red-500' : 'border-gray-300'
+          error ? "border-red-500" : "border-gray-300"
         } hover:border-orange-400 focus:border-orange-500`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className={value ? 'text-gray-900' : 'text-gray-500'}>
+        <span className={value ? "text-gray-900" : "text-gray-500"}>
           {value || placeholder}
         </span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </div>
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
@@ -183,26 +209,24 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
           ))}
         </div>
       )}
-      {error && (
-        <p className="text-sm text-red-600 mt-1">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
     </div>
   );
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-xl font-semibold text-center mb-6">Upload a video</h2>
-      
+
       <div className="space-y-4">
         {/* Video Upload Area */}
         <div className="space-y-2">
           <div
             className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
               dragActive
-                ? 'border-orange-500 bg-orange-50'
+                ? "border-orange-500 bg-orange-50"
                 : selectedFile
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-300 bg-gray-50 hover:border-orange-400'
+                ? "border-green-500 bg-green-50"
+                : "border-gray-300 bg-gray-50 hover:border-orange-400"
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -216,7 +240,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               disabled={isUploading}
             />
-            
+
             <div className="space-y-2">
               {selectedFile ? (
                 <>
@@ -238,18 +262,18 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
                 </>
               )}
             </div>
-            
+
             {!selectedFile && (
               <div className="mt-3 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-100 transition-colors inline-block">
                 Browse file
               </div>
             )}
           </div>
-          
+
           {errors.video && (
             <p className="text-sm text-red-600">{errors.video.message}</p>
           )}
-          
+
           {isUploading && (
             <div className="space-y-2">
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -268,7 +292,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         {/* Title Input */}
         <div className="space-y-1">
           <input
-            {...register('title')}
+            {...register("title")}
             type="text"
             placeholder="Title"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
@@ -281,10 +305,14 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
 
         {/* Sports Dropdown */}
         <CustomDropdown
-          value={watchedValues.sport || ''}
-          options={['Basketball', 'Football']}
+          value={watchedValues.sport || ""}
+          options={["Basketball", "Football"]}
           placeholder="Sports"
-          onSelect={(value) => setValue('sport', value as 'Basketball' | 'Football', { shouldValidate: true })}
+          onSelect={(value) =>
+            setValue("sport", value as "Basketball" | "Football", {
+              shouldValidate: true,
+            })
+          }
           isOpen={sportDropdownOpen}
           setIsOpen={setSportDropdownOpen}
           error={errors.sport?.message}
@@ -292,10 +320,14 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
 
         {/* Consumer Dropdown */}
         <CustomDropdown
-          value={watchedValues.consumer || ''}
-          options={['Student', 'Trainers']}
+          value={watchedValues.consumer || ""}
+          options={["Student", "Trainers"]}
           placeholder="Consumer"
-          onSelect={(value) => setValue('consumer', value as 'Student' | 'Trainers', { shouldValidate: true })}
+          onSelect={(value) =>
+            setValue("consumer", value as "Student" | "Trainers", {
+              shouldValidate: true,
+            })
+          }
           isOpen={consumerDropdownOpen}
           setIsOpen={setConsumerDropdownOpen}
           error={errors.consumer?.message}
@@ -304,7 +336,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         {/* Description Textarea */}
         <div className="space-y-1">
           <textarea
-            {...register('description')}
+            {...register("description")}
             placeholder="Add a short description"
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
@@ -323,28 +355,33 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         </div>
 
         {/* Submit and Cancel Buttons */}
-        <div className="flex space-x-3 pt-4">
-          <button
-            type="button"
-            onClick={handleSubmit(handleFormSubmit)}
-            disabled={isUploading}
-            className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-medium py-2 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-          >
-            {isUploading ? 'Uploading...' : 'Submit'}
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              reset();
-              setSelectedFile(null);
-              setUploadProgress(0);
-            }}
-            disabled={isUploading}
-            className="flex-1 border border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          >
-            Cancel
-          </button>
+        <div className="flex gap-3 items-center justify-center border mt-5">
+          <div className="w-full">
+            <Button
+            className="w-full"
+              type="button"
+              onClick={handleSubmit(handleFormSubmit)}
+              disabled={isUploading}
+            >
+              {isUploading ? "Uploading..." : "Submit"}
+            </Button>
+          </div>
+
+          <Link href={"/dashboard/media"} className="w-full">
+            <Button
+            className="w-full text-[#F15A24] hover:text-[#F15A24]"
+              variant={"outline"}
+              type="button"
+              onClick={() => {
+                reset();
+                setSelectedFile(null);
+                setUploadProgress(0);
+              }}
+              disabled={isUploading}
+            >
+              Cancel
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
