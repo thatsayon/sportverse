@@ -2,6 +2,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, status
 
+from controlpanel.serializers import SportSerializer
+from controlpanel.models import Sport
 from .models import (
     Teacher,
     Document
@@ -35,3 +37,7 @@ class TecherVerficationView(generics.CreateAPIView):
 
         return super().create(request, *args, **kwargs)
 
+class GetSportsView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SportSerializer 
+    queryset = Sport.objects.all()

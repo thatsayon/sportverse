@@ -1,4 +1,5 @@
 from django.db import models
+from cloudinary.models import CloudinaryField
 import uuid
 
 class Sport(models.Model):
@@ -16,6 +17,7 @@ class Sport(models.Model):
         unique=True, 
         blank=True
     )
+    image = CloudinaryField('admin/')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
