@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       "images.unsplash.com",
-      "i.pinimg.com", // ✅ allow Pinterest images
+      "i.pinimg.com",
+      'res.cloudinary.com' // ✅ allow Pinterest images
     ], // allow this hostname for next/image
   },
 };

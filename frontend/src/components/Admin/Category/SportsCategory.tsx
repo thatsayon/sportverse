@@ -16,14 +16,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { sportsTableData } from "@/data/SportsTableData";
+// import { sportsTableData } from "@/data/SportsTableData";
 import Image from "next/image";
 import UpdateSportsPopUp from "./UpdateSportsPopUp";
+import { useGetAllSportsQuery } from "@/store/Slices/apiSlices/apiSlice";
 
 const SportsCategory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState<boolean>(false);
   const itemsPerPage = 10;
+  const { data, error, isLoading, refetch } = useGetAllSportsQuery();
+
+if (isLoading) return <div>Loading...</div>;
+// if (error) return <div>Error: {error}</div>;
+
+const sportsTableData = data?.results || []; // Safely access results
 
   console.log("open state:", open);
 
@@ -50,7 +57,7 @@ const SportsCategory: React.FC = () => {
 
   return (
     <div className="w-full">
-      <UpdateSportsPopUp open={open} setOpen={setOpen} />
+      <UpdateSportsPopUp open={open} setOpen={setOpen} refetch={refetch} />
       <div className="mb-4 md:mb-8 flex items-center w-full justify-between">
         <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
           All Available Sports
@@ -67,7 +74,6 @@ const SportsCategory: React.FC = () => {
             <TableRow>
               <TableHead className="px-6 py-4">No</TableHead>
               <TableHead className="px-6 py-4">Sports Name</TableHead>
-              <TableHead className="px-6 py-4">ID</TableHead>
               <TableHead className="px-6 py-4">Total Videos</TableHead>
               <TableHead className="px-6 py-4">Total Trainer</TableHead>
               <TableHead className="px-6 py-4">Total Trainee</TableHead>
@@ -90,10 +96,9 @@ const SportsCategory: React.FC = () => {
                         e.currentTarget.src = "/default-image.png";
                       }}
                     />
-                    {item.sportsName}
+                    {item.name}
                   </div>
                 </TableCell>
-                <TableCell className="px-6 py-4">{item.id}</TableCell>
                 <TableCell className="px-6 py-4">{item.totalVideos}</TableCell>
                 <TableCell className="px-6 py-4">
                   {item.totalTrainers}

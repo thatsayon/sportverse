@@ -23,7 +23,7 @@ export interface SignUpRequest {
   full_name: string;
   email: string;
   password: string;
-  role?: "student" | "teacher"
+  role?: "student" | "teacher";
 }
 
 export interface LoginRequest {
@@ -69,19 +69,30 @@ export interface verifyForgotPasswordCodeResponse {
 export interface requestForgotPasswordCodeResponse {
   success: boolean;
   message: string;
-  user:{
+  user: {
     id: string;
     email: string;
   };
   passResetToken: string;
-
 }
 
-export interface resendRegistrationCodeRequesrt{
+export interface resendRegistrationCodeRequesrt {
   verificationToken: string | null;
 }
-export interface resendPasswordCodeRequesrt{
+export interface resendPasswordCodeRequesrt {
   passResetToken: string | null;
+}
+
+export interface allSportsResponseData {
+  id: string;
+  name: string;
+  image: string;
+}
+export interface allSportsResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: allSportsResponseData[];
 }
 
 // Create the API slice
@@ -154,7 +165,10 @@ export const apiSlice = createApi({
     }),
 
     // Forgot Password endpoints
-    requestForgotPasswordCode: builder.mutation<requestForgotPasswordCodeResponse, ForgotPasswordRequest>({
+    requestForgotPasswordCode: builder.mutation<
+      requestForgotPasswordCodeResponse,
+      ForgotPasswordRequest
+    >({
       query: (data) => ({
         url: "/auth/forget-password/",
         method: "POST",
@@ -162,15 +176,21 @@ export const apiSlice = createApi({
       }),
     }),
 
-    verifyEmailCode: builder.mutation<verifyEmailCodeResponse, VerifyCodeRequest>({
+    verifyEmailCode: builder.mutation<
+      verifyEmailCodeResponse,
+      VerifyCodeRequest
+    >({
       query: (data) => ({
         url: "/auth/verify-otp/",
         method: "POST",
         body: data,
-        credentials: "include"
+        credentials: "include",
       }),
     }),
-    verifyForgotPasswordCode: builder.mutation<verifyForgotPasswordCodeResponse, forgetCodeRequest>({
+    verifyForgotPasswordCode: builder.mutation<
+      verifyForgotPasswordCodeResponse,
+      forgetCodeRequest
+    >({
       query: (data) => ({
         url: "/auth/forget-password-otp-verify/",
         method: "POST",
@@ -185,22 +205,23 @@ export const apiSlice = createApi({
         body: data,
       }),
     }),
-    resendRegistrationCode: builder.mutation<string, resendRegistrationCodeRequesrt>({
-      query:(data)=>({
+    resendRegistrationCode: builder.mutation<
+      string,
+      resendRegistrationCodeRequesrt
+    >({
+      query: (data) => ({
         url: "/auth/resend-registration-otp/",
         method: "POST",
-        body: data
-      })
+        body: data,
+      }),
     }),
     resendPasswordCode: builder.mutation<string, resendPasswordCodeRequesrt>({
- query:(data)=>({
+      query: (data) => ({
         url: "/auth/resend-forget-password-otp/",
         method: "POST",
-        body: data
-      })
+        body: data,
+      }),
     }),
-
-
     // User profile endpoint
     getUserProfile: builder.query<User, void>({
       query: () => ({
@@ -209,7 +230,9 @@ export const apiSlice = createApi({
       }),
       providesTags: ["User"],
     }),
-    
+    getAllSports: builder.query<allSportsResponse, void>({
+      query: () => "/control/get-or-create-sport/",
+    }),
   }),
 });
 
@@ -226,5 +249,6 @@ export const {
   useGetUserProfileQuery,
   useVerifyEmailCodeMutation,
   useResendPasswordCodeMutation,
-  useResendRegistrationCodeMutation
+  useResendRegistrationCodeMutation,
+  useGetAllSportsQuery,
 } = apiSlice;

@@ -10,26 +10,27 @@ import { getCookie } from "@/hooks/cookie";
 // Define types for form data and errors
 interface FormData {
   image: File | null;
-  title: string;
+  name: string;
 }
 
 interface Errors {
   image?: string;
-  title?: string;
+  name?: string;
 }
 
 interface UpdateSportsPopUpProps {
   open: boolean;
   setOpen: (Open: boolean) => void;
+  refetch: ()=> void
 }
 
-function UpdateSportsPopUp({ open, setOpen }: UpdateSportsPopUpProps) {
+function UpdateSportsPopUp({ open, setOpen, refetch }: UpdateSportsPopUpProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     image: null,
-    title: "",
+    name: "",
   });
   const [errors, setErrors] = useState<Errors>({});
 
@@ -127,10 +128,10 @@ function UpdateSportsPopUp({ open, setOpen }: UpdateSportsPopUpProps) {
   const validateForm = (): boolean => {
     const newErrors: Errors = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = "Title is required";
-    } else if (formData.title.length > 100) {
-      newErrors.title = "Title must be less than 100 characters";
+    if (!formData.name.trim()) {
+      newErrors.name = "Title is required";
+    } else if (formData.name.length > 100) {
+      newErrors.name = "Title must be less than 100 characters";
     }
 
     if (!formData.image) {
@@ -171,13 +172,13 @@ function UpdateSportsPopUp({ open, setOpen }: UpdateSportsPopUpProps) {
       // Prepare formData to send to the backend
       const formDataToSend = new FormData();
       formDataToSend.append("image", compressedImage);
-      formDataToSend.append("title", formData.title);
+      formDataToSend.append("name", formData.name);
 
       console.log("Formatted data:", formDataToSend);
 
       // API call - replace with your actual endpoint
       const accessToken = getCookie("access_token");
-      const response = await fetch("", {
+      const response = await fetch("http://127.0.0.1:8000/control/get-or-create-sport/", {
         // Leave empty as requested
         method: "POST",
         body: formDataToSend,
@@ -188,11 +189,13 @@ function UpdateSportsPopUp({ open, setOpen }: UpdateSportsPopUpProps) {
 
       if (response.ok) {
         toast.success("Sports item added successfully!");
+        setOpen(false)
+        refetch()
 
         // Reset form after successful submission
         setFormData({
           image: null,
-          title: "",
+          name: "",
         });
         setImagePreview(null);
         setErrors({});
@@ -211,7 +214,7 @@ function UpdateSportsPopUp({ open, setOpen }: UpdateSportsPopUpProps) {
   const handleCancel = () => {
     setFormData({
       image: null,
-      title: "",
+      name: "",
     });
     setImagePreview(null);
     setErrors({});
@@ -297,23 +300,23 @@ function UpdateSportsPopUp({ open, setOpen }: UpdateSportsPopUpProps) {
               {/* Title Input */}
               <div className="space-y-2">
                 <label
-                  htmlFor="title"
+                  htmlFor="name"
                   className="block text-sm font-medium text-gray-700"
                 >
                   Title
                 </label>
                 <input
-                  id="title"
+                  id="name"
                   type="text"
-                  placeholder="Enter sports title"
+                  placeholder="Enter sports name"
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors ${
-                    errors.title ? "border-red-300" : "border-gray-200"
+                    errors.name ? "border-red-300" : "border-gray-200"
                   }`}
-                  value={formData.title}
-                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                 />
-                {errors.title && (
-                  <p className="text-sm text-red-600">{errors.title}</p>
+                {errors.name && (
+                  <p className="text-sm text-red-600">{errors.name}</p>
                 )}
               </div>
 
