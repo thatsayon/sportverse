@@ -7,3 +7,8 @@ class GetorAddSportView(generics.ListCreateAPIView):
     serializer_class = SportSerializer
     queryset = Sport.objects.all()
 
+class EditSportView(generics.RetrieveUpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SportSerializer
+    queryset = Sport.objects.all()
+    lookup_field = 'id'
