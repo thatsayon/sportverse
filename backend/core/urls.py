@@ -8,4 +8,5 @@ urlpatterns = [
     path('communication/', include('communication.urls')),
     path('teacher/', include('teacher.urls')),
     path('map/', include('map.urls')),
+    path('control/', include('controlpanel.urls')),
 ]
