@@ -63,6 +63,8 @@ INSTALLED_APPS += [
     'communication',
     'map',
     'teacher',
+    'student',
+    'video',
     'controlpanel',
 ]
 
@@ -213,9 +215,9 @@ AGORA_APP_CERTIFICATE = env('AGORA_APP_CERTIFICATE')
 
 # cloudinary setup
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'derjxccji',
-    'API_KEY': '676927365482216',
-    'API_SECRET': 'ZbLQhVXtGwI_diAXHCtnqvJOfD0',
+    'CLOUD_NAME': env('CLOUD_NAME'),
+    'API_KEY': env('CLOUDINARY_API_KEY'),
+    'API_SECRET': env('CLOUDINARY_API_SECRET')
 }
 
 cloudinary.config(

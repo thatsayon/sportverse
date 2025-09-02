@@ -26,6 +26,17 @@ class Teacher(models.Model):
         on_delete=models.CASCADE,
         related_name="teacher"
     )
+    institute_name = models.CharField(
+        max_length=120,
+        blank=True,
+        null=True
+    )
+    coach_type = models.ManyToManyField(
+        Sport,
+        related_name='teacher',
+        blank=True
+    )
+
     status = models.CharField(
         max_length=20,
         choices=STATUS,
