@@ -1,6 +1,10 @@
 from django.db import models
+from django.contrib.auth import get_user_model
+from django.conf import settings
 from account.models import Teacher
 import uuid
+
+User = get_user_model()
 
 TRAINING_TYPE = [
     ('virtual', 'Virtual Training'),
@@ -80,3 +84,38 @@ class AvailableTimeSlot(models.Model):
         return f"{self.availabledays.day}: {self.start_time} - {self.end_time}"
 
 
+class BookedSession(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    teacher = models.ForeignKey(
+        Teacher,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="booked_sessions_as_teacher"
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # safer than direct import
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="booked_sessions_as_student"
+    )
+    session = models.ForeignKey(
+        SessionOption,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="booked_sessions"
+    )
+    session_time = models.DateTimeField()
+    duration = models.PositiveIntegerField(default=60)
+    is_paid = models.BooleanField(default=False)
+
+    def __str__(self):
+        teacher_name = self.teacher.user.username if self.teacher and self.teacher.user else "Unknown Teacher"
+        student_name = self.student.username if self.student else "Unknown Student"
+        return f"Booked Session: {teacher_name} - {student_name}"
