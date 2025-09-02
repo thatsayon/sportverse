@@ -15,7 +15,7 @@ class Video(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     description = models.TextField()
-    public_id = models.CharField(max_length=255, unique=True)
+    public_id = models.CharField(max_length=255)
     format = models.CharField(max_length=50, blank=True, null=True)
     duration = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS, default="processing")
