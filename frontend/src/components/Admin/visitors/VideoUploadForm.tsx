@@ -6,6 +6,8 @@ import * as z from "zod";
 import { Upload, Video, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getSignatureReponse, useGetSignatureMutation } from "@/store/Slices/apiSlices/apiSlice";
+import { toast } from "sonner";
 
 // Form validation schema
 
@@ -14,7 +16,7 @@ const formSchema = z.object({
     .string()
     .min(1, "Title is required")
     .min(3, "Title must be at least 3 characters"),
-    
+
   sport: z.enum(["Basketball", "Football"]).refine((val) => val, {
     message: "Please select a sport",
   }),
@@ -41,8 +43,6 @@ const formSchema = z.object({
     ),
 });
 
-
-
 type FormData = z.infer<typeof formSchema>;
 
 interface VideoUploadFormProps {
@@ -56,6 +56,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const [dragActive, setDragActive] = useState(false);
   const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
   const [consumerDropdownOpen, setConsumerDropdownOpen] = useState(false);
+  const [getSignature, { isLoading }] = useGetSignatureMutation();
 
   const {
     register,
@@ -71,58 +72,101 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const watchedValues = watch();
 
   // Mock Cloudinary upload function
-  const uploadToCloudinary = async (file: File): Promise<string> => {
-    // Simulate upload progress
-    setUploadProgress(0);
+  const uploadToCloudinary = async (file: File, signatureData: getSignatureReponse) => {
+    const formData = new FormData();
+    
+    // Add required Cloudinary parameters
+    formData.append('file', file);
+    formData.append('api_key', signatureData.api_key);
+    formData.append('timestamp', signatureData.timestamp.toString());
+    formData.append('signature', signatureData.signature);
+    formData.append('folder', signatureData.folder);
+    formData.append('public_id', signatureData.video_id);
 
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            // Return a mock Cloudinary URL
-            const mockUrl = `https://res.cloudinary.com/demo/video/upload/v${Date.now()}/${file.name.replace(
-              /\.[^/.]+$/,
-              ""
-            )}.mp4`;
-            resolve(mockUrl);
-            return 100;
-          }
-          return prev + Math.random() * 15;
-        });
-      }, 200);
-    });
-  };
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${signatureData.cloud_name}/video/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
-  const handleFormSubmit = async (data: FormData) => {
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      throw error;
+    }
+  }
+
+   const handleFormSubmit = async (data: FormData) => {
+    console.log("Submitted data:", data);
+
     try {
       setIsUploading(true);
+      setUploadProgress(0);
+
+      // Get signature from backend
+      const signatureResponse = await getSignature({
+        title: data.title,
+        description: data.description,
+      }).unwrap();
+
+      if (!signatureResponse) {
+        throw new Error("Failed to get upload signature");
+      }
+
+      console.log("Getting the signature response:", signatureResponse);
+
+      // Simulate progress for UI (since we can't track real progress with fetch)
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + Math.random() * 10;
+        });
+      }, 200);
 
       // Upload video to Cloudinary
-      const videoUrl = await uploadToCloudinary(data.video);
+      const cloudinaryResponse = await uploadToCloudinary(data.video, signatureResponse);
+      
+      // Clear progress interval and set to 100%
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
-      // Prepare final data
+      console.log("Cloudinary upload response:", cloudinaryResponse);
+
+      // Prepare final data with video URL
       const finalData = {
         ...data,
-        videoUrl,
+        videoUrl: cloudinaryResponse.secure_url || cloudinaryResponse.url,
       };
 
-      // Call the onSubmit callback or make API call
+      // Show success toast
+      toast.success("Video has been uploaded successfully.");
+
+      // Call the onSubmit callback
       if (onSubmit) {
         onSubmit(finalData);
-      } else {
-        // Mock API call
-        console.log("Submitting to backend:", finalData);
-        alert(`Form submitted successfully!\nVideo URL: ${videoUrl}`);
       }
 
       // Reset form
       reset();
       setSelectedFile(null);
       setUploadProgress(0);
+
     } catch (error) {
       console.error("Upload failed:", error);
-      alert("Upload failed. Please try again.");
+      
+      // Show error toast
+      toast.error("Failed to upload video. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -358,7 +402,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         <div className="flex gap-3 items-center justify-center border mt-5">
           <div className="w-full">
             <Button
-            className="w-full"
+              className="w-full"
               type="button"
               onClick={handleSubmit(handleFormSubmit)}
               disabled={isUploading}
@@ -369,7 +413,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
 
           <Link href={"/dashboard/media"} className="w-full">
             <Button
-            className="w-full text-[#F15A24] hover:text-[#F15A24]"
+              className="w-full text-[#F15A24] hover:text-[#F15A24]"
               variant={"outline"}
               type="button"
               onClick={() => {

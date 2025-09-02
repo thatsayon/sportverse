@@ -95,6 +95,20 @@ export interface allSportsResponse {
   results: allSportsResponseData[];
 }
 
+export interface getSignatureReponse {
+  api_key: string;
+  cloud_name: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  video_id: string;
+}
+export interface getSignatureRequest {
+  title: string;
+  description: string;
+}
+
+
 // Create the API slice
 export const apiSlice = createApi({
   reducerPath: "api",
@@ -233,6 +247,14 @@ export const apiSlice = createApi({
     getAllSports: builder.query<allSportsResponse, void>({
       query: () => "/control/get-or-create-sport/",
     }),
+    getSignature: builder.mutation<getSignatureReponse, getSignatureRequest>({
+      query:(data)=>({
+        url: "/video/upload-signature/",
+        method: "POST",
+        body: data,
+        credentials: "include"
+      })
+    })
   }),
 });
 
@@ -251,4 +273,5 @@ export const {
   useResendPasswordCodeMutation,
   useResendRegistrationCodeMutation,
   useGetAllSportsQuery,
+  useGetSignatureMutation
 } = apiSlice;
