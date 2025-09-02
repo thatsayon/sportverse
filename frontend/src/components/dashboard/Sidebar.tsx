@@ -88,26 +88,9 @@ const navItems: NavItem[] = [
     name: 'Analytics and reports',
     href: '/dashboard/analytics',
     icon: BarChart3,
-    children: [
-      {
-        name: 'Traffic overview',
-        href: '/dashboard/analytics/traffic',
-        icon: TrendingUp,
-      },
-      {
-        name: 'Sales',
-        href: '/dashboard/analytics/sales',
-        icon: ShoppingCart,
-      },
-      {
-        name: 'Marketing',
-        href: '/dashboard/analytics/marketing',
-        icon: Megaphone,
-      },
-    ],
   },
   {
-    name: 'Sports management',
+    name: 'Sports',
     href: '/dashboard/category',
     icon: FolderOpen,
   },

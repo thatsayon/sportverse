@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { trafficData } from "@/data/TrafficData";
+import { analyticsData } from "@/data/analyticsData";
+import AnalyticsCard from "@/components/Element/analyticsData";
 
 export const description = "An interactive area chart";
 
@@ -80,9 +82,15 @@ export function TrafficChart() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4 md:mb-8 lg:mb-10">
-        <h3>Revenue</h3>
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+      <div className="p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {analyticsData.map((item) => (
+          <AnalyticsCard key={item.id} data={item} />
+        ))}
+      </div>
+    </div>
+      <div className="flex items-center justify-end mb-4 md:mb-8 lg:mb-10">
+       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Month" />
           </SelectTrigger>
