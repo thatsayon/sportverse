@@ -7,9 +7,9 @@ import React from 'react'
 function page() {
   return (
     <div>
-      {/* <TrainerProfile/> */}
+      <TrainerProfile/>
       {/* < DocUpload/> */}
-      <HomePage/>
+      {/* <HomePage/> */}
     </div>
   )
 }

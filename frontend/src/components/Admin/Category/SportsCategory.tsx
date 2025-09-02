@@ -25,7 +25,7 @@ const SportsCategory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState<boolean>(false);
   const itemsPerPage = 10;
-  const { data, error, isLoading, refetch } = useGetAllSportsQuery();
+  const { data, isLoading, refetch } = useGetAllSportsQuery();
 
 if (isLoading) return <div>Loading...</div>;
 // if (error) return <div>Error: {error}</div>;

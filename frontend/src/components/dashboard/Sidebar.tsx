@@ -20,7 +20,10 @@ import {
   FolderOpen,
   Settings,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  User,
+  UserRound,
+  BanknoteArrowDown
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -47,6 +50,16 @@ const navItems: NavItem[] = [
     icon: Calendar,
   },
   {
+    name: 'Trainers',
+    href: '/dashboard/trainers',
+    icon: User,
+  },
+  {
+    name: 'Trainees',
+    href: '/dashboard/trainees',
+    icon: UserRound,
+  },
+  {
     name: 'Visitors',
     href: '/dashboard/visitors',
     icon: Users,
@@ -60,6 +73,11 @@ const navItems: NavItem[] = [
     name: 'Payout history',
     href: '/dashboard/payout',
     icon: DollarSign,
+  },
+  {
+    name: 'Withdraw',
+    href: '/dashboard/withdraw',
+    icon: BanknoteArrowDown,
   },
   {
     name: 'Chat log',
@@ -89,7 +107,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    name: 'Category management',
+    name: 'Sports management',
     href: '/dashboard/category',
     icon: FolderOpen,
   },
