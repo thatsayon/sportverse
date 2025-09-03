@@ -13,6 +13,8 @@ import {
   Mail,
   MessageCircle,
   ChevronDown,
+  Calendar,
+  Settings,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useRouter } from "next/navigation";
 
 interface NavProps {
   className?: string;
@@ -32,7 +35,7 @@ interface NavProps {
 
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const router = useRouter()
   const navItems = [
     { name: "Home", href: "/student", active: true },
     { name: "Virtual Training", href: "/student/virtual-training" },
@@ -44,6 +47,10 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  const handleRedirect = ()=>{
+router.push("/student/bookings")
+  }
 
   return (
     <nav
@@ -167,17 +174,29 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 </span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>
+                  <h1 className="font-montserrat font-medium">
+                    Student Profile
+                  </h1>
+                  <p className="text-[#5E5E5E] text-xs">student@213124</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
                 <DropdownMenuItem>
                   <User className="size-6 mr-2" />
                   Profile
                 </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleRedirect}>
+                    <Calendar className="size-6 mr-2" />
+                    Bookings
+                  </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <BarChart3 className="size-6 mr-2" />
-                  Dashboard
+                  <Settings className="size-6 mr-2" />
+                  Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <LogOut className="size-6 mr-2" />
+                <DropdownMenuItem className="text-[#CD5E5E]">
+                  <LogOut stroke="#CD5E5E" className="size-6 mr-2" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -81,6 +81,7 @@ function VirtualTraining() {
             rating={item.rating}
             price={item.virtualPrice}
             sports={item.title}
+            id={item.id}
             key={item.id}
           />
         ))}

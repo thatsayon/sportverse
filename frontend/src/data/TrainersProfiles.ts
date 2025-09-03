@@ -1,6 +1,6 @@
 export const trainersProfiles = [
   {
-    id: "1",
+    id: 1,
     name: "Sarah Johnson",
     title: "Fitness Coach",
     rating: 4.8,
@@ -33,7 +33,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "2",
+    id: 2,
     name: "John Smith",
     title: "Yoga Instructor",
     rating: 4.7,
@@ -66,7 +66,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "3",
+    id: 3,
     name: "David Miller",
     title: "Personal Trainer",
     rating: 4.9,
@@ -99,7 +99,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "4",
+    id: 4,
     name: "Emily Davis",
     title: "Pilates Instructor",
     rating: 4.6,
@@ -132,7 +132,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "5",
+    id: 5,
     name: "Michael Brown",
     title: "Martial Arts Coach",
     rating: 5,
@@ -165,7 +165,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "6",
+    id: 6,
     name: "Daniel Walker",
     title: "CrossFit Trainer",
     rating: 4.7,
@@ -198,7 +198,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "7",
+    id: 7,
     name: "Ava Martin",
     title: "Strength Coach",
     rating: 4.9,
@@ -231,7 +231,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "8",
+    id: 8,
     name: "Mia Robinson",
     title: "Cycling Coach",
     rating: 4.8,
@@ -264,7 +264,7 @@ export const trainersProfiles = [
     ],
   },
   {
-    id: "9",
+    id: 9,
     name: "Lucas Green",
     title: "Boxing Trainer",
     rating: 5,

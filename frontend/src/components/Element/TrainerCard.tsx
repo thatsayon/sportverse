@@ -3,8 +3,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card
 import Image from "next/image";
 import { Star } from "lucide-react";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 interface TrainerCardProps {
+  id: number;
   image: string;
   sports: string;
   name: string;
@@ -12,7 +14,7 @@ interface TrainerCardProps {
   price: number;
 }
 
-function TrainerCard({ image, name, price, rating, sports }: TrainerCardProps) {
+function TrainerCard({ image, name, price, rating, sports, id }: TrainerCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -48,7 +50,9 @@ function TrainerCard({ image, name, price, rating, sports }: TrainerCardProps) {
         <p className="text-2xl mb-6 font-semibold">${price}<span className="font-normal text-[#707070] text-sm">/Session</span></p>
         <CardFooter className="flex items-center justify-center gap-6">
             <Button className="w-1/2 py-3.5 px-12 " variant={"outline"}>View Profile</Button>
-            <Button className="w-1/2 py-3.5 px-12 ">Book Now</Button>
+            <Link className="w-1/2" href={`/trainer/${id}`}>
+            <Button className="w-full py-3.5 px-12 ">Book Now</Button>
+            </Link>
         </CardFooter>
       </CardContent>
     </Card>
