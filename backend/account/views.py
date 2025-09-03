@@ -9,12 +9,16 @@ from uuid import UUID
 
 from controlpanel.serializers import SportSerializer
 from controlpanel.models import Sport
+from payment.utils import create_stripe_checkout_session
 from .models import (
     Teacher,
-    Document
+    Student,
+    Document,
+    Subscription
 )
 from .serializers import (
-    TeacherVerificationSerializer
+    TeacherVerificationSerializer,
+    CheckoutSessionSerializer,
 )
 
 User = get_user_model()
@@ -120,3 +124,32 @@ class AddFavoriteSportView(APIView):
             "msg": "Favorites updated successfully",
             "favorites": favorites
         }, status=status.HTTP_200_OK)
+
+class SubscriptionCheckoutSessionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = CheckoutSessionSerializer(data=request.data) 
+        serializer.is_valid(raise_exception=True)
+
+
+        subscription = Subscription.objects.filter(user=request.user.student).first()
+        if subscription:
+            return Response({"detail": "Already subscribed"}, status=status.HTTP_400_BAD_REQUEST)
+
+        session = create_stripe_checkout_session(**serializer.validated_data, name='pro')
+        print(session)
+        if session:
+            subscription = Subscription.objects.filter(user=request.user.student).first()
+            if subscription:
+                subscription.stripe_id = session.id
+                subscription.save()
+            else:
+                Subscription.objects.create(
+                    user=request.user.student,
+                    stripe_id=session.id
+                )
+
+        return Response({"checkout_url": session.url}, status=status.HTTP_200_OK)
+
+        

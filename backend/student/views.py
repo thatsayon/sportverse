@@ -111,7 +111,7 @@ class BookedSessionView(APIView):
             success_url=f"{settings.DOMAIN_URL}/payment-success?session_id={booked_session.id}",
             cancel_url=f"{settings.DOMAIN_URL}/payment-cancel?session_id={booked_session.id}",
         )
-        return Response({"checkout_url": checkout_url, "booked_session_id": str(booked_session.id)}, status=201)
+        return Response({"checkout_url": checkout_url.url, "booked_session_id": str(booked_session.id)}, status=201)
 
         # return Response(
         #     {

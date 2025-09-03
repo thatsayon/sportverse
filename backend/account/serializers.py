@@ -16,3 +16,12 @@ class TeacherVerificationSerializer(serializers.ModelSerializer):
         rep['id_back'] = instance.id_back.url if instance.id_back else None
         return rep
 
+class CheckoutSessionSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(decimal_places=2, max_digits=10)
+    success_url = serializers.CharField()
+    cancel_url = serializers.CharField()
+
+    def validate_amount(self, value):
+        if value < 0.5:
+            raise serializers.ValidationError("Minimum amount is $0.50")
+        return value

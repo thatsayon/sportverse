@@ -25,7 +25,7 @@ def create_stripe_checkout_session(name: str, amount: float, success_url: str, c
             success_url=success_url,
             cancel_url=cancel_url,
         )
-        return checkout_session.url
+        return checkout_session
     except Exception as e:
         raise e
 
