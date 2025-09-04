@@ -30,7 +30,7 @@ export default function RootLayout({
         className={`${montserrat.variable} ${openSans.variable} font-open_sans antialiased`}
       >
         <StoreProvider>
-          <Toaster/>
+          {/* <Toaster/> */}
           {children}
           </StoreProvider>
       </body>

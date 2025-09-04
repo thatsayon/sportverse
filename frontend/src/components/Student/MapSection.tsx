@@ -384,9 +384,9 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
                       </div>
                       {/* Right side - Price */}
                       <div className="text-right flex-shrink-0">
-                        <div className="text-xl font-bold text-gray-900">
+                        {/* <div className="text-xl font-bold text-gray-900">
                           ${teacher.price || "70"}
-                        </div>
+                        </div> */}
                         <div className="text-sm text-gray-500">/session</div>
                       </div>
                     </div>
