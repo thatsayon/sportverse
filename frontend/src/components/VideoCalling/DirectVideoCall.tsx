@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Video,
   VideoOff,
@@ -24,6 +24,7 @@ interface IAgoraRTCClient {
   publish: (tracks: any[]) => Promise<void>;
   subscribe: (user: any, mediaType: "video" | "audio") => Promise<void>;
   on: (event: string, callback: (...args: any[]) => void) => void;
+  off: (event: string, callback: (...args: any[]) => void) => void;
   removeAllListeners: () => void;
 }
 
@@ -44,7 +45,7 @@ interface ICameraVideoTrack {
   setEnabled: (enabled: boolean) => Promise<void>;
   stop: () => void;
   close: () => void;
-  play: (element: string) => void;
+  play: (element: string | HTMLElement) => void;
 }
 
 // Props interface to receive Agora config
@@ -61,19 +62,13 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   channelName,
   uid,
 }) => {
-  // Agora configuration
-  const agoraConfig = {
-    appId,
-    token,
-    channelName,
-    uid,
-  };
-
   // Refs
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const localVideoTrackRef = useRef<ICameraVideoTrack | null>(null);
   const localAudioTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
   const agoraRTCRef = useRef<any>(null);
+  const isInitializedRef = useRef<boolean>(false);
+  const cleanupInProgressRef = useRef<boolean>(false);
 
   // State
   const [isJoined, setIsJoined] = useState<boolean>(false);
@@ -82,24 +77,78 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isJoining, setIsJoining] = useState<boolean>(false);
   const [devicePermissions, setDevicePermissions] = useState({
     camera: false,
     microphone: false,
     checked: false,
   });
 
-  // Load Agora SDK dynamically
+  // Event handlers with useCallback to prevent recreation
+  const handleUserPublished = useCallback(async (
+    user: IAgoraRTCRemoteUser,
+    mediaType: "video" | "audio"
+  ) => {
+    try {
+      if (!clientRef.current) return;
+
+      await clientRef.current.subscribe(user, mediaType);
+
+      if (mediaType === "video" && user.videoTrack) {
+        // Wait a bit for DOM to be ready
+        setTimeout(() => {
+          const videoElement = document.getElementById(`remote-video-${user.uid}`);
+          if (videoElement && user.videoTrack) {
+            user.videoTrack.play(videoElement);
+          }
+        }, 100);
+      }
+
+      if (mediaType === "audio" && user.audioTrack) {
+        user.audioTrack.play();
+      }
+
+      setRemoteUsers((prevUsers) => {
+        const existingUserIndex = prevUsers.findIndex((u) => u.uid === user.uid);
+        if (existingUserIndex !== -1) {
+          const updatedUsers = [...prevUsers];
+          updatedUsers[existingUserIndex] = user;
+          return updatedUsers;
+        }
+        return [...prevUsers, user];
+      });
+    } catch (error) {
+      console.error("Error handling user published:", error);
+    }
+  }, []);
+
+  const handleUserUnpublished = useCallback((user: IAgoraRTCRemoteUser) => {
+    setRemoteUsers((prevUsers) =>
+      prevUsers.map((u) => (u.uid === user.uid ? user : u))
+    );
+  }, []);
+
+  const handleUserJoined = useCallback((user: IAgoraRTCRemoteUser) => {
+    console.log("User joined:", user.uid);
+  }, []);
+
+  const handleUserLeft = useCallback((user: IAgoraRTCRemoteUser) => {
+    setRemoteUsers((prevUsers) => prevUsers.filter((u) => u.uid !== user.uid));
+  }, []);
+
+  // Load Agora SDK and initialize
   useEffect(() => {
     const loadAgoraSDK = async () => {
       try {
-        // Only load on client side
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || isInitializedRef.current) return;
 
         const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
         agoraRTCRef.current = AgoraRTC;
 
         await initClient();
         await checkDevicePermissions();
+        
+        isInitializedRef.current = true;
         setIsLoading(false);
       } catch (err) {
         console.error("Failed to load Agora SDK:", err);
@@ -110,13 +159,63 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
 
     loadAgoraSDK();
 
-    // Cleanup
+    // Cleanup on unmount
     return () => {
-      if (clientRef.current) {
-        clientRef.current.removeAllListeners();
-      }
+      cleanup();
     };
   }, []);
+
+  const cleanup = useCallback(async () => {
+    if (cleanupInProgressRef.current) return;
+    cleanupInProgressRef.current = true;
+
+    try {
+      // Clean up local tracks first
+      if (localVideoTrackRef.current) {
+        try {
+          localVideoTrackRef.current.stop();
+          localVideoTrackRef.current.close();
+        } catch (e) {
+          console.error("Error closing video track:", e);
+        }
+        localVideoTrackRef.current = null;
+      }
+
+      if (localAudioTrackRef.current) {
+        try {
+          localAudioTrackRef.current.stop();
+          localAudioTrackRef.current.close();
+        } catch (e) {
+          console.error("Error closing audio track:", e);
+        }
+        localAudioTrackRef.current = null;
+      }
+
+      // Clean up client
+      if (clientRef.current) {
+        try {
+          clientRef.current.off("user-published", handleUserPublished);
+          clientRef.current.off("user-unpublished", handleUserUnpublished);
+          clientRef.current.off("user-joined", handleUserJoined);
+          clientRef.current.off("user-left", handleUserLeft);
+          
+          if (isJoined) {
+            await clientRef.current.leave();
+          }
+        } catch (e) {
+          console.error("Error cleaning up client:", e);
+        }
+        clientRef.current = null;
+      }
+
+      setIsJoined(false);
+      setRemoteUsers([]);
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+    } finally {
+      cleanupInProgressRef.current = false;
+    }
+  }, [isJoined, handleUserPublished, handleUserUnpublished, handleUserJoined, handleUserLeft]);
 
   const checkDevicePermissions = async () => {
     try {
@@ -132,7 +231,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       if (hasCamera) {
         try {
           const videoStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: { width: 640, height: 480 }
           });
           videoStream.getTracks().forEach((track) => track.stop());
           cameraPermission = true;
@@ -144,7 +243,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       if (hasMicrophone) {
         try {
           const audioStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
+            audio: true
           });
           audioStream.getTracks().forEach((track) => track.stop());
           microphonePermission = true;
@@ -169,79 +268,61 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   };
 
   const initClient = async () => {
-    if (!agoraRTCRef.current) return;
+    if (!agoraRTCRef.current || clientRef.current) return;
 
-    clientRef.current = agoraRTCRef.current.createClient({
-      mode: "rtc",
-      codec: "vp8",
-    });
-
-    clientRef.current.on("user-published", handleUserPublished);
-    clientRef.current.on("user-unpublished", handleUserUnpublished);
-    clientRef.current.on("user-joined", handleUserJoined);
-    clientRef.current.on("user-left", handleUserLeft);
-  };
-
-  const handleUserPublished = async (
-    user: IAgoraRTCRemoteUser,
-    mediaType: "video" | "audio"
-  ) => {
-    if (clientRef.current) {
-      await clientRef.current.subscribe(user, mediaType);
-
-      if (mediaType === "video") {
-        const remoteVideoTrack = user.videoTrack;
-        if (remoteVideoTrack) {
-          remoteVideoTrack.play(`remote-video-${user.uid}`);
-        }
-      }
-
-      if (mediaType === "audio") {
-        const remoteAudioTrack = user.audioTrack;
-        if (remoteAudioTrack) {
-          remoteAudioTrack.play();
-        }
-      }
-
-      setRemoteUsers((prevUsers) => {
-        const existingUser = prevUsers.find((u) => u.uid === user.uid);
-        if (existingUser) {
-          return prevUsers.map((u) => (u.uid === user.uid ? user : u));
-        }
-        return [...prevUsers, user];
+    try {
+      clientRef.current = agoraRTCRef.current.createClient({
+        mode: "rtc",
+        codec: "vp8",
       });
+
+      // Add event listeners
+      clientRef.current.on("user-published", handleUserPublished);
+      clientRef.current.on("user-unpublished", handleUserUnpublished);
+      clientRef.current.on("user-joined", handleUserJoined);
+      clientRef.current.on("user-left", handleUserLeft);
+    } catch (error) {
+      console.error("Error initializing client:", error);
+      throw error;
     }
   };
 
-  const handleUserUnpublished = (user: IAgoraRTCRemoteUser) => {
-    setRemoteUsers((prevUsers) =>
-      prevUsers.map((u) => (u.uid === user.uid ? user : u))
-    );
-  };
-
-  const handleUserJoined = (user: IAgoraRTCRemoteUser) => {
-    console.log("User joined:", user.uid);
-  };
-
-  const handleUserLeft = (user: IAgoraRTCRemoteUser) => {
-    setRemoteUsers((prevUsers) => prevUsers.filter((u) => u.uid !== user.uid));
-  };
-
   const createLocalTracks = async () => {
+    if (!agoraRTCRef.current) throw new Error("Agora SDK not loaded");
+
     const tracks = [];
     let audioTrack = null;
     let videoTrack = null;
 
     try {
-      if (devicePermissions.microphone && devicePermissions.camera) {
-        [audioTrack, videoTrack] =
-          await agoraRTCRef.current.createMicrophoneAndCameraTracks();
+      if (devicePermissions.camera && devicePermissions.microphone) {
+        const [newAudioTrack, newVideoTrack] =
+          await agoraRTCRef.current.createMicrophoneAndCameraTracks(
+            {
+              echoCancellation: true,
+              noiseSuppression: true,
+            },
+            {
+              width: 640,
+              height: 480,
+              frameRate: 15,
+            }
+          );
+        audioTrack = newAudioTrack;
+        videoTrack = newVideoTrack;
         tracks.push(audioTrack, videoTrack);
       } else if (devicePermissions.microphone) {
-        audioTrack = await agoraRTCRef.current.createMicrophoneAudioTrack();
+        audioTrack = await agoraRTCRef.current.createMicrophoneAudioTrack({
+          echoCancellation: true,
+          noiseSuppression: true,
+        });
         tracks.push(audioTrack);
       } else if (devicePermissions.camera) {
-        videoTrack = await agoraRTCRef.current.createCameraVideoTrack();
+        videoTrack = await agoraRTCRef.current.createCameraVideoTrack({
+          width: 640,
+          height: 480,
+          frameRate: 15,
+        });
         tracks.push(videoTrack);
       }
 
@@ -255,43 +336,67 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   };
 
   const joinChannel = async (): Promise<void> => {
-    try {
-      if (!clientRef.current || !agoraRTCRef.current) return;
+    if (isJoining || !clientRef.current || !agoraRTCRef.current) return;
+    
+    setIsJoining(true);
+    setError(null);
 
+    try {
       const { audioTrack, videoTrack, tracks } = await createLocalTracks();
+      
+      // Store tracks in refs
       localAudioTrackRef.current = audioTrack;
       localVideoTrackRef.current = videoTrack;
 
-      await clientRef.current.join(
-        agoraConfig.appId,
-        agoraConfig.channelName,
-        agoraConfig.token,
-        agoraConfig.uid
-      );
+      // Join channel first
+      await clientRef.current.join(appId, channelName, token, uid);
 
+      // Publish tracks if available
       if (tracks.length > 0) {
         await clientRef.current.publish(tracks);
       }
 
+      // Play local video with retry mechanism
       if (videoTrack) {
-        videoTrack.play("local-video");
+        const playVideo = () => {
+          const localVideoElement = document.getElementById("local-video");
+          if (localVideoElement) {
+            videoTrack.play(localVideoElement);
+          } else {
+            // Retry after a short delay
+            setTimeout(playVideo, 100);
+          }
+        };
+        playVideo();
       }
 
       setIsJoined(true);
-      setError(null);
       console.log("Successfully joined channel");
     } catch (error) {
       console.error("Failed to join channel:", error);
       setError(
         error instanceof Error ? error.message : "Failed to join video call"
       );
+      
+      // Clean up tracks on failure
+      if (localVideoTrackRef.current) {
+        localVideoTrackRef.current.close();
+        localVideoTrackRef.current = null;
+      }
+      if (localAudioTrackRef.current) {
+        localAudioTrackRef.current.close();
+        localAudioTrackRef.current = null;
+      }
+    } finally {
+      setIsJoining(false);
     }
   };
 
   const leaveChannel = async (): Promise<void> => {
-    try {
-      if (!clientRef.current) return;
+    if (!clientRef.current) return;
 
+    try {
+      // Stop and close tracks
       if (localVideoTrackRef.current) {
         localVideoTrackRef.current.stop();
         localVideoTrackRef.current.close();
@@ -316,30 +421,35 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   };
 
   const toggleCamera = async (): Promise<void> => {
-    if (localVideoTrackRef.current) {
-      await localVideoTrackRef.current.setEnabled(!isCameraOn);
-      setIsCameraOn(!isCameraOn);
+    if (localVideoTrackRef.current && isJoined) {
+      try {
+        await localVideoTrackRef.current.setEnabled(!isCameraOn);
+        setIsCameraOn(!isCameraOn);
+      } catch (error) {
+        console.error("Error toggling camera:", error);
+      }
     }
   };
 
   const toggleMicrophone = async (): Promise<void> => {
-    if (localAudioTrackRef.current) {
-      await localAudioTrackRef.current.setEnabled(!isMicOn);
-      setIsMicOn(!isMicOn);
+    if (localAudioTrackRef.current && isJoined) {
+      try {
+        await localAudioTrackRef.current.setEnabled(!isMicOn);
+        setIsMicOn(!isMicOn);
+      } catch (error) {
+        console.error("Error toggling microphone:", error);
+      }
     }
   };
 
   const requestPermissions = async () => {
     try {
-      await navigator.mediaDevices
-        .getUserMedia({
-          video: true,
-          audio: true,
-        })
-        .then((stream) => {
-          stream.getTracks().forEach((track) => track.stop());
-        });
+      await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
       await checkDevicePermissions();
+      setError(null);
     } catch (error) {
       console.error("Permission request failed:", error);
       setError(
@@ -360,7 +470,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
     );
   }
 
-  if (error) {
+  if (error && !devicePermissions.checked) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
         <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md mx-4">
@@ -400,173 +510,181 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       <div className="mx-auto px-4 py-8">
         {/* Header */}
         {!isJoined && (
-          <>
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Video Call Session
-              </h1>
-              <p className="text-gray-600">Connect with your coach or team</p>
-            </div>
-          </>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              Video Call Session
+            </h1>
+            <p className="text-gray-600">Connect with your coach or team</p>
+          </div>
+        )}
+
+        {/* Error Banner */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
         )}
 
         {/* Device Status Card */}
-        {!isJoined && (
-          <>
-            {devicePermissions.checked && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 max-w-2xl mx-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Device Status
-                  </h3>
+        {!isJoined && devicePermissions.checked && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6 max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Device Status
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    devicePermissions.camera ? "bg-green-100" : "bg-red-100"
+                  }`}
+                >
+                  <Video
+                    className={`w-5 h-5 ${
+                      devicePermissions.camera
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        devicePermissions.camera ? "bg-green-100" : "bg-red-100"
-                      }`}
-                    >
-                      <Video
-                        className={`w-5 h-5 ${
-                          devicePermissions.camera
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">Camera</p>
-                      <p
-                        className={`text-sm ${
-                          devicePermissions.camera
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {devicePermissions.camera
-                          ? "Available"
-                          : "Not available"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        devicePermissions.microphone
-                          ? "bg-green-100"
-                          : "bg-red-100"
-                      }`}
-                    >
-                      <Mic
-                        className={`w-5 h-5 ${
-                          devicePermissions.microphone
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">Microphone</p>
-                      <p
-                        className={`text-sm ${
-                          devicePermissions.microphone
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {devicePermissions.microphone
-                          ? "Available"
-                          : "Not available"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {(!devicePermissions.camera ||
-                  !devicePermissions.microphone) && (
-                  <button
-                    onClick={requestPermissions}
-                    className="w-full px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+                <div>
+                  <p className="font-medium text-gray-800">Camera</p>
+                  <p
+                    className={`text-sm ${
+                      devicePermissions.camera
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
                   >
-                    Request Device Permissions
-                  </button>
-                )}
+                    {devicePermissions.camera
+                      ? "Available"
+                      : "Not available"}
+                  </p>
+                </div>
               </div>
+
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    devicePermissions.microphone
+                      ? "bg-green-100"
+                      : "bg-red-100"
+                  }`}
+                >
+                  <Mic
+                    className={`w-5 h-5 ${
+                      devicePermissions.microphone
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Microphone</p>
+                  <p
+                    className={`text-sm ${
+                      devicePermissions.microphone
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {devicePermissions.microphone
+                      ? "Available"
+                      : "Not available"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {(!devicePermissions.camera || !devicePermissions.microphone) && (
+              <button
+                onClick={requestPermissions}
+                className="w-full px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Request Device Permissions
+              </button>
             )}
-          </>
+          </div>
         )}
 
         {/* Main Call Interface */}
-        <div className=" min-h-screen border-2">
+        <div className="max-w-6xl mx-auto">
           {/* Video Grid */}
-          <div className="bg-black rounded-xl overflow-hidden shadow-lg mb-6 min-h-[1000px]">
-            <div className="gap-4 p-4 h-[1000px] w-full relative border-2 border-red-500">
-              {/* Local Video */}
-              {isJoined && (
-                <div className="absolute z-30 right-4 bottom-4 bg-gray-900 rounded-lg overflow-hidden aspect-video w-96">
-                  <div
-                    id="local-video"
-                    className="w-full h-full bg-gray-800 flex items-center justify-center relative"
-                  >
-                    {!devicePermissions.camera && (
-                      <div className="text-center text-white">
-                        <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-2">
-                          <VideoOff className="w-8 h-8" />
-                        </div>
-                        <p className="text-sm">Camera Off</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute bottom-3 left-3 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    You
-                  </div>
-                  <div className="absolute top-3 right-3 flex gap-2">
-                    {!isCameraOn && (
-                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                        <VideoOff className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                    {!isMicOn && (
-                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                        <MicOff className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Remote Videos */}
-              {remoteUsers.map((user) => (
+          <div className="bg-black rounded-xl overflow-hidden shadow-lg mb-6 aspect-video relative">
+            {/* Local Video */}
+            {isJoined && (
+              <div className="absolute z-20 top-4 right-4 w-64 aspect-video bg-gray-900 rounded-lg overflow-hidden border-2 border-gray-600">
                 <div
-                  key={user.uid}
-                  className="relative bg-green-900 rounded-lg overflow-hidden aspect-video border-2 border-red-700 h-[19%]"
+                  id="local-video"
+                  className="w-full h-full bg-gray-800 flex items-center justify-center"
                 >
-                  <div
-                    id={`remote-video-${user.uid}`}
-                    className="w-full h-full bg-gray-800"
-                  />
-                  <div className="absolute bottom-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    User {user.uid}
-                  </div>
+                  {(!devicePermissions.camera || !isCameraOn) && (
+                    <div className="text-center text-white">
+                      <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <VideoOff className="w-6 h-6" />
+                      </div>
+                      <p className="text-xs">Camera Off</p>
+                    </div>
+                  )}
                 </div>
-              ))}
+                <div className="absolute bottom-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
+                  You
+                </div>
+                <div className="absolute top-2 right-2 flex gap-1">
+                  {!isCameraOn && (
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <VideoOff className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                  {!isMicOn && (
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <MicOff className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-              {/* Empty state when not joined */}
-              {!isJoined && (
-                <div className="col-span-full flex items-center justify-center py-20">
+            {/* Remote Videos */}
+            <div className="w-full h-full">
+              {remoteUsers.length > 0 ? (
+                <div className={`grid h-full gap-2 p-4 ${
+                  remoteUsers.length === 1 ? 'grid-cols-1' :
+                  remoteUsers.length <= 4 ? 'grid-cols-2' : 'grid-cols-3'
+                }`}>
+                  {remoteUsers.map((user) => (
+                    <div
+                      key={user.uid}
+                      className="relative bg-gray-800 rounded-lg overflow-hidden"
+                    >
+                      <div
+                        id={`remote-video-${user.uid}`}
+                        className="w-full h-full bg-gray-800"
+                      />
+                      <div className="absolute bottom-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        User {user.uid}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Empty state */
+                <div className="flex items-center justify-center h-full">
                   <div className="text-center text-white">
                     <div className="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Video className="w-10 h-10" />
                     </div>
                     <h3 className="text-xl font-semibold mb-2">
-                      Ready to Connect
+                      {isJoined ? "Waiting for others to join" : "Ready to Connect"}
                     </h3>
                     <p className="text-gray-400">
-                      Click "Join Call" to start your video session
+                      {isJoined 
+                        ? `Share channel "${channelName}" with others`
+                        : "Click \"Join Call\" to start your video session"
+                      }
                     </p>
                   </div>
                 </div>
@@ -582,16 +700,18 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
                 <button
                   onClick={joinChannel}
                   disabled={
-                    !devicePermissions.camera && !devicePermissions.microphone
+                    isJoining ||
+                    (!devicePermissions.camera && !devicePermissions.microphone)
                   }
                   className={`px-8 py-3 rounded-lg font-semibold flex items-center gap-2 transition-all ${
-                    !devicePermissions.camera && !devicePermissions.microphone
+                    isJoining ||
+                    (!devicePermissions.camera && !devicePermissions.microphone)
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-orange-500 hover:bg-orange-600 text-white shadow-lg hover:shadow-xl"
                   }`}
                 >
                   <Phone className="w-5 h-5" />
-                  Join Call
+                  {isJoining ? "Joining..." : "Join Call"}
                 </button>
               ) : (
                 <button
@@ -643,38 +763,32 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
             </div>
 
             {/* Session Info */}
-            {/* {isJoined && (
-              <div className="bg-gray-50 rounded-lg p-4 mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+            {isJoined && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
                     <p className="text-gray-500 text-sm">Channel</p>
-                    <p className="font-semibold text-gray-800">
-                      {agoraConfig.channelName}
+                    <p className="font-semibold text-gray-800 text-sm">
+                      {channelName}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">Participants</p>
-                    <p className="font-semibold text-gray-800 flex items-center justify-center gap-1">
+                    <p className="font-semibold text-gray-800 flex items-center justify-center gap-1 text-sm">
                       <Users className="w-4 h-4" />
                       {remoteUsers.length + 1}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm">Your ID</p>
-                    <p className="font-semibold text-gray-800">
-                      {agoraConfig.uid}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">Status</p>
                     <div className="flex items-center justify-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <p className="font-semibold text-green-600">Connected</p>
+                      <p className="font-semibold text-green-600 text-sm">Connected</p>
                     </div>
                   </div>
                 </div>
               </div>
-            )} */}
+            )}
           </div>
         </div>
       </div>
@@ -682,4 +796,4 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   );
 };
 
-export default DirectVideoCall;
+export default DirectVideoCall
