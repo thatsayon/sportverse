@@ -16,19 +16,19 @@ import { MoveUpIcon, Percent } from 'lucide-react'
 
 // Donut Chart Data
 const pieData = [
-  { name: 'California', value: 547, color: '#3B82F6' },
-  { name: 'Charlotte', value: 914, color: '#F59E0B' },
-  { name: 'New Jersey', value: 414, color: '#EF4444' }
+  { name: 'Virtual', value: 547, color: '#3B82F6' },
+  { name: 'Mindset', value: 914, color: '#F59E0B' },
+  { name: 'In-Person', value: 414, color: '#EF4444' }
 ]
 
 // Bar Chart Data
 const barData = [
-  { month: 'Jan', value: 400 },
-  { month: 'Feb', value: 600 },
-  { month: 'Mar', value: 800 },
-  { month: 'Apr', value: 1000 },
-  { month: 'May', value: 900 },
-  { month: 'Jun', value: 1100 }
+  { month: 'Jan', value: 1021457 },
+  { month: 'Feb', value: 1245895 },
+  { month: 'Mar', value: 3578956 },
+  { month: 'Apr', value: 6458964 },
+  { month: 'May', value: 7245878 },
+  { month: 'Jun', value: 9235874 }
 ]
 
 // Donut Chart Component
@@ -39,7 +39,7 @@ const DonutChart: React.FC = () => {
     <Card className="border-0 shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between border-b-2 pb-3">
-          <CardTitle className="text-base lg:text-lg font-semibold">Most Visited states</CardTitle>
+          <CardTitle className="text-base lg:text-lg font-semibold">Session Breakdown</CardTitle>
           <Select defaultValue="month">
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -79,8 +79,8 @@ const DonutChart: React.FC = () => {
           <div className="flex-1 w-full mt-6">
             <div className="space-y-4">
                 <div className='flex justify-between items-center px-3 lg:px-6 py-2 bg-[#F5F6F7]'>
-                    <p className='text-xs lg:text-base'>Page name</p>
-                    <p className='text-xs lg:text-base'>Total Users</p>
+                    <p className='text-xs lg:text-base'>Session name</p>
+                    <p className='text-xs lg:text-base'>Total Sessions</p>
                     <p className='text-xs lg:text-base'>Inceate Rate</p>
                 </div>
               {pieData.map((item, index) => (
@@ -114,7 +114,7 @@ const BarChartComponent: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-start justify-between">
             <div>
-                <h3 className='text-sm text-[#626C70]'>Conversion Rate</h3>
+                <h3 className='text-sm text-[#626C70]'>Income Chart</h3>
                 <h1 className='text-2xl font-semibold'>9.73%</h1>
             </div>
             <h4 className='flex text-sm items-center gap-0 text-[#0FAF62]'><MoveUpIcon size={16} stroke='#0FAF62'/> 3.5% Increase</h4>

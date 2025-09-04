@@ -1,4 +1,3 @@
-// components/Sidebar.tsx
 'use client'
 
 import React, { useState } from 'react'
@@ -14,9 +13,6 @@ import {
   DollarSign,
   MessageSquare,
   BarChart3,
-  TrendingUp,
-  ShoppingCart,
-  Megaphone,
   FolderOpen,
   Settings,
   ChevronDown,
@@ -25,6 +21,7 @@ import {
   UserRound,
   BanknoteArrowDown
 } from 'lucide-react'
+import { useJwt } from '@/hooks/useJwt'
 
 interface SidebarProps {
   isOpen: boolean
@@ -101,8 +98,61 @@ const navItems: NavItem[] = [
   },
 ]
 
+export const navItemsTrainer = [
+  {
+    title: "Dashboard",
+    icon: "LayoutDashboard",
+    path: "/dashboard",
+  },
+  {
+    title: "Session management",
+    icon: "CalendarDays",
+    path: "/sessions",
+  },
+  {
+    title: "Booked session",
+    icon: "CalendarCheck", // closer match since it’s a booked calendar
+    path: "/sessions/booked",
+  },
+  {
+    title: "Upload video",
+    icon: "Video",
+    path: "/videos/upload",
+  },
+  {
+    title: "Revenue",
+    icon: "DollarSign",
+    path: "/revenue",
+  },
+  {
+    title: "My wallet",
+    icon: "CreditCard",
+    children: [
+      {
+        title: "Add wallet",
+        icon: "Plus",
+        path: "/wallet/add",
+      },
+      {
+        title: "Withdraw",
+        icon: "WalletMinimal", // or "Banknote" if you prefer
+        path: "/wallet/withdraw",
+      },
+    ],
+  },
+  {
+    title: "Settings",
+    icon: "Settings",
+    path: "/settings",
+  },
+];
+
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const pathname = usePathname()
+  const {decoded,isExpired} = useJwt()
+
+  console.log("Token info decoded:", decoded)
+  console.log("Token info Expired:", isExpired)
   const [expandedItems, setExpandedItems] = useState<string[]>(['Analytics and reports'])
 
   const toggleExpanded = (itemName: string) => {

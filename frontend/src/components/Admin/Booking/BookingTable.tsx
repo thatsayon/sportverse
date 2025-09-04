@@ -65,6 +65,7 @@ const BookingTable: React.FC = () => {
               <TableHead className="font-medium text-gray-500">
                 Student name
               </TableHead>
+              <TableHead className="font-medium text-gray-500">Date</TableHead>
               <TableHead className="font-medium text-gray-500">ID No</TableHead>
               <TableHead className="font-medium text-gray-500">
                 Sports
@@ -108,6 +109,7 @@ const BookingTable: React.FC = () => {
                     <span className="text-gray-900">{manager.studentName}</span>
                   </div>
                 </TableCell>
+                <TableCell className="text-gray-600">{manager.idNo}</TableCell>
                 <TableCell className="text-gray-600">{manager.idNo}</TableCell>
                 <TableCell className="text-gray-600">{manager.sport}</TableCell>
                 <TableCell className="text-gray-600">{manager.state}</TableCell>

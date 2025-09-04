@@ -18,8 +18,8 @@ interface StatCard {
 
 const statsData: StatCard[] = [
   {
-    title: "Total balance",
-    value: "$9,569",
+    title: "Current Month Income",
+    value: "$29,569,000",
     change: "+3.67%",
     changeType: "positive",
     icon: Wallet,
@@ -27,8 +27,8 @@ const statsData: StatCard[] = [
     iconColor: "text-green-600",
   },
   {
-    title: "Total income",
-    value: "$21,869",
+    title: "Current Month Expence",
+    value: "$21,869,000",
     change: "+3.67%",
     changeType: "positive",
     icon: DollarSign,
@@ -36,8 +36,8 @@ const statsData: StatCard[] = [
     iconColor: "text-yellow-600",
   },
   {
-    title: "Total savings",
-    value: "2,100",
+    title: "Current Month Profit",
+    value: "7,700,000",
     change: "+3.67%",
     changeType: "positive",
     icon: TrendingUp,
@@ -45,8 +45,8 @@ const statsData: StatCard[] = [
     iconColor: "text-blue-600",
   },
   {
-    title: "Total expense",
-    value: "3,212",
+    title: "Current Month New User",
+    value: "212",
     change: "-2.40%",
     changeType: "negative",
     icon: TrendingDown,
