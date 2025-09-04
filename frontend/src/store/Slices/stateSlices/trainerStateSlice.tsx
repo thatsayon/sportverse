@@ -3,7 +3,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 
 
 export interface CounterState {
- virtualFilter: "all" | "Virtual Trainers" | "Mindset Trainers"
+ virtualFilter: "all" | "Virtual Trainers" | "Mindset Trainers",
 }
 
 const initialState: CounterState = {

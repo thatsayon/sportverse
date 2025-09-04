@@ -12,6 +12,7 @@ export interface CounterState {
   value: number;
   user: userType;
   userQuery: string;
+  isJoined: boolean;
 }
 
 const initialState: CounterState = {
@@ -24,6 +25,7 @@ const initialState: CounterState = {
     profile_pic: "",
   },
   userQuery: "",
+  isJoined: false
 };
 
 export const stateSclice = createSlice({
@@ -42,8 +44,11 @@ export const stateSclice = createSlice({
     setUserQuery: (state, action: PayloadAction<string>) => {
       state.userQuery = action.payload;
     },
+    setIsJoined: (state, action: PayloadAction<boolean>)=>{
+      state.isJoined = action.payload
+    }
   },
 });
 
-export const { setValue, setUser, setEmail, setUserQuery } = stateSclice.actions;
+export const { setValue, setUser, setEmail, setUserQuery, setIsJoined } = stateSclice.actions;
 export default stateSclice.reducer;
