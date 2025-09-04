@@ -11,4 +11,5 @@ urlpatterns = [
     path('map/', include('map.urls')),
     path('control/', include('controlpanel.urls')),
     path('video/', include('video.urls')),
+    path('payment/', include('payment.urls')),
 ]

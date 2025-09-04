@@ -105,12 +105,17 @@ class BookedSessionView(APIView):
             is_paid=False
         )
 
-        checkout_url = create_stripe_checkout_session(
+        checkout_url =  create_stripe_checkout_session(
             name=f"{session_option.training_type} with {session_option.teacher.user.username}",
             amount=float(session_option.price),
             success_url=f"{settings.DOMAIN_URL}/payment-success?session_id={booked_session.id}",
             cancel_url=f"{settings.DOMAIN_URL}/payment-cancel?session_id={booked_session.id}",
-        )
+            metadata={
+                "type": "booked_session",
+                "booked_session_id": str(booked_session.id),
+                "user_id": str(request.user.id)
+            }
+        )       
         return Response({"checkout_url": checkout_url.url, "booked_session_id": str(booked_session.id)}, status=201)
 
         # return Response(

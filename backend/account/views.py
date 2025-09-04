@@ -137,7 +137,15 @@ class SubscriptionCheckoutSessionView(APIView):
         if subscription:
             return Response({"detail": "Already subscribed"}, status=status.HTTP_400_BAD_REQUEST)
 
-        session = create_stripe_checkout_session(**serializer.validated_data, name='pro')
+        session = create_stripe_checkout_session(
+            **serializer.validated_data,
+            name="pro",
+            metadata={
+                "type": "subscription",
+                "user_id": str(request.user.id)
+            }
+        )
+
         print(session)
         if session:
             subscription = Subscription.objects.filter(user=request.user.student).first()
