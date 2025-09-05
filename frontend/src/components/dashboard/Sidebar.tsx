@@ -19,7 +19,13 @@ import {
   ChevronRight,
   User,
   UserRound,
-  BanknoteArrowDown
+  BanknoteArrowDown,
+  CalendarDays,
+  CalendarCheck,
+  Video,
+  CreditCard,
+  Plus,
+  WalletMinimal
 } from 'lucide-react'
 import { useJwt } from '@/hooks/useJwt'
 
@@ -35,7 +41,8 @@ interface NavItem {
   children?: NavItem[]
 }
 
-const navItems: NavItem[] = [
+// Admin navigation items
+const adminNavItems: NavItem[] = [
   {
     name: 'Dashboard',
     href: '/dashboard',
@@ -98,62 +105,89 @@ const navItems: NavItem[] = [
   },
 ]
 
-export const navItemsTrainer = [
+// Teacher/Trainer navigation items
+const trainerNavItems: NavItem[] = [
   {
-    title: "Dashboard",
-    icon: "LayoutDashboard",
-    path: "/dashboard",
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
   },
   {
-    title: "Session management",
-    icon: "CalendarDays",
-    path: "/sessions",
+    name: 'Session management',
+    href: '/sessions',
+    icon: CalendarDays,
   },
   {
-    title: "Booked session",
-    icon: "CalendarCheck", // closer match since it’s a booked calendar
-    path: "/sessions/booked",
+    name: 'Booked session',
+    href: '/sessions/booked',
+    icon: CalendarCheck,
   },
   {
-    title: "Upload video",
-    icon: "Video",
-    path: "/videos/upload",
+    name: 'Upload video',
+    href: '/videos/upload',
+    icon: Video,
   },
   {
-    title: "Revenue",
-    icon: "DollarSign",
-    path: "/revenue",
+    name: 'Revenue',
+    href: '/revenue',
+    icon: DollarSign,
   },
   {
-    title: "My wallet",
-    icon: "CreditCard",
+    name: 'My wallet',
+    href: '/wallet',
+    icon: CreditCard,
     children: [
       {
-        title: "Add wallet",
-        icon: "Plus",
-        path: "/wallet/add",
+        name: 'Add wallet',
+        href: '/wallet/add',
+        icon: Plus,
       },
       {
-        title: "Withdraw",
-        icon: "WalletMinimal", // or "Banknote" if you prefer
-        path: "/wallet/withdraw",
+        name: 'Withdraw',
+        href: '/wallet/withdraw',
+        icon: WalletMinimal,
       },
     ],
   },
   {
-    title: "Settings",
-    icon: "Settings",
-    path: "/settings",
+    name: 'Settings',
+    href: '/settings',
+    icon: Settings,
   },
-];
+]
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const pathname = usePathname()
-  const {decoded,isExpired} = useJwt()
+  const { decoded, isExpired } = useJwt()
 
   console.log("Token info decoded:", decoded)
   console.log("Token info Expired:", isExpired)
+  
   const [expandedItems, setExpandedItems] = useState<string[]>(['Analytics and reports'])
+
+  // Determine which navigation items to show based on user role
+  const getNavigationItems = (): NavItem[] => {
+    if (!decoded || isExpired) {
+      // Default to admin items or return empty array if no valid token
+      return adminNavItems
+    }
+
+    const userRole = decoded.role?.toLowerCase()
+    
+    switch (userRole) {
+      case 'teacher':
+      case 'trainer':
+        return trainerNavItems
+      case 'admin':
+      case 'administrator':
+        return adminNavItems
+      default:
+        // Default fallback - you can customize this
+        return adminNavItems
+    }
+  }
+
+  const navItems = getNavigationItems()
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev =>
@@ -246,6 +280,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     )
   }
 
+  // Show loading state if token is being processed
+  if (!decoded && !isExpired) {
+    return (
+      <div className={cn(
+        'fixed top-16 lg:top-24 left-0 z-50 h-full w-64 bg-white border-gray-200 transform transition-transform duration-300 ease-in-out',
+        'lg:translate-x-0',
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      )}>
+        <nav className="flex-1 px-0 py-4 overflow-y-auto h-[calc(100vh-4rem)]">
+          <div className="flex items-center justify-center p-8">
+            <div className="text-gray-500">Loading navigation...</div>
+          </div>
+        </nav>
+      </div>
+    )
+  }
+
   return (
     <>
       {/* Mobile/Tablet Overlay */}
@@ -269,8 +320,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         // Mobile/Tablet: slide in/out based on isOpen
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}>
-        {/* Logo */}
-        
 
         {/* Navigation */}
         <nav className="flex-1 px-0 py-4 overflow-y-auto h-[calc(100vh-4rem)]">
