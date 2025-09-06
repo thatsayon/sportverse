@@ -119,17 +119,12 @@ const trainerNavItems: NavItem[] = [
   },
   {
     name: 'Booked session',
-    href: '/sessions/booked',
+    href: '/dashboard/trainer-bookings',
     icon: CalendarCheck,
   },
   {
-    name: 'Upload video',
-    href: '/videos/upload',
-    icon: Video,
-  },
-  {
     name: 'Revenue',
-    href: '/revenue',
+    href: '/dashboard/revenue',
     icon: DollarSign,
   },
   {

@@ -1,25 +1,25 @@
 "use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Toggle } from "@/components/ui/toggle";
-import { X, Clock, Calendar, Plus } from "lucide-react";
-import { SessionResult } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { X, Plus, Clock, Calendar } from "lucide-react";
+import {
+  SessionResult,
+} from "@/store/Slices/apiSlices/trainerApiSlice";
 import { CLOSE_BEFORE_OPTIONS, DAYS_OF_WEEK, formatTime } from "./SessionManagment";
-
-
 interface SessionFormProps {
   sessionType: string;
   register: any;
   errors: any;
-  selectedDays: string[];
+  daysWithTimeSlots: string[];
   timeSlots: Record<string, string[]>;
-  onDayToggle: (day: string) => void;
+  onDayClick: (day: string) => void;
   onAddTimeSlot: (time: string) => void;
   onRemoveTimeSlot: (day: string, timeSlot: string) => void;
+  onClearAllTimeSlotsForDay: (day: string) => void;
   onSubmit: () => void;
   watchedCloseBeforeTime: string;
   editingSession: SessionResult | null;
@@ -28,17 +28,19 @@ interface SessionFormProps {
   onServiceToggle: (enabled: boolean) => void;
   newTimeSlot: string;
   setNewTimeSlot: (time: string) => void;
+  activeDay: string;
 }
 
 const SessionForm: React.FC<SessionFormProps> = ({
   sessionType,
   register,
   errors,
-  selectedDays,
+  daysWithTimeSlots,
   timeSlots,
-  onDayToggle,
+  onDayClick,
   onAddTimeSlot,
   onRemoveTimeSlot,
+  onClearAllTimeSlotsForDay,
   onSubmit,
   editingSession,
   onCancelEdit,
@@ -46,6 +48,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
   onServiceToggle,
   newTimeSlot,
   setNewTimeSlot,
+  activeDay,
 }) => {
   return (
     <Card>
@@ -78,8 +81,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
                 <Button
                   key={day}
                   type="button"
-                  variant={selectedDays.includes(day.toLowerCase()) ? "default" : "outline"}
-                  onClick={() => onDayToggle(day)}
+                  variant={activeDay === day.toLowerCase() ? "default" : "outline"}
+                  onClick={() => onDayClick(day)}
                   className="w-full"
                   disabled={!serviceEnabled}
                 >
@@ -89,8 +92,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
             </div>
           </div>
 
-          {/* Add Time Slot */}
-          {selectedDays.length > 0 && (
+          {/* Add Time Slot - Single input above the days */}
+          {activeDay && (
             <div className="space-y-3">
               <Label className="text-base font-semibold">Add Time Slot</Label>
               <div className="flex gap-2 w-fit">
@@ -104,45 +107,49 @@ const SessionForm: React.FC<SessionFormProps> = ({
                 <Button
                   type="button"
                   onClick={() => onAddTimeSlot(newTimeSlot)}
-                  disabled={!newTimeSlot || !serviceEnabled}
+                  disabled={!newTimeSlot || !serviceEnabled || !activeDay}
                   className="bg-[#FFD7BC] text-[#F15A24] hover:text-white transition-colors duration-300"
                 >
-                  Add
+                  Add to {activeDay ? activeDay.charAt(0).toUpperCase() + activeDay.slice(1) : 'Day'}
                   <Plus/>
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Time Slots Display */}
-          {selectedDays.length > 0 && (
+          {!activeDay && serviceEnabled && (
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Click on a day above to select it for adding time slots</p>
+            </div>
+          )}
+
+          {/* Time Slots Display - Only show days with actual time slots */}
+          {daysWithTimeSlots.length > 0 && (
             <div className="space-y-4">
               <Label className="text-base font-semibold">Time Slots</Label>
               <Card className="p-4">
                 <div className="space-y-4">
-                  {selectedDays.map((day) => (
+                  {daysWithTimeSlots.map((day) => (
                     <div key={day} className="space-y-2">
                       <h4 className="font-medium capitalize flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         {day}
-                        {timeSlots[day]?.length > 0 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              // Clear all time slots for this day
-                              timeSlots[day]?.forEach(slot => onRemoveTimeSlot(day, slot));
-                            }}
-                            className="text-orange-500 hover:text-orange-600 h-auto p-1 text-xs"
-                            disabled={!serviceEnabled}
-                          >
-                            Cancel all
-                          </Button>
+                        {activeDay === day.toLowerCase() && (
+                          <Badge variant="secondary" className="text-xs">Active</Badge>
                         )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onClearAllTimeSlotsForDay(day)}
+                          className="text-orange-500 hover:text-orange-600 h-auto p-1 text-xs ml-auto"
+                          disabled={!serviceEnabled}
+                        >
+                          Clear all
+                        </Button>
                       </h4>
                       
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 ml-6">
                         {(timeSlots[day] || []).map((slot, index) => {
                           const [start, end] = slot.split("-");
                           return (
@@ -174,7 +181,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
             </div>
           )}
 
-          {/* Price and Close Before - Below Time Slots */}
+          {/* Price and Close Before */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Price (USD)</Label>
@@ -213,7 +220,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
             <Button
               type="submit"
               className="flex-1 sm:flex-none"
-              disabled={selectedDays.length === 0 || !serviceEnabled}
+              disabled={daysWithTimeSlots.length === 0 || !serviceEnabled}
             >
               {editingSession ? "Update Session" : "Save Session"}
             </Button>

@@ -1,4 +1,4 @@
-import SessionManagement from '@/components/Trainer/Dashboard/SessionManagment'
+import SessionManagement from '@/components/Trainer/Dashboard/SessionManagement/SessionManagment'
 import React from 'react'
 
 function page() {
