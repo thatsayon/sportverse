@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { useAppSelector } from "@/store/hooks/hooks";
 import { RootState } from "@/store/store";
 import { Manager, managersData } from "@/data/BookingData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Helper function to get status badge variant and styles
 const getStatusStyles = (status: Manager["status"]) => {
@@ -40,10 +41,20 @@ const getInitials = (name: string): string => {
 };
 
 const BookingTable: React.FC = () => {
+  const [filterSports, setFilterSports] = useState<string>("All");
+  const [filterSubscriptionType, setFilterSubscriptionType] =
+      useState<string>("All");
   const handleEdit = (id: string) => {
     console.log(`Edit manager with ID: ${id}`);
     // Implement edit functionality
   };
+
+  const filteredData = managersData.filter((trainee) => {
+      const matchesSports =
+        filterSports === "All" || trainee.sport === filterSports;
+     
+      return matchesSports
+    });
 
   const handleDelete = (id: string) => {
     console.log(`Delete manager with ID: ${id}`);
@@ -55,6 +66,21 @@ const BookingTable: React.FC = () => {
 
   return (
     <div className="w-full">
+      <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
+            All Booking History
+          </h1>
+          <Select value={filterSports} onValueChange={setFilterSports}>
+            <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[130px]">
+              <SelectValue placeholder="Filter by Sport" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Sports</SelectItem>
+              <SelectItem value="Football">Football</SelectItem>
+              <SelectItem value="Basketball">Basketball</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -82,7 +108,7 @@ const BookingTable: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {managersData.map((manager) => (
+            {filteredData.map((manager) => (
               <TableRow key={manager.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center space-x-3">

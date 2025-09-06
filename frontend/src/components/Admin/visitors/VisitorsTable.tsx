@@ -47,6 +47,9 @@ const VisitorTable: React.FC = () => {
 
   return (
     <div className="w-full">
+      <h1 className="text-xl md:text-2xl mb-6 font-semibold font-montserrat">
+            All Booking History
+          </h1>
       <div className="rounded-md border bg-white shadow-sm">
         <Table>
           <TableHeader>

@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import { Camera, Cloud, X } from "lucide-react";
 import Image from "next/image";
-import imageCompression from "browser-image-compression"; // Import image compression
-import { useUploadDocMutation } from "@/store/Slices/apiSlices/trainerApiSlice";
+import imageCompression from "browser-image-compression";
 import { toast } from "sonner";
 import { getCookie } from "@/hooks/cookie";
 
@@ -38,8 +37,6 @@ const DocUpload: React.FC = () => {
   });
   const [errors, setErrors] = useState<Errors>({});
 
-  // api import
-  const [uploadDoc, { isLoading }] = useUploadDocMutation();
 
   // Handle input change for form fields
   const handleInputChange = (

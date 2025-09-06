@@ -114,7 +114,7 @@ const trainerNavItems: NavItem[] = [
   },
   {
     name: 'Session management',
-    href: '/sessions',
+    href: '/dashboard/session-management',
     icon: CalendarDays,
   },
   {
