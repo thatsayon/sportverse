@@ -146,7 +146,7 @@ const trainerNavItems: NavItem[] = [
   },
   {
     name: 'Settings',
-    href: '/settings',
+    href: '/dashboard/trainer-settings',
     icon: Settings,
   },
 ]

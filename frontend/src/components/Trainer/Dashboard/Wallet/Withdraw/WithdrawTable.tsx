@@ -195,7 +195,7 @@ const WithdrawTable = () => {
       <Card className="bg-white shadow-none border-none">
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle className="text-xl font-semibold text-gray-900">
+            <CardTitle className="text-2xl font-bold text-gray-900">
               Withdraw History
             </CardTitle>
 
