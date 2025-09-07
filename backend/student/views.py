@@ -118,12 +118,3 @@ class BookedSessionView(APIView):
         )       
         return Response({"checkout_url": checkout_url.url, "booked_session_id": str(booked_session.id)}, status=201)
 
-        # return Response(
-        #     {
-        #         "msg": "Session booked successfully",
-        #         "id": str(booked_session.id),
-        #         "session_time": booked_session.session_time,
-        #         "duration": booked_session.duration
-        #     },
-        #     status=status.HTTP_201_CREATED
-        # )

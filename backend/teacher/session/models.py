@@ -48,41 +48,30 @@ class SessionOption(models.Model):
         return f"{self.teacher} - {self.training_type} ({self.price})"
 
 class AvailableDay(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     session = models.ForeignKey(
         SessionOption,
         on_delete=models.CASCADE,
-        related_name='availabledays'
+        related_name='available_days'
     )
-    day = models.CharField(
-        max_length=12,
-        choices=DAYS_OF_WEEK
-    )
+    day = models.CharField(max_length=12, choices=DAYS_OF_WEEK)
 
     def __str__(self):
         return f"{self.session} - {self.day}"
 
+
 class AvailableTimeSlot(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
-    availabledays = models.ForeignKey(
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    available_day = models.ForeignKey(
         AvailableDay,
         on_delete=models.CASCADE,
-        related_name='availabledays'
+        related_name='time_slots'
     )
     start_time = models.TimeField()
     end_time = models.TimeField()
 
     def __str__(self):
-        return f"{self.availabledays.day}: {self.start_time} - {self.end_time}"
-
+        return f"{self.available_day.day}: {self.start_time} - {self.end_time}"
 
 class BookedSession(models.Model):
     id = models.UUIDField(
