@@ -134,12 +134,12 @@ const trainerNavItems: NavItem[] = [
     children: [
       {
         name: 'Add wallet',
-        href: '/wallet/add',
+        href: '/dashboard/add-wallet',
         icon: Plus,
       },
       {
         name: 'Withdraw',
-        href: '/wallet/withdraw',
+        href: '/dashboard/withdraw-trainer',
         icon: WalletMinimal,
       },
     ],
@@ -262,7 +262,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden"
+                className="overflow-hidden "
               >
                 {item.children?.map((child) => (
                   <NavLink key={child.name} item={child} level={level + 1} />

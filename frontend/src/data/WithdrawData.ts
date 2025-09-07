@@ -8,7 +8,7 @@ export interface invoiceType {
 }
 
 
-export const invoices = [
+export const invoices: invoiceType[] = [
   {
     transition_Id: "INV001",
     trainer_name: "Sarah Johnson",
