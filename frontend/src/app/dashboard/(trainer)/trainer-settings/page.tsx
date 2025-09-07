@@ -1,10 +1,10 @@
-import AccountForm from '@/components/Trainer/Dashboard/Settings/Accounts/AccountForm'
+import Settings from '@/components/Trainer/Dashboard/Settings/Settings'
 import React from 'react'
 
 function page() {
   return (
     <div>
-      <AccountForm/>
+      <Settings/>
     </div>
   )
 }

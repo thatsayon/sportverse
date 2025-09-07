@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Pencil, Upload, X } from "lucide-react";
@@ -89,25 +88,9 @@ const AccountForm = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-      <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger
-            value="account"
-            className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 data-[state=active]:border-orange-200"
-          >
-            Account
-          </TabsTrigger>
-          <TabsTrigger value="documents" disabled>
-            Documents
-          </TabsTrigger>
-          <TabsTrigger value="password" disabled>
-            Password
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="account" className="space-y-6">
-          <Card className="border-none shadow-none">
+    <div>
+        <h1 className="text-2xl font-semibold text-center mb-4">Account Details</h1>
+        <Card className="border-none shadow-none">
             <CardContent className="p-6">
               <div className="space-y-8" onSubmit={handleSubmit(handleSave)}>
                 {/* Profile Section */}
@@ -116,7 +99,7 @@ const AccountForm = () => {
                   <div className="flex flex-col items-center gap-6 w-full lg:w-80 flex-shrink-0">
                     {/* Profile Image */}
                     <div className="relative">
-                      <Avatar className="w-24 h-24">
+                      <Avatar className="w-32 h-32">
                         <AvatarImage src={profileImage} alt="Profile" />
                         <AvatarFallback className="bg-orange-100 text-orange-600 text-lg font-semibold">
                           BL
@@ -427,28 +410,6 @@ const AccountForm = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="documents">
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-center text-gray-500">
-                Documents tab content will be added here.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="password">
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-center text-gray-500">
-                Password tab content will be added here.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
