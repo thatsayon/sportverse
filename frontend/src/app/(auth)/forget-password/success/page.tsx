@@ -17,7 +17,15 @@ const dispatch = useDispatch()
   const handleSignIn = () => {
     dispatch(setUserQuery(""))
    if(userQuery === "signup"){
-     router.push("/dashboard");
+     if(decoded?.role === "admin"){
+          router.push("/dashboard")
+        }else{
+          if(decoded?.role === "student"){
+            router.push("/student")
+          }else{
+            router.push("/trainer")
+          }
+        }
    }else{
     router.push("/login")
    }

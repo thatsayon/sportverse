@@ -4,12 +4,15 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Logo from "../Element/Logo";
+import { useJwt } from "@/hooks/useJwt";
 
 interface FooterProps {
   className?: string;
 }
 
 const Footer: React.FC<FooterProps> = ({ className = "" }) => {
+  const {decoded} = useJwt()
   const quickLinks = [
     { name: "About", href: "/about" },
     { name: "FAQ", href: "/faq" },
@@ -58,20 +61,7 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-36">
           {/* Brand Section */}
           <motion.div variants={itemVariants} className="lg:col-span-1">
-            <div className="flex items-center space-x-2 mb-8">
-              <Link href="/" className="flex items-center space-x-2">
-              <Image
-              src={"/image/logo.png"}
-              alt="logo image"
-              width={48}
-              height={48}
-              className="rounded-sm"
-              />
-                <span className="text-3xl font-bold bg-gradient-to-r from-[#FF7442] to-[#994628] bg-clip-text text-transparent">
-                  SportVerse
-                </span>
-              </Link>
-            </div>
+            <Logo href={decoded?.role=== "student" ? "/student":"/trainer"}/>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
               SportVerse is your all-in-one online sports training platform,
               dedicated to helping athletes of all levels improve their game in

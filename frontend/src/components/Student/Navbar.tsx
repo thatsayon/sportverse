@@ -29,6 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useRouter } from "next/navigation";
+import Logo from "../Element/Logo";
+import { removeCookie } from "@/hooks/cookie";
 
 interface NavProps {
   className?: string;
@@ -63,6 +65,11 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     return pathname.startsWith(href);
   };
 
+    const handleLogout = ()=>{
+      removeCookie("access_token")
+      router.push("/login")
+    }
+
   return (
     <nav
       className={`bg-white border-b border-gray-200 sticky top-0 z-50 ${className}`}
@@ -70,11 +77,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       <div className=" px-4 sm:px-6 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-3xl font-bold bg-gradient-to-r from-[#FF7442] to-[#994628] bg-clip-text text-transparent">
-              SportVerse
-            </span>
-          </Link>
+          <Logo href="/student"/>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
@@ -346,6 +349,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button
+                  onClick={handleLogout}
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start"

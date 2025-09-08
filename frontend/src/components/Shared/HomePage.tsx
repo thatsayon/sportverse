@@ -109,13 +109,21 @@ const HomePage: React.FC = () => {
                 variants={itemVariants}
                 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6"
               >
-                How do you want to train?
+                {
+                  decoded?.role === "student" ? "How do you want to train?" : "Ready to share your expertise?"
+                }
               </motion.h1>
               <motion.p
                 variants={itemVariants}
                 className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
               >
-                Choose from our comprehensive training options designed to help you  <br className="hidden lg:block"/>achieve your fitness goals
+                {
+                  decoded?.role === "student" ? <>
+                  Choose from our comprehensive training options designed to help you  <br className="hidden lg:block"/>achieve your fitness goals
+                  </>:<>
+                  Turn your knowledge into impact and help players elevate their skills and <br />confidence.
+                  </>
+                }
               </motion.p>
             </div>
           </div>

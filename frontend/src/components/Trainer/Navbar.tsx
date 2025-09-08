@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -26,6 +26,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import Logo from "../Element/Logo";
+import { removeCookie } from "@/hooks/cookie";
 
 interface NavProps {
   className?: string;
@@ -34,6 +36,8 @@ interface NavProps {
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter()
+
 
   const navItems = [
     { name: "Home", href: "/trainer" },
@@ -55,6 +59,12 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     return pathname.startsWith(href);
   };
 
+  
+  const handleLogout = ()=>{
+    removeCookie("access_token")
+    router.push("/login")
+  }
+
   return (
     <nav
       className={`bg-white border-b border-gray-200 sticky top-0 z-50 ${className}`}
@@ -62,11 +72,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       <div className=" px-4 sm:px-6 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-3xl font-bold bg-gradient-to-r from-[#FF7442] to-[#994628] bg-clip-text text-transparent">
-              SportVerse
-            </span>
-          </Link>
+          <Logo href="/trainer"/>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
@@ -326,6 +332,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button
+                  onClick={handleLogout}
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start"
