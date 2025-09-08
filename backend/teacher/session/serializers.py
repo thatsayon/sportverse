@@ -57,7 +57,6 @@ class AvailableDaySerializer(serializers.ModelSerializer):
 
         return instance
 
-# testing
 class SessionOptionSerializer(serializers.ModelSerializer):
     available_days = AvailableDaySerializer(many=True)
 
