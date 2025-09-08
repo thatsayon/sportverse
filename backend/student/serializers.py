@@ -3,23 +3,35 @@ from teacher.session.models import SessionOption, AvailableDay, AvailableTimeSlo
 from teacher.serializers import TeacherInfoSerializer
 from account.models import Teacher
 
+class TrainingInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionOption
+        fields = ['id', 'training_type', 'price']
+
 class SessionOptionSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')
     username = serializers.CharField(source='teacher.user.username')
     institute_name = serializers.CharField(source='teacher.institute_name')
     coach_type = serializers.CharField(source='teacher.coach_type')
+    training_info = serializers.SerializerMethodField()
 
     class Meta:
         model = SessionOption
         fields = [
-            'id', 
-            'training_type', 
-            'price', 
             'full_name',
             'username',
             'institute_name',
-            'coach_type'
+            'coach_type',
+            'training_info',
         ]
+
+    def get_training_info(self, obj):
+        # Get all session options for this trainer (only virtual/mindset)
+        sessions = SessionOption.objects.filter(
+            teacher=obj.teacher,
+            training_type__in=['virtual', 'mindset']
+        )
+        return TrainingInfoSerializer(sessions, many=True).data
 
 class TrainerDetailsSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')

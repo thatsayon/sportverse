@@ -19,10 +19,10 @@ class TrainerListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # Filter sessions
+        # Get distinct trainers who provide virtual/mindset
         sessions = SessionOption.objects.filter(
             training_type__in=['virtual', 'mindset']
-        )
+        ).select_related('teacher', 'teacher__user').distinct('teacher')
 
         # Pagination
         paginator = PageNumberPagination()
@@ -31,6 +31,7 @@ class TrainerListView(APIView):
 
         serializer = SessionOptionSerializer(paginated_sessions, many=True)
         return paginator.get_paginated_response(serializer.data)
+
 
 class TrainerDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
