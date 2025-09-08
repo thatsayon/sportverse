@@ -68,7 +68,10 @@ class BookedSessionView(APIView):
             return Response({"error": "available_time_slot_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            time_slot = AvailableTimeSlot.objects.get(id=available_time_slot_id, availabledays__session=session_option)
+            time_slot = AvailableTimeSlot.objects.get(
+                id=available_time_slot_id, 
+                available_day__session=session_option
+            )
         except AvailableTimeSlot.DoesNotExist:
             return Response({"error": "Invalid or unavailable time slot"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -86,7 +89,7 @@ class BookedSessionView(APIView):
 
         # Validate weekday matches AvailableDay
         weekday = session_date_obj.strftime("%A").lower()  # monday, tuesday, etc.
-        if weekday != time_slot.availabledays.day:
+        if weekday != time_slot.available_day.day:
             return Response({"error": f"This slot is only available on {time_slot.availabledays.day}"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Combine date + start_time into DateTime
