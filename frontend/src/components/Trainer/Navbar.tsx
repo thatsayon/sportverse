@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -32,9 +33,10 @@ interface NavProps {
 
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const navItems = [
-    { name: "Home", href: "/trainer", active: true },
+    { name: "Home", href: "/trainer" },
     { name: "Virtual Training", href: "/trainer/virtual-training" },
     { name: "Video Library", href: "/trainer/video-library" },
     { name: "In-Person", href: "/trainer/in-person" },
@@ -43,6 +45,14 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  // Function to check if a link is active
+  const isActive = (href: string) => {
+    if (href === '/trainer') {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
   };
 
   return (
@@ -70,7 +80,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 <Link
                   href={item.href}
                   className={`font-medium transition-colors duration-200 ${
-                    item.active
+                    isActive(item.href)
                       ? "text-orange-500 border-b-2 border-orange-500 pb-1"
                       : "text-gray-700 hover:text-orange-500"
                   }`}
@@ -167,14 +177,18 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 </span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <Link href={"/dashboard/trainer-settings"}>
                 <DropdownMenuItem>
                   <User className="size-6 mr-2" />
                   Profile
                 </DropdownMenuItem>
+                </Link>
+                <Link href={"/dashboard"}>
                 <DropdownMenuItem>
                   <BarChart3 className="size-6 mr-2" />
                   Dashboard
                 </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <LogOut className="size-6 mr-2" />
@@ -221,7 +235,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     <Link
                       href={item.href}
                       className={`block px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                        item.active
+                        isActive(item.href)
                           ? "text-orange-500 bg-orange-50"
                           : "text-gray-700 hover:text-orange-500 hover:bg-gray-50"
                       }`}

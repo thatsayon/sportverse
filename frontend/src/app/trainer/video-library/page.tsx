@@ -1,9 +1,10 @@
+import MediaManagement from '@/components/Admin/MediaManagement/MediaManagement'
 import React from 'react'
 
 function page() {
   return (
     <div>
-      Video library
+     <MediaManagement isAdmin={false}/>
     </div>
   )
 }

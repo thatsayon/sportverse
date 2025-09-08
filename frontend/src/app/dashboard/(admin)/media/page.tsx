@@ -3,7 +3,7 @@ import MediaManagement from '@/components/Admin/MediaManagement/MediaManagement'
 function page() {
   return (
     <div>
-      <MediaManagement/>
+      <MediaManagement isAdmin={true}/>
     </div>
   )
 }

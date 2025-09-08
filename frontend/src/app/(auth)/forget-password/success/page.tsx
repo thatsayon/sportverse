@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useStateSlice } from "@/store/hooks/sliceHook";
 import { useDispatch } from "react-redux";
 import { setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
+import { useJwt } from "@/hooks/useJwt";
 
 export default function ForgotPasswordSuccessPage() {
+  const {decoded} = useJwt()
   const router = useRouter();
   const {userQuery} = useStateSlice()
 const dispatch = useDispatch()

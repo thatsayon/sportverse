@@ -1,10 +1,10 @@
-import MapSearch from '@/components/Student/MapSearch'
+import Profile from '@/components/Student/Profile'
 import React from 'react'
 
 function page() {
   return (
     <div>
-      <MapSearch/>
+      <Profile/>
     </div>
   )
 }

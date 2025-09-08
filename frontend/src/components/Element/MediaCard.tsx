@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 
 interface MediaCardProps {
-  videoUrl: string;
+  isAdmin?: boolean;
   title: string;
   description: string;
   duration: string;
@@ -15,7 +15,7 @@ interface MediaCardProps {
 }
 
 const MediaCard: React.FC<MediaCardProps> = ({
-  videoUrl,
+  isAdmin= true,
   title,
   description,
   duration,
@@ -110,7 +110,9 @@ const MediaCard: React.FC<MediaCardProps> = ({
       <CardContent className="p-4 -mt-6">
         <div className="mb-3">
           <h3 className="font-semibold text-xl flex items-center justify-between text-gray-900 mb-2 line-clamp-1">
-            <span className="group-hover:text-[#F15A24] transition-colors">{title}</span>
+            <span className="group-hover:text-[#F15A24] transition-colors">
+              {title}
+            </span>
             <span className="text-base font-normal">{duration}</span>
           </h3>
           <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
@@ -126,14 +128,16 @@ const MediaCard: React.FC<MediaCardProps> = ({
           >
             {getSportsIcon(sports)} {sports}
           </Badge>
-          <Badge
-            variant="outline"
-            className={`text-xs ${getConsumerColor(consumer)} capitalize`}
-          >
-            {/* <User className="w-3 h-3 mr-1" /> */}
-            {getConsumerIcon(consumer)}
-            {consumer}
-          </Badge>
+          {isAdmin && (
+            <Badge
+              variant="outline"
+              className={`text-xs ${getConsumerColor(consumer)} capitalize`}
+            >
+              {/* <User className="w-3 h-3 mr-1" /> */}
+              {getConsumerIcon(consumer)}
+              {consumer}
+            </Badge>
+          )}
         </div>
       </CardContent>
     </Card>

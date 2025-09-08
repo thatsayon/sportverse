@@ -1,11 +1,17 @@
-"use client"
-import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
-import MediaCard from '@/components/Element/MediaCard';
+"use client";
+import React, { useState, useMemo } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
+import MediaCard from "@/components/Element/MediaCard";
 
 export interface VideoData {
   id: string;
@@ -13,149 +19,161 @@ export interface VideoData {
   title: string;
   description: string;
   duration: string;
-  sports: 'basketball' | 'football';
-  consumer: 'student' | 'teacher';
+  sports: "basketball" | "football";
+  consumer: "student" | "teacher";
   thumbnail?: string;
 }
 
 const dummyVideos: VideoData[] = [
   {
-    id: '1',
-    videoUrl: '/videos/basic-ball-control.mp4',
-    title: 'Basic ball control',
-    description: 'Learn how to control the ball with your feet and body',
-    duration: '30s',
-    sports: 'football',
-    consumer: 'student',
-    thumbnail: '/thumbnails/ball-control.jpg'
+    id: "1",
+    videoUrl: "/videos/basic-ball-control.mp4",
+    title: "Basic ball control",
+    description: "Learn how to control the ball with your feet and body",
+    duration: "30s",
+    sports: "football",
+    consumer: "student",
+    thumbnail: "/thumbnails/ball-control.jpg",
   },
   {
-    id: '2',
-    videoUrl: '/videos/passing-receiving.mp4',
-    title: 'Passing & Receiving',
-    description: 'Master short and long passes with accuracy and control',
-    duration: '45s',
-    sports: 'football',
-    consumer: 'teacher',
-    thumbnail: '/thumbnails/passing.jpg'
+    id: "2",
+    videoUrl: "/videos/passing-receiving.mp4",
+    title: "Passing & Receiving",
+    description: "Master short and long passes with accuracy and control",
+    duration: "45s",
+    sports: "football",
+    consumer: "teacher",
+    thumbnail: "/thumbnails/passing.jpg",
   },
   {
-    id: '3',
-    videoUrl: '/videos/dribbling-techniques.mp4',
-    title: 'Dribbling Techniques',
-    description: 'Improve footwork, speed, and control of the ball',
-    duration: '30s',
-    sports: 'football',
-    consumer: 'student',
-    thumbnail: '/thumbnails/dribbling.jpg'
+    id: "3",
+    videoUrl: "/videos/dribbling-techniques.mp4",
+    title: "Dribbling Techniques",
+    description: "Improve footwork, speed, and control of the ball",
+    duration: "30s",
+    sports: "football",
+    consumer: "student",
+    thumbnail: "/thumbnails/dribbling.jpg",
   },
   {
-    id: '4',
-    videoUrl: '/videos/shooting-finishing.mp4',
-    title: 'Shooting & Finishing',
-    description: 'Learn powerful and accurate shooting techniques for different game situations',
-    duration: '30s',
-    sports: 'football',
-    consumer: 'teacher',
-    thumbnail: '/thumbnails/shooting.jpg'
+    id: "4",
+    videoUrl: "/videos/shooting-finishing.mp4",
+    title: "Shooting & Finishing",
+    description:
+      "Learn powerful and accurate shooting techniques for different game situations",
+    duration: "30s",
+    sports: "football",
+    consumer: "teacher",
+    thumbnail: "/thumbnails/shooting.jpg",
   },
   {
-    id: '5',
-    videoUrl: '/videos/defensive-skills.mp4',
-    title: 'Defensive Skills',
-    description: 'Build tackling, marking, and interception strategies to stop opponents',
-    duration: '30s',
-    sports: 'football',
-    consumer: 'student',
-    thumbnail: '/thumbnails/defensive.jpg'
+    id: "5",
+    videoUrl: "/videos/defensive-skills.mp4",
+    title: "Defensive Skills",
+    description:
+      "Build tackling, marking, and interception strategies to stop opponents",
+    duration: "30s",
+    sports: "football",
+    consumer: "student",
+    thumbnail: "/thumbnails/defensive.jpg",
   },
   {
-    id: '6',
-    videoUrl: '/videos/positioning-movement.mp4',
-    title: 'Positioning & Movement',
-    description: 'Learn how to control the ball with your feet and body movements effectively',
-    duration: '30s',
-    sports: 'football',
-    consumer: 'teacher',
-    thumbnail: '/thumbnails/positioning.jpg'
+    id: "6",
+    videoUrl: "/videos/positioning-movement.mp4",
+    title: "Positioning & Movement",
+    description:
+      "Learn how to control the ball with your feet and body movements effectively",
+    duration: "30s",
+    sports: "football",
+    consumer: "teacher",
+    thumbnail: "/thumbnails/positioning.jpg",
   },
   {
-    id: '7',
-    videoUrl: '/videos/basketball-dribbling.mp4',
-    title: 'Basketball Dribbling Fundamentals',
-    description: 'Master basic and advanced basketball dribbling techniques',
-    duration: '45s',
-    sports: 'basketball',
-    consumer: 'student',
-    thumbnail: '/thumbnails/basketball-dribbling.jpg'
+    id: "7",
+    videoUrl: "/videos/basketball-dribbling.mp4",
+    title: "Basketball Dribbling Fundamentals",
+    description: "Master basic and advanced basketball dribbling techniques",
+    duration: "45s",
+    sports: "basketball",
+    consumer: "student",
+    thumbnail: "/thumbnails/basketball-dribbling.jpg",
   },
   {
-    id: '8',
-    videoUrl: '/videos/basketball-shooting.mp4',
-    title: 'Basketball Shooting Form',
-    description: 'Perfect your shooting technique and accuracy',
-    duration: '60s',
-    sports: 'basketball',
-    consumer: 'teacher',
-    thumbnail: '/thumbnails/basketball-shooting.jpg'
+    id: "8",
+    videoUrl: "/videos/basketball-shooting.mp4",
+    title: "Basketball Shooting Form",
+    description: "Perfect your shooting technique and accuracy",
+    duration: "60s",
+    sports: "basketball",
+    consumer: "teacher",
+    thumbnail: "/thumbnails/basketball-shooting.jpg",
   },
   {
-    id: '9',
-    videoUrl: '/videos/basketball-defense.mp4',
-    title: 'Basketball Defense Strategies',
-    description: 'Learn defensive positioning and techniques',
-    duration: '40s',
-    sports: 'basketball',
-    consumer: 'student',
-    thumbnail: '/thumbnails/basketball-defense.jpg'
+    id: "9",
+    videoUrl: "/videos/basketball-defense.mp4",
+    title: "Basketball Defense Strategies",
+    description: "Learn defensive positioning and techniques",
+    duration: "40s",
+    sports: "basketball",
+    consumer: "student",
+    thumbnail: "/thumbnails/basketball-defense.jpg",
   },
   {
-    id: '10',
-    videoUrl: '/videos/basketball-teamwork.mp4',
-    title: 'Basketball Team Play',
-    description: 'Develop team coordination and communication skills',
-    duration: '55s',
-    sports: 'basketball',
-    consumer: 'teacher',
-    thumbnail: '/thumbnails/basketball-teamwork.jpg'
+    id: "10",
+    videoUrl: "/videos/basketball-teamwork.mp4",
+    title: "Basketball Team Play",
+    description: "Develop team coordination and communication skills",
+    duration: "55s",
+    sports: "basketball",
+    consumer: "teacher",
+    thumbnail: "/thumbnails/basketball-teamwork.jpg",
   },
   {
-    id: '11',
-    videoUrl: '/videos/football-advanced-tactics.mp4',
-    title: 'Advanced Football Tactics',
-    description: 'Strategic gameplay and formation understanding',
-    duration: '90s',
-    sports: 'football',
-    consumer: 'teacher',
-    thumbnail: '/thumbnails/advanced-tactics.jpg'
+    id: "11",
+    videoUrl: "/videos/football-advanced-tactics.mp4",
+    title: "Advanced Football Tactics",
+    description: "Strategic gameplay and formation understanding",
+    duration: "90s",
+    sports: "football",
+    consumer: "teacher",
+    thumbnail: "/thumbnails/advanced-tactics.jpg",
   },
   {
-    id: '12',
-    videoUrl: '/videos/basketball-conditioning.mp4',
-    title: 'Basketball Conditioning',
-    description: 'Physical training and endurance building for basketball',
-    duration: '75s',
-    sports: 'basketball',
-    consumer: 'student',
-    thumbnail: '/thumbnails/basketball-conditioning.jpg'
-  }
+    id: "12",
+    videoUrl: "/videos/basketball-conditioning.mp4",
+    title: "Basketball Conditioning",
+    description: "Physical training and endurance building for basketball",
+    duration: "75s",
+    sports: "basketball",
+    consumer: "student",
+    thumbnail: "/thumbnails/basketball-conditioning.jpg",
+  },
 ];
 
-const MediaManagement: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sportsFilter, setSportsFilter] = useState<string>('all');
-  const [consumerFilter, setConsumerFilter] = useState<string>('all');
+interface MediaManagementProps {
+  isAdmin: boolean;
+}
+
+const MediaManagement: React.FC<MediaManagementProps> = ({
+  isAdmin = true,
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sportsFilter, setSportsFilter] = useState<string>("all");
+  const [consumerFilter, setConsumerFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = isAdmin ? 6 : 8;
 
   // Filter videos based on search term and filters
   const filteredVideos = useMemo(() => {
-    return dummyVideos.filter(video => {
-      const matchesSearch = video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           video.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSports = sportsFilter === 'all' || video.sports === sportsFilter;
-      const matchesConsumer = consumerFilter === 'all' || video.consumer === consumerFilter;
-      
+    return dummyVideos.filter((video) => {
+      const matchesSearch =
+        video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        video.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSports =
+        sportsFilter === "all" || video.sports === sportsFilter;
+      const matchesConsumer =
+        consumerFilter === "all" || video.consumer === consumerFilter;
+
       return matchesSearch && matchesSports && matchesConsumer;
     });
   }, [searchTerm, sportsFilter, consumerFilter]);
@@ -163,7 +181,10 @@ const MediaManagement: React.FC = () => {
   // Calculate pagination
   const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedVideos = filteredVideos.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedVideos = filteredVideos.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   // Reset to first page when filters change
   React.useEffect(() => {
@@ -175,28 +196,36 @@ const MediaManagement: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
-    setSportsFilter('all');
-    setConsumerFilter('all');
+    setSearchTerm("");
+    setSportsFilter("all");
+    setConsumerFilter("all");
     setCurrentPage(1);
   };
 
   return (
-    <div className="md:px-6 -mt-6">
+    <div className={`md:px-6 ${isAdmin ? "-mt-6":"mt-6 mb-6"}`}>
       {/* Header */}
       <div className="flex flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Videos</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Videos
+          </h1>
           <p className="text-gray-600 mt-1">
             Showing {filteredVideos.length} of {dummyVideos.length} videos
           </p>
         </div>
-        <Link href="/dashboard/media/video-upload">
-          <Button variant={"outline"} size={"lg"} className="flex py-2 md:py-2.5 text-[#F15A24] items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Add
-          </Button>
-        </Link>
+        {isAdmin && (
+          <Link href="/dashboard/media/video-upload">
+            <Button
+              variant={"outline"}
+              size={"lg"}
+              className="flex py-2 md:py-2.5 text-[#F15A24] items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
@@ -210,10 +239,16 @@ const MediaManagement: React.FC = () => {
             className="pl-10 lg:w-80"
           />
         </div>
-        
+
         <div className="flex flex-row gap-4">
-            {(searchTerm || sportsFilter !== 'all' || consumerFilter !== 'all') && (
-            <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap hidden md:block py-1">
+          {(searchTerm ||
+            sportsFilter !== "all" ||
+            consumerFilter !== "all") && (
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              className="whitespace-nowrap hidden md:block py-1"
+            >
               Clear Filters
             </Button>
           )}
@@ -228,19 +263,27 @@ const MediaManagement: React.FC = () => {
             </SelectContent>
           </Select>
 
-          <Select value={consumerFilter} onValueChange={setConsumerFilter}>
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Filter by User" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Users</SelectItem>
-              <SelectItem value="student">Student</SelectItem>
-              <SelectItem value="teacher">Teacher</SelectItem>
-            </SelectContent>
-          </Select>
+          {isAdmin && (
+            <Select value={consumerFilter} onValueChange={setConsumerFilter}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Filter by User" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="teacher">Teacher</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
-          {(searchTerm || sportsFilter !== 'all' || consumerFilter !== 'all') && (
-            <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap block md:hidden py-1">
+          {(searchTerm ||
+            sportsFilter !== "all" ||
+            consumerFilter !== "all") && (
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              className="whitespace-nowrap block md:hidden py-1"
+            >
               Clear Filters
             </Button>
           )}
@@ -253,16 +296,19 @@ const MediaManagement: React.FC = () => {
           <div className="text-gray-400 mb-4">
             <Search className="w-12 h-12 mx-auto mb-4" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No videos found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No videos found
+          </h3>
           <p className="text-gray-600 mb-4">
-            Try adjusting your search terms or filters to find what you&apos;re looking for.
+            Try adjusting your search terms or filters to find what you&apos;re
+            looking for.
           </p>
           <Button variant="outline" onClick={clearFilters}>
             Clear all filters
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? "xl:grid-cols-3":"lg: grid-cols-3 xl:grid-cols-4"} gap-6 mb-8`}>
           {paginatedVideos.map((video) => (
             <MediaCard
               key={video.id}
@@ -273,6 +319,7 @@ const MediaManagement: React.FC = () => {
               sports={video.sports}
               consumer={video.consumer}
               thumbnail={video.thumbnail}
+              isAdmin={isAdmin}
             />
           ))}
         </div>
@@ -282,19 +329,19 @@ const MediaManagement: React.FC = () => {
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages} ({filteredVideos.length} total videos)
+            Page {currentPage} of {totalPages} ({filteredVideos.length} total
+            videos)
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 w-8 h-8"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
+              <ChevronLeft className="w-4 h-4" />              
             </Button>
 
             <div className="flex gap-1">
@@ -329,9 +376,8 @@ const MediaManagement: React.FC = () => {
               size="sm"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 w-8 h-8"
             >
-              Next
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>

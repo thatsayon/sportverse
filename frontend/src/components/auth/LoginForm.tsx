@@ -30,6 +30,7 @@ import { Label } from "../ui/label";
 import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
 import { useRouter } from "next/navigation";
 import { setCookie } from "@/hooks/cookie";
+import { useJwt } from "@/hooks/useJwt";
 
 // Cookie utility function
 
@@ -38,7 +39,7 @@ import { setCookie } from "@/hooks/cookie";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-
+const {decoded} = useJwt()
   const [login, { isLoading }] = useLoginMutation();
   //   const [getUserPackage] = useLazyGetUserpackageQuery();
  
@@ -64,7 +65,16 @@ export function LoginForm() {
 
         // Store tokens in cookies
         setCookie("access_token", result.access_token, 7); // 7 days expiry
-       router.push("/dashboard")
+        
+        if(decoded?.role === "admin"){
+          router.push("/dashboard")
+        }else{
+          if(decoded?.role === "student"){
+            router.push("/student")
+          }else{
+            router.push("/trainer")
+          }
+        }
 
         // Store login data in sessionStorage for immediate access
         sessionStorage.setItem("isLoggedIn", "true");

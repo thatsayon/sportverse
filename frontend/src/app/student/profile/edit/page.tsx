@@ -1,10 +1,10 @@
-import MapSearch from '@/components/Student/MapSearch'
+import AccountSettingForm from '@/components/Student/AccountSettingFrom'
 import React from 'react'
 
 function page() {
   return (
     <div>
-      <MapSearch/>
+      <AccountSettingForm/>
     </div>
   )
 }

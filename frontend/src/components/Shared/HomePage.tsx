@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Users, Video, Dumbbell, VideoIcon, SquarePlay, MapPin } from "lucide-react";
+import { ArrowRight, Video, SquarePlay, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,12 +12,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Navigation from "../Trainer/Navbar";
-import Footer from "./Footer";
 import Image from "next/image";
 import Link from "next/link";
+import { useJwt } from "@/hooks/useJwt";
 
 const HomePage: React.FC = () => {
+  const {decoded} = useJwt()
   const trainingOptions = [
     {
       icon: MapPin,
@@ -26,6 +26,7 @@ const HomePage: React.FC = () => {
       iconColor: "text-white",
       bgColor: "bg-[#EB5A0D]",
       href: "/trainer/in-person",
+      hrefStudent: "/student/in-person",
       image: "/trainer/home-1.jpg", // Sports team training image
     },
     {
@@ -35,6 +36,7 @@ const HomePage: React.FC = () => {
       iconColor: "text-white",
       bgColor: "bg-[#2867EC]",
       href: "/trainer/virtual-training",
+      hrefStudent: "/student/virtual-training",
       image: "/trainer/home-2.jpg", // Virtual training session image
     },
     {
@@ -44,6 +46,7 @@ const HomePage: React.FC = () => {
       iconColor: "text-white",
       bgColor: "bg-[#17A54B]",
       href: "/trainer/video-library",
+      hrefStudent: "/student/video-library",
       image: "/trainer/home-3.jpg", // Video library on laptop image
       badge: "Pro Only",
     },
@@ -131,7 +134,7 @@ const HomePage: React.FC = () => {
               {trainingOptions.map((option, index) => {
                 const IconComponent = option.icon;
                 return (
-                  <Link key={index} href={option.href}>
+                  <Link key={index} href={decoded?.role === "teacher" ? option.href: option.hrefStudent}>
                     <motion.div
                     key={option.title}
                     variants={cardVariants}

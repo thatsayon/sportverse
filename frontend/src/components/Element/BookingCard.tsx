@@ -52,8 +52,8 @@ const BookingCard: React.FC<BookingCardProps> = ({
   };
 
   return (
-    <Card className="w-full bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-      <CardContent className="p-3 sm:p-4 md:p-5">
+    <Card className="w-full bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 py-0">
+      <CardContent className="py-2">
         {/* Mobile Layout (xs to sm) */}
         <div className="block sm:hidden">
           {/* Header - Trainer Info */}

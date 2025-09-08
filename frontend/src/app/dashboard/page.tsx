@@ -92,7 +92,7 @@ const DashboardPage: React.FC = () => {
     // Navigate to students page or open modal
   };
 
-  if (decoded?.role === "admin") return (
+  if (decoded?.role === "teacher") return (
     <div className="min-h-screen bg-white -mt-10">
       <TrainerDashboard
         metrics={sampleMetrics}
@@ -105,11 +105,7 @@ const DashboardPage: React.FC = () => {
       />
     </div>
   );
-  if (decoded?.role === "teacher") return <AdminDashboard />;
-  if (decoded?.role === "student") {
-    route.push("/student");
-    return;
-  }
+  if (decoded?.role === "admin") return <AdminDashboard />;
 };
 
 export default DashboardPage;

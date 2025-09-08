@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -35,9 +36,11 @@ interface NavProps {
 
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
+  const pathname = usePathname();
+  
   const navItems = [
-    { name: "Home", href: "/student", active: true },
+    { name: "Home", href: "/student" },
     { name: "Virtual Training", href: "/student/virtual-training" },
     { name: "Video Library", href: "/student/video-library" },
     { name: "In-Person", href: "/student/in-person" },
@@ -48,9 +51,17 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const handleRedirect = ()=>{
-router.push("/student/bookings")
-  }
+  const handleRedirect = () => {
+    router.push("/student/bookings");
+  };
+
+  // Function to check if a link is active
+  const isActive = (href: string) => {
+    if (href === '/student') {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <nav
@@ -77,7 +88,7 @@ router.push("/student/bookings")
                 <Link
                   href={item.href}
                   className={`font-medium transition-colors duration-200 ${
-                    item.active
+                    isActive(item.href)
                       ? "text-orange-500 border-b-2 border-orange-500 pb-1"
                       : "text-gray-700 hover:text-orange-500"
                   }`}
@@ -182,18 +193,22 @@ router.push("/student/bookings")
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
+                <Link href={"/student/profile"}>
                 <DropdownMenuItem>
                   <User className="size-6 mr-2" />
                   Profile
                 </DropdownMenuItem>
+                </Link>
+                <Link href={"/student/bookings"}>
                   <DropdownMenuItem onClick={handleRedirect}>
                     <Calendar className="size-6 mr-2" />
                     Bookings
                   </DropdownMenuItem>
-                <DropdownMenuItem>
+                </Link>
+                {/* <DropdownMenuItem>
                   <Settings className="size-6 mr-2" />
                   Settings
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-[#CD5E5E]">
                   <LogOut stroke="#CD5E5E" className="size-6 mr-2" />
@@ -240,7 +255,7 @@ router.push("/student/bookings")
                     <Link
                       href={item.href}
                       className={`block px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                        item.active
+                        isActive(item.href)
                           ? "text-orange-500 bg-orange-50"
                           : "text-gray-700 hover:text-orange-500 hover:bg-gray-50"
                       }`}

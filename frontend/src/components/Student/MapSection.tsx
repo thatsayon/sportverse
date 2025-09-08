@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Clock, Phone, Mail, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useJwt } from "@/hooks/useJwt";
+import Link from "next/link";
 
 // Types based on your API response
 interface Location {
@@ -59,22 +61,24 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
   const teacherCardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const { decoded } = useJwt();
 
   // Function to scroll selected teacher card to top
   const scrollToTeacher = (teacherId: number) => {
     const teacherCard = teacherCardRefs.current[teacherId];
     const teacherListContainer = teacherListRef.current;
-    
+
     if (teacherCard && teacherListContainer) {
       // Calculate the position to scroll to (teacher card position minus container offset)
       const containerRect = teacherListContainer.getBoundingClientRect();
       const cardRect = teacherCard.getBoundingClientRect();
       const scrollTop = teacherListContainer.scrollTop;
-      const targetScrollTop = scrollTop + (cardRect.top - containerRect.top) - 20; // 20px padding from top
-      
+      const targetScrollTop =
+        scrollTop + (cardRect.top - containerRect.top) - 20; // 20px padding from top
+
       teacherListContainer.scrollTo({
         top: targetScrollTop,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -325,14 +329,14 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
                 Trainer Profiles
               </CardTitle>
             </CardHeader>
-            <CardContent 
+            <CardContent
               ref={teacherListRef}
               className="p-4 space-y-4 max-h-[490px] overflow-y-auto"
             >
               {data.results.teachers.map((teacher, index) => (
                 <div
                   key={teacher.id}
-                  ref={(el) => teacherCardRefs.current[teacher.id] = el}
+                  ref={(el) => (teacherCardRefs.current[teacher.id] = el)}
                   className={`p-4 rounded-lg border transition-all cursor-pointer ${
                     selectedTeacher?.id === teacher.id
                       ? "border-blue-500 bg-blue-50"
@@ -396,9 +400,13 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
                       {/* Left side - Buttons */}
                       <div className="flex flex-row gap-2 justify-between">
                         <Button className="w-1/2 py-3">View Profile</Button>
-                        <Button className="w-1/2 py-3" variant="outline">
-                          Quick Book
-                        </Button>
+                        {decoded?.role === "student" && (
+                          <Link href={`/trainer/${teacher.id}`}>
+                          <Button className="w-1/2 py-3" variant="outline">
+                            Quick Book
+                          </Button>
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>
