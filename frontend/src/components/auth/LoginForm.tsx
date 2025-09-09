@@ -34,15 +34,13 @@ import { useJwt } from "@/hooks/useJwt";
 
 // Cookie utility function
 
-
 // Main function component
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-const {decoded} = useJwt()
+  const { decoded } = useJwt();
   const [login, { isLoading }] = useLoginMutation();
   //   const [getUserPackage] = useLazyGetUserpackageQuery();
- 
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -57,7 +55,6 @@ const {decoded} = useJwt()
   const onSubmit = async (data: LoginFormData) => {
     console.log("Login data:", data);
     try {
-
       const result = await login(data).unwrap();
 
       if (result.access_token) {
@@ -65,14 +62,14 @@ const {decoded} = useJwt()
 
         // Store tokens in cookies
         setCookie("access_token", result.access_token, 7); // 7 days expiry
-        
-        if(decoded?.role === "admin"){
-          router.push("/dashboard")
-        }else{
-          if(decoded?.role === "student"){
-            router.push("/student")
-          }else{
-            router.push("/trainer")
+
+        if (decoded?.role === "admin") {
+          router.push("/dashboard");
+        } else {
+          if (decoded?.role === "student") {
+            router.push("/student");
+          } else {
+            router.push("/trainer");
           }
         }
 
@@ -80,9 +77,8 @@ const {decoded} = useJwt()
         sessionStorage.setItem("isLoggedIn", "true");
         sessionStorage.setItem("userEmail", data.email);
         toast.success("Login successful!");
-      }else{
+      } else {
         toast.error("Login Failed!");
-
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -94,14 +90,16 @@ const {decoded} = useJwt()
     <Card className="w-full max-w-lg md:px-3 shadow-none border-none">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center md:mt-6 lg:mt-14 mb-2 md:mb-4 lg:mb-6">
-          <Image
-            src={"/image/logo.png"}
-            alt="logo-image"
-            width={63}
-            height={63}
-            className="max-w-20 md:max-w-[63px] max-h-20 md:max-h-[63px] object-center rounded-md"
-            layout="responsive"
-          />
+          <Link href={"/"}>
+            <Image
+              src={"/image/logo.png"}
+              alt="logo-image"
+              width={63}
+              height={63}
+              className="max-w-20 md:max-w-[63px] max-h-20 md:max-h-[63px] object-center rounded-md"
+              layout="responsive"
+            />
+          </Link>
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
           <h2 className="text-3xl font-medium">Welcome back</h2>
@@ -110,17 +108,17 @@ const {decoded} = useJwt()
           </p>
         </CardTitle>
         <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
-          <GoogleIcon size={22}/>
+          <GoogleIcon size={22} />
           Continue with Google
         </Button>
         <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
-          <AppleIcon size={24}/>
+          <AppleIcon size={24} />
           Continue with Apple
         </Button>
         <div className="flex items-center gap-4 mt-6">
-          <div className="w-full h-[2px] bg-[#C4C3C3]"/>
+          <div className="w-full h-[2px] bg-[#C4C3C3]" />
           or
-          <div className="w-full h-[2px] bg-[#C4C3C3]"/>
+          <div className="w-full h-[2px] bg-[#C4C3C3]" />
         </div>
       </CardHeader>
       <CardContent>
@@ -202,7 +200,7 @@ const {decoded} = useJwt()
 
         <div className="mt-6 text-center">
           <p className="text-sm text-[#666666]">
-           Don&apos;t have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="text-black hover:underline font-semibold underline"

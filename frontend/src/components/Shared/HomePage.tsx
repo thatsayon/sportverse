@@ -187,7 +187,7 @@ const HomePage: React.FC = () => {
                           {option.title}
                           </div>
                         </CardTitle>
-                        <CardDescription className="text-gray-600 text-base font-montserrat">
+                        <CardDescription className="text-gray-600 h-10 text-base font-montserrat">
                           {option.description}
                         </CardDescription>
                       </CardHeader>

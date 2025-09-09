@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -36,7 +36,6 @@ interface NavProps {
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter()
 
 
   const navItems = [
@@ -67,13 +66,15 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
   return (
     <nav
-      className={`bg-white border-b border-gray-200 sticky top-0 z-50 ${className}`}
+      className={`bg-white py-2 border-b border-gray-200 sticky top-0 z-50 ${className}`}
     >
       <div className=" px-4 sm:px-6 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Logo href="/trainer"/>
+          <div className="mt-7"> 
+            <Logo href="/trainer"/>
 
+          </div>
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item, index) => (

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import MediaCard from '@/components/Element/MediaCard';
+import { useGetVritualTrainersQuery } from '@/store/Slices/apiSlices/studentApiSlice';
 
 export interface VideoData {
   id: string;

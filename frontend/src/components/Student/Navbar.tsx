@@ -72,12 +72,14 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
   return (
     <nav
-      className={`bg-white border-b border-gray-200 sticky top-0 z-50 ${className}`}
+      className={`bg-white py-2 border-b border-gray-200 sticky top-0 z-50 ${className}`}
     >
-      <div className=" px-4 sm:px-6 lg:px-16">
+      <div className="px-4 sm:px-6 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Logo href="/student"/>
+          <div className="mt-7">
+            <Logo href="/student"/>
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">

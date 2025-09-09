@@ -92,6 +92,7 @@ export function SignUpForm() {
     <Card className="w-full max-w-lg border-none shadow-none">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mb-0 md:mb-1 lg:mb-2">
+         <Link href={"/"}>
           <Image
             src={"/image/logo.png"}
             alt="logo-image"
@@ -100,6 +101,7 @@ export function SignUpForm() {
             className="max-w-20 md:max-w-[63px] max-h-20 md:max-h-[63px] object-center rounded-md"
             layout="responsive"
           />
+         </Link>
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
           <h2 className="text-3xl font-medium">Create your account</h2>

@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import TrainerCard from "../Element/TrainerCard";
-import { trainersProfiles } from "@/data/TrainersProfiles";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,37 +12,41 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { FilterIcon } from "lucide-react";
+import { useGetVritualTrainersQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 
 function VirtualTraining() {
   const [filter, setFilter] = useState<string>("all");
+  const { data, isLoading } = useGetVritualTrainersQuery();
 
-  console.log("Filter values:",filter)
+  console.log("Filter values:", filter);
+  console.log("Data values:", data);
 
-  // Filter the trainers based on selected filter
-   const filteredData = trainersProfiles.filter((trainer) => {
-    if (filter === "all") {
-      // Show coaches who offer either Virtual or Mindset Sessions
-      return (
-        trainer.consultancyPlans.includes("Virtual Session") ||
-        trainer.consultancyPlans.includes("Mindset Session")
-      );
-    } else if (filter === "virtual") {
-      // Show only coaches who offer Virtual Session
-      return trainer.consultancyPlans.includes("Virtual Session");
-    } else if (filter === "mindset") {
-      // Show only coaches who offer Mindset Session
-      return trainer.consultancyPlans.includes("Mindset Session");
-    }
-    return false;
-  });
-
+  // Filter based on new API structure
+  const filteredData =
+    data?.results.filter((trainer) => {
+      if (filter === "all") {
+        return trainer.training_info.some(
+          (t) => t.training_type === "virtual" || t.training_type === "mindset"
+        );
+      } else if (filter === "virtual") {
+        return trainer.training_info.some((t) => t.training_type === "virtual");
+      } else if (filter === "mindset") {
+        return trainer.training_info.some((t) => t.training_type === "mindset");
+      }
+      return false;
+    }) || [];
 
   return (
     <div>
+      {/* Header + Filters */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-6 md:gap-0">
         <div>
           <h2 className="text-3xl font-semibold font-montserrat mb-2">
-            {filter === "all" ? "Virtual Trainers" : filter}
+            {filter === "all"
+              ? "Virtual Trainers"
+              : filter === "virtual"
+              ? "Virtual Sessions"
+              : "Mindset Sessions"}
           </h2>
           <p>Connect with professional trainers through live video sessions</p>
         </div>
@@ -60,7 +63,10 @@ function VirtualTraining() {
             <DropdownMenuContent className="w-56">
               <DropdownMenuLabel>Choose Session Type</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={filter} onValueChange={setFilter}>
+              <DropdownMenuRadioGroup
+                value={filter}
+                onValueChange={setFilter}
+              >
                 <DropdownMenuRadioItem value="all">All</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="virtual">
                   Virtual Session
@@ -73,18 +79,37 @@ function VirtualTraining() {
           </DropdownMenu>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredData.map((item) => (
-          <TrainerCard
-            image={item.profileImage}
-            name={item.name}
-            rating={item.rating}
-            price={item.virtualPrice}
-            sports={item.title}
-            id={item.id}
-            key={item.id}
-          />
-        ))}
+
+      {/* Trainers List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : filteredData.length === 0 ? (
+          <p>No trainers found.</p>
+        ) : (
+          filteredData.map((item, index) => {
+            // pick first matching price (virtual or mindset)
+            const matchingTraining = item.training_info.find(
+              (t) =>
+                filter === "all" ||
+                t.training_type.toLowerCase() === filter.toLowerCase()
+            );
+
+            return (
+              <TrainerCard
+                key={index}
+                institute_name={item.institute_name}
+                id={index}
+                image="/trainer/default.jpg" // fallback until API provides images
+                name={item.full_name}
+                rating={4.5} // placeholder, API doesn’t provide rating yet
+                price={matchingTraining ? Number(matchingTraining.price) : 0.00}
+                sports={item.coach_type.replace("controlpanel.Sport.", "")}
+                sessionType={item.training_info}
+              />
+            );
+          })
+        )}
       </div>
     </div>
   );

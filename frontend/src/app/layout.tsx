@@ -3,6 +3,8 @@ import { Montserrat, Open_Sans } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
 import { Toaster } from "sonner";
+import Navbar from "@/components/Landing/Navbar";
+import Footer from "@/components/Shared/Footer";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -30,8 +32,11 @@ export default function RootLayout({
         className={`${montserrat.variable} ${openSans.variable} font-open_sans antialiased`}
       >
         <StoreProvider>
-          {/* <Toaster/> */}
+          <Navbar/>
+          <Toaster/>
+          
           {children}
+          <Footer/>
           </StoreProvider>
       </body>
     </html>

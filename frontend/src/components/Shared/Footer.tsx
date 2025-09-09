@@ -3,9 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import Logo from "../Element/Logo";
 import { useJwt } from "@/hooks/useJwt";
+import { usePathname } from "next/navigation";
 
 interface FooterProps {
   className?: string;
@@ -13,6 +13,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ className = "" }) => {
   const {decoded} = useJwt()
+  const pathname = usePathname()
   const quickLinks = [
     { name: "About", href: "/about" },
     { name: "FAQ", href: "/faq" },
@@ -48,6 +49,10 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
+
+  if (pathname === "/login" || pathname === "/signup") {
+    return null;
+  }
 
   return (
     <footer className={`bg-slate-900 text-white ${className}`}>

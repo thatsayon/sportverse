@@ -113,7 +113,7 @@ export interface getSignatureRequest {
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://127.0.0.1:8000/", // Your actual API base URL
+    baseUrl: "https://dd37f7826654.ngrok-free.app/", // Your actual API base URL
     prepareHeaders: (headers) => {
       // Add any default headers here (e.g., authorization)
       headers.set("Content-Type", "application/json");
@@ -156,7 +156,6 @@ export const apiSlice = createApi({
         url: "/auth/login/",
         method: "POST",
         body: credentials,
-        credentials: "include",
       }),
       // No cache invalidation needed for login
     }),

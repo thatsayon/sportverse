@@ -21,7 +21,7 @@ const dispatch = useDispatch()
           router.push("/dashboard")
         }else{
           if(decoded?.role === "student"){
-            router.push("/student")
+            router.push("/sports-selection")
           }else{
             router.push("/trainer")
           }
