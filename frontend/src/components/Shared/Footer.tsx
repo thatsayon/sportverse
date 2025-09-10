@@ -25,15 +25,8 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
   const supportLinks = [
     { name: "Help Center", href: "/help" },
     { name: "Contact Us", href: "/contact" },
-    { name: "Booking Support", href: "/support" },
   ];
 
-  const accountLinks = [
-    { name: "My Profile", href: "/profile" },
-    { name: "My Sessions", href: "/sessions" },
-    { name: "Progress Tracking", href: "/progress" },
-    { name: "Settings", href: "/settings" },
-  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -50,7 +43,7 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
     visible: { opacity: 1, y: 0 },
   };
 
-  if (pathname === "/login" || pathname === "/signup") {
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/video"){
     return null;
   }
 
@@ -98,23 +91,6 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
             <h3 className="text-white font-semibold text-lg mb-4">Support</h3>
             <ul className="space-y-2">
               {supportLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Account */}
-          <motion.div variants={itemVariants}>
-            <h3 className="text-white font-semibold text-lg mb-4">Account</h3>
-            <ul className="space-y-2">
-              {accountLinks.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}

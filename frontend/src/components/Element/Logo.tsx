@@ -13,7 +13,7 @@ function Logo({href}:{href: string;}) {
           height={48}
           className="rounded-sm"
         />
-        <span className="text-3xl font-bold bg-gradient-to-r from-[#FF7442] to-[#994628] bg-clip-text text-transparent">
+        <span className="text-2xl font-bold bg-gradient-to-r from-[#FF7442] to-[#994628] bg-clip-text text-transparent">
           SportVerse
         </span>
       </Link>

@@ -30,17 +30,20 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // Function to check if a link is active
+  // Fixed function to check if a link is active
   const isActive = (href: string) => {
-    if (href === "/student") {
-      return pathname === href;
+    // For home page, only match exact path
+    if (href === "/") {
+      return pathname === "/";
     }
+    // For other pages, check if pathname starts with the href
     return pathname.startsWith(href);
   };
 
-  if (pathname === "/login" || pathname === "/signup") {
-    return null;
-  }
+   if (pathname === "/" || pathname === "/about" || pathname === "/faq" || pathname === "/contact" || pathname === "/help" || pathname === "/privacy" || pathname === "/terms") {
+
+    
+  
   return (
     <nav
       className={`bg-white py-2 border-b border-gray-200 sticky top-0 z-50 ${className}`}
@@ -76,8 +79,6 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
           </div>
 
           {/* Desktop User Menu & Actions */}
-
-          {/* message */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link href={"/login"}>
               <Button className="font-bold">Login</Button>
@@ -157,6 +158,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       </div>
     </nav>
   );
+}
 };
 
 export default Navbar;

@@ -113,7 +113,7 @@ export interface getSignatureRequest {
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://dd37f7826654.ngrok-free.app/", // Your actual API base URL
+    baseUrl: "https://72fbbe186b29.ngrok-free.app/", // Your actual API base URL
     prepareHeaders: (headers) => {
       // Add any default headers here (e.g., authorization)
       headers.set("Content-Type", "application/json");
