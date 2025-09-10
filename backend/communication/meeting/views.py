@@ -33,7 +33,7 @@ class GenerateAgoraTokenView(APIView):
         app_id = settings.AGORA_APP_ID
         app_certificate = settings.AGORA_APP_CERTIFICATE
         role = 1  # 1 = publisher, 2 = subscriber
-        expiration_time_in_seconds = 3600
+        expiration_time_in_seconds = 30
         current_timestamp = int(time.time())
         privilege_expired_ts = current_timestamp + expiration_time_in_seconds
 

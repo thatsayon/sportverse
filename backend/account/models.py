@@ -47,6 +47,9 @@ class Teacher(models.Model):
         choices=STATUS,
         default='unverfied'
     )
+    is_profile_complete = models.BooleanField(
+        default=False
+    )
 
     def __str__(self):
         return f"{self.user.username}"
