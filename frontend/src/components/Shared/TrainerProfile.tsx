@@ -78,7 +78,12 @@ const TrainerProfile: React.FC = () => {
                 >
                   <div className="text-center">
                     <div className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-1">
-                      <Star size={30} stroke="none" fill="#EDCC13" className="" />
+                      <Star
+                        size={30}
+                        stroke="none"
+                        fill="#EDCC13"
+                        className=""
+                      />
                       4.9
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
@@ -291,7 +296,7 @@ const TrainerProfile: React.FC = () => {
               <motion.div
                 key={index}
                 className="bg-white rounded-2xl p-6 border border-gray-100"
-                variants={fadeInUp}              
+                variants={fadeInUp}
                 transition={{ duration: 0.3 }}
               >
                 <div className="flex flex-col md:flex-row gap-10 lg:gap-[123px]">

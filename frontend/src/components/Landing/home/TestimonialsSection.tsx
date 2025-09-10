@@ -8,7 +8,7 @@ const TestimonialsSection = () => {
       id: 1,
       name: "Iva Ryan",
       role: "Athlete",
-      image: "/api/placeholder/150/150",
+      image: "/Landing/student-1.jpg",
       rating: 5,
       testimonial: "This website provides structured basketball and football training that really helps athletes develop their skills efficiently"
     },
@@ -16,7 +16,7 @@ const TestimonialsSection = () => {
       id: 2,
       name: "James Hall",
       role: "Athlete", 
-      image: "/api/placeholder/150/150",
+      image: "/Landing/student-2.jpg",
       rating: 5,
       testimonial: "Every session feels purposeful, motivating, and designed to push players to improve their game consistently"
     },
@@ -24,8 +24,16 @@ const TestimonialsSection = () => {
       id: 3,
       name: "Judith Rodriguez",
       role: "Athlete",
-      image: "/api/placeholder/150/150", 
+      image: "/Landing/student-3.jpg", 
       rating: 5,
+      testimonial: "I've noticed significant progress in my and football abilities since following the training programs here"
+    },
+    {
+      id: 4,
+      name: "Judith Rodriguez",
+      role: "Athlete",
+      image: "/Landing/student-2.jpg", 
+      rating: 3,
       testimonial: "I've noticed significant progress in my and football abilities since following the training programs here"
     }
   ]
@@ -46,19 +54,19 @@ const TestimonialsSection = () => {
   }
 
   return (
-    <section className="bg-gray-50 py-16 px-4 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black">
+    <section className="py-16 px-4 lg:px-8">
+      <div className="">
+        <div className="text-center my-16">
+          <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold text-black">
             What our students say
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {testimonials.map((testimonial) => (
-            <Card key={testimonial.id} className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-8 text-center space-y-6">
-                <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden">
+            <Card key={testimonial.id} className="bg-white border-0 shadow-lg shadow-[#F15A242B] hover:shadow-xl transition-shadow duration-300">
+              <CardContent className="p-8 text-center space-y-10">
+                <div className="relative size-64 mx-auto rounded-full overflow-hidden">
                   <Image
                     src={testimonial.image}
                     alt={testimonial.name}
@@ -68,31 +76,22 @@ const TestimonialsSection = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-black">
+                  <h3 className="text-3xl font-bold text-black">
                     {testimonial.name}
                   </h3>
-                  <p className="text-[#808080] text-sm">
+                  <p className="text-[#808080] font-semibold">
                     {testimonial.role}
                   </p>
                 </div>
 
                 <StarRating rating={testimonial.rating} />
                 
-                <p className="text-[#808080] text-sm leading-relaxed">
+                <p className="text-[#808080] text-xl leading-relaxed">
                   {testimonial.testimonial}
                 </p>
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Additional testimonials indicator for mobile */}
-        <div className="text-center mt-12">
-          <div className="flex justify-center space-x-2">
-            <div className="w-2 h-2 rounded-full bg-[#F15A24]" />
-            <div className="w-2 h-2 rounded-full bg-[#808080]" />
-            <div className="w-2 h-2 rounded-full bg-[#808080]" />
-          </div>
         </div>
       </div>
     </section>
