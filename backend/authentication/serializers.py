@@ -6,7 +6,7 @@ from django.utils.text import slugify
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 
-from account.models import Teacher
+from account.models import Teacher, Student
 from .models import ROLE_CHOICES
 import uuid
 
@@ -68,6 +68,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 teacher_profile = Teacher.objects.get(user=user)
                 token['verification_status'] = teacher_profile.status
             except Teacher.DoesNotExist:
-                token['verification_status'] = "unverified"  # fallback
+                token['verification_status'] = "unverified"  
+
+        if user.role == "student":
+            try:
+                student_profile = Student.objects.get(user=user)
+                token['subscription_type'] = student_profile.account_type
+            except Student.DoesNotExist:
+                token['subscription_type'] = "unverified"
 
         return token
