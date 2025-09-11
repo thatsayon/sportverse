@@ -62,11 +62,11 @@ const TestimonialsSection = () => {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-8">
           {testimonials.map((testimonial) => (
             <Card key={testimonial.id} className="bg-white border-0 shadow-lg shadow-[#F15A242B] hover:shadow-xl transition-shadow duration-300">
               <CardContent className="p-8 text-center space-y-10">
-                <div className="relative size-64 mx-auto rounded-full overflow-hidden">
+                <div className="relative size-52 xl:size-64 mx-auto rounded-full overflow-hidden">
                   <Image
                     src={testimonial.image}
                     alt={testimonial.name}

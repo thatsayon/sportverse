@@ -7,7 +7,7 @@ import WhyChooseUsSection from "@/components/Landing/home/WhyChooseUsSection";
 
 export default function Home() {
   return (
-    <div className="py-6 md:py-8 lg:py-10 px-6 md:px-8 lg:px-20 border-2 bg-white">
+    <div className="py-6 md:py-8 lg:py-10 px-6 md:px-8 lg:px-12 xl:px-20 border-2 bg-white">
       <HeroSection/>
       <CompanyOverviewSection/>
       <WhyChooseUsSection/>

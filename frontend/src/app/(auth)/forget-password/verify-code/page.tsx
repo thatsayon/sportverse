@@ -93,7 +93,7 @@ export default function VerifyCodePage() {
         if (result.access_token) {
           // Store code in sessionStorage for next step
           // sessionStorage.setItem("verificationCode", fullCode);
-          // setCookie("passResetToken", result.passResetToken, 7)
+          setCookie("access_token", result.access_token, 7)
           removeCookie("verificationToken");
           // Redirect to success page
           router.push("/forget-password/success");

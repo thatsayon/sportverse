@@ -7,12 +7,12 @@ const WhyChooseUsSection = () => {
     <section className="py-16">
       <div className="">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold text-black">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black">
             Why choose us?
           </h2>
         </div>
 
-        <div className="grid lg:grid-cols-3 lg:gap-44 items-center justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-44 items-center justify-center">
           {/* Left - Images */}
           <div className="relative border-2 right-0">
             <div className="grid grid-cols-2 gap-4">
@@ -26,7 +26,7 @@ const WhyChooseUsSection = () => {
                 />
                 <div className="bg-black/50 absolute z-10 w-full h-full" />
               </div>
-              <div className="lg:w-[198px] xl:w-[290px] lg:h-[187px] xl:h-[250px] absolute -bottom-20 -right-30 rounded-lg">
+              <div className="lg:w-[198px] xl:w-[290px] lg:h-[187px] xl:h-[250px] absolute -bottom-20 -right-30 rounded-lg hidden xl:block">
                 <Image
                   src="/Landing/why-2.jpg"
                   alt="Athletes running"
@@ -39,8 +39,8 @@ const WhyChooseUsSection = () => {
           </div>
 
           {/* Right - Content */}
-          <div className="space-y-6 col-span-2">
-            <p className="text-[#808080] text-lg md:text-2xl xl:text-3xl leading-relaxed">
+          <div className="space-y-6 col-span-1 lg:col-span-2">
+            <p className="text-[#808080] text-lg md:text-xl xl:text-3xl leading-relaxed">
               At our Sports Learning Academy, we provide expert coaching from
               certified trainers, personalized programs designed for every age
               and skill level, world-class facilities with modern equipment, a

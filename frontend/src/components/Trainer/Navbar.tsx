@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +28,7 @@ import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Logo from "../Element/Logo";
 import { removeCookie } from "@/hooks/cookie";
+import ChatConversation from "../Element/ChatConversation";
 
 interface NavProps {
   className?: string;
@@ -35,8 +36,25 @@ interface NavProps {
 
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const pathname = usePathname();
 
+  console.log("conversation state:", chatOpen)
+
+   useEffect(() => {
+    if (chatOpen) {
+      // Disable body scroll
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Re-enable body scroll
+      document.body.style.overflow = 'auto';
+    }
+
+    // Cleanup to reset overflow when component is unmounted or chat is closed
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [chatOpen]);
 
   const navItems = [
     { name: "Home", href: "/trainer" },
@@ -117,7 +135,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               <DropdownMenuContent align="end" className="w-72 sm:w-80">
                 <DropdownMenuLabel>Messages</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={()=>setChatOpen(true)}>
                   <div className="flex items-start space-x-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="/avatars/01.png" />
@@ -347,6 +365,12 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
           )}
         </AnimatePresence>
       </div>
+      <ChatConversation
+        open={chatOpen}
+        setOpen={setChatOpen}
+        otherUserName="John Trainer"
+        currentUserName="You"
+      />
     </nav>
   );
 };

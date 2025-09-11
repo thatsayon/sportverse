@@ -60,7 +60,7 @@ const CompanyOverviewSection = () => {
             <div className="flex justify-center">
               <div className="text-green-500 font-bold text-lg">Carlsberg</div>
             </div>
-            <div className="flex justify-center">
+            <div className="hidden lg:block">
               {/* <div className="text-green-500 font-bold text-lg">Carlsberg</div> */}
             </div>
 

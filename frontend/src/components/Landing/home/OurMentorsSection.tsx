@@ -73,12 +73,13 @@ const OurMentorsSection = () => {
               <CarouselItem key={mentor.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 <Card className="h-full border-none transition-shadow hover:shadow-2xl duration-300">
                   <CardContent className="p-6 text-center space-y-4">
-                    <div className="relative w-[275px] h-[266px] mx-auto rounded-2xl overflow-hidden">
+                    <div className="relative xl:w-[275px] h-[190px] md:h-[250px] lg:h-[266px] xl:h-[266px] mx-auto rounded-2xl overflow-hidden">
                       <Image
                         src={mentor.image}
                         alt={mentor.name}
-                        fill
-                        className="object-cover"
+                        width={275}
+                        height={266}
+                        className="object-cover h-full"
                       />
                     </div>
                     

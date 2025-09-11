@@ -25,7 +25,7 @@ const HeroSection = () => {
           </p>
           
           {/* CTA Button - keep original styling */}
-          <Button className="mt-6 px-14 py-4 text-lg font-bold">Join Academy</Button>
+          <Button className="mt-6 px-7 md:px-14 py-4 md:text-lg md:font-bold">Join Academy</Button>
           
           {/* First Image - keep original dimensions for lg+, responsive for smaller */}
           <div className="w-full max-w-full lg:max-w-full lg:max-h-[435px] h-[250px] sm:h-[300px] lg:h-[435px] overflow-hidden relative rounded-2xl mt-8">
@@ -40,7 +40,7 @@ const HeroSection = () => {
         </div>
         
         {/* Right Image - keep original styling for lg+ */}
-        <div className="h-[400px] sm:h-[500px] lg:h-[92%] overflow-hidden relative rounded-2xl lg:mt-9">
+        <div className="h-[400px] sm:h-[500px] lg:h-[92%] overflow-hidden relative rounded-2xl lg:mt-9 lg:hidden xl:block">
           <Image
             src="/Landing/hero-2.jpg"
             alt="handing Image"
