@@ -100,6 +100,7 @@ class BookedSession(models.Model):
         blank=True,
         related_name="booked_sessions"
     )
+    channel_name = models.CharField(max_length=120, blank=True, null=True)
     session_time = models.DateTimeField()
     duration = models.PositiveIntegerField(default=60)
     is_paid = models.BooleanField(default=False)

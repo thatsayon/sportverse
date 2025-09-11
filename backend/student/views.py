@@ -15,6 +15,8 @@ from .serializers import (
     SessionDetailsSerializer
 )
 
+import uuid
+
 class TrainerListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -99,11 +101,15 @@ class BookedSessionView(APIView):
         if BookedSession.objects.filter(session=session_option, session_time=session_datetime).exists():
             return Response({"error": "This slot is already booked"}, status=status.HTTP_400_BAD_REQUEST)
 
+        random_suffix = uuid.uuid4().hex[:6]
+        channel_name = f"{session_option.teacher.user.username}_{request.user.username}_{random_suffix}"
+
         # 4. Create booked session
         booked_session = BookedSession.objects.create(
             teacher=session_option.teacher,
             student=request.user,
             session=session_option,
+            channel_name=channel_name,
             session_time=session_datetime,
             duration=(datetime.combine(date.today(), time_slot.end_time) - datetime.combine(date.today(), time_slot.start_time)).seconds // 60,
             is_paid=False
