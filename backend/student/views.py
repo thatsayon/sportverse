@@ -3,8 +3,11 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions, status, generics
 
+from agora_token_builder import RtcTokenBuilder
 from django.shortcuts import get_object_or_404
 from django.conf import settings
+from datetime import timedelta
+from django.utils import timezone
 
 from teacher.session.models import SessionOption, BookedSession, AvailableTimeSlot
 from payment.utils import create_stripe_checkout_session
@@ -12,10 +15,16 @@ from payment.utils import create_stripe_checkout_session
 from .serializers import (
     SessionOptionSerializer,
     TrainerDetailsSerializer,
-    SessionDetailsSerializer
+    SessionDetailsSerializer,
+    BookedSessionSerializer
 )
 
 import uuid
+import time
+import os
+
+APP_ID = os.getenv("AGORA_APP_ID")
+APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
 
 class TrainerListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -128,3 +137,74 @@ class BookedSessionView(APIView):
         )       
         return Response({"checkout_url": checkout_url.url, "booked_session_id": str(booked_session.id)}, status=201)
 
+class BookedSessionList(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BookedSessionSerializer
+    queryset = BookedSession.objects.all()
+    
+    def get_queryset(self):
+        return BookedSession.objects.filter(student=self.request.user)
+
+
+class GenerateVideoToken(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, id):
+        try:
+            booked_session = BookedSession.objects.get(student=request.user, id=id)
+        except BookedSession.DoesNotExist:
+            return Response(
+                {"msg": "No booked session found with this id"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        now = timezone.now()
+        start_time = booked_session.session_time
+        end_time = start_time + timedelta(minutes=booked_session.duration)
+
+        # Check time window (15s before start -> until session ends)
+        if now < start_time - timedelta(seconds=15):
+            return Response(
+                {"msg": "Token not available yet. Try 15 seconds before session start."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if now > end_time:
+            return Response(
+                {"msg": "Session already completed. Token can’t be generated."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Reuse channel_name from DB
+        if not booked_session.channel_name:
+            return Response(
+                {"msg": "Channel name not set for this session."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        channel_name = booked_session.channel_name
+        uid = str(request.user.id)
+        role = 1  # host (you can later change to host/audience based on role)
+        expire_time_in_seconds = booked_session.duration * 60
+
+        current_timestamp = int(time.time())
+        privilege_expired_ts = current_timestamp + expire_time_in_seconds
+
+        token = RtcTokenBuilder.buildTokenWithUid(
+            APP_ID,
+            APP_CERTIFICATE,
+            booked_session.channel_name,  # must match for all users
+            int(request.user.id),         # unique uid per user
+            role,                         # 1=host, 2=audience
+            privilege_expired_ts          # expiry timestamp
+        )
+
+
+        return Response(
+            {
+                "token": token,
+                "appId": APP_ID,
+                "channelName": channel_name,
+                "expireIn": expire_time_in_seconds
+            },
+            status=status.HTTP_200_OK
+        )
