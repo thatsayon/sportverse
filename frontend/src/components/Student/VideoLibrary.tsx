@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import MediaCard from "@/components/Element/MediaCard";
-import { useGetVritualTrainersQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 
 export interface VideoData {
   id: string;
@@ -154,7 +153,6 @@ const dummyVideos: VideoData[] = [
 const VideoLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sportsFilter, setSportsFilter] = useState<string>("all");
-  const [consumerFilter, setConsumerFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -166,12 +164,11 @@ const VideoLibrary: React.FC = () => {
         video.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesSports =
         sportsFilter === "all" || video.sports === sportsFilter;
-      const matchesConsumer =
-        consumerFilter === "all" || video.consumer === consumerFilter;
+      
 
-      return matchesSearch && matchesSports && matchesConsumer;
+      return matchesSearch && matchesSports;
     });
-  }, [searchTerm, sportsFilter, consumerFilter]);
+  }, [searchTerm, sportsFilter]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
@@ -184,7 +181,7 @@ const VideoLibrary: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, sportsFilter, consumerFilter]);
+  }, [searchTerm, sportsFilter]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -193,7 +190,6 @@ const VideoLibrary: React.FC = () => {
   const clearFilters = () => {
     setSearchTerm("");
     setSportsFilter("all");
-    setConsumerFilter("all");
     setCurrentPage(1);
   };
 
@@ -212,7 +208,7 @@ const VideoLibrary: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 p-4 rounded-lg">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
@@ -225,8 +221,7 @@ const VideoLibrary: React.FC = () => {
 
         <div className="flex flex-row gap-4">
           {(searchTerm ||
-            sportsFilter !== "all" ||
-            consumerFilter !== "all") && (
+            sportsFilter !== "all") && (
             <Button
               variant="outline"
               onClick={clearFilters}
@@ -245,21 +240,8 @@ const VideoLibrary: React.FC = () => {
               <SelectItem value="basketball">Basketball</SelectItem>
             </SelectContent>
           </Select>
-
-          <Select value={consumerFilter} onValueChange={setConsumerFilter}>
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Filter by User" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Users</SelectItem>
-              <SelectItem value="student">Student</SelectItem>
-              <SelectItem value="teacher">Teacher</SelectItem>
-            </SelectContent>
-          </Select>
-
           {(searchTerm ||
-            sportsFilter !== "all" ||
-            consumerFilter !== "all") && (
+            sportsFilter !== "all") && (
             <Button
               variant="outline"
               onClick={clearFilters}
@@ -317,13 +299,12 @@ const VideoLibrary: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size={"icon"}
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="flex items-center gap-1"
+              className="w-8 h-8 p-0"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
+              <ChevronLeft className="w-8 h-8" />              
             </Button>
 
             <div className="flex gap-1">
@@ -343,7 +324,7 @@ const VideoLibrary: React.FC = () => {
                   <Button
                     key={pageNumber}
                     variant={currentPage === pageNumber ? "default" : "outline"}
-                    size="sm"
+                    size={"icon"}
                     onClick={() => handlePageChange(pageNumber)}
                     className="w-8 h-8 p-0"
                   >
@@ -355,13 +336,11 @@ const VideoLibrary: React.FC = () => {
 
             <Button
               variant="outline"
-              size="sm"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1"
+              className="w-8 h-8 p-0"
             >
-              Next
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight />
             </Button>
           </div>
         </div>

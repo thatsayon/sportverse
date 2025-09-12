@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useRouter } from "next/navigation";
 import Logo from "../Element/Logo";
 import { removeCookie } from "@/hooks/cookie";
+import ChatConversation from "../Element/ChatConversation";
 
 interface NavProps {
   className?: string;
@@ -38,9 +39,11 @@ interface NavProps {
 
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const navItems = [
     { name: "Home", href: "/student" },
     { name: "Virtual Training", href: "/student/virtual-training" },
@@ -59,16 +62,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
   // Function to check if a link is active
   const isActive = (href: string) => {
-    if (href === '/student') {
+    if (href === "/student") {
       return pathname === href;
     }
     return pathname.startsWith(href);
   };
 
-    const handleLogout = ()=>{
-      removeCookie("access_token")
-      router.push("/login")
-    }
+  const handleLogout = () => {
+    removeCookie("access_token");
+    router.push("/login");
+  };
 
   return (
     <nav
@@ -78,7 +81,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="mt-7">
-            <Logo href="/student"/>
+            <Logo href="/student" />
           </div>
 
           {/* Desktop Navigation */}
@@ -123,7 +126,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               <DropdownMenuContent align="end" className="w-72 sm:w-80">
                 <DropdownMenuLabel>Messages</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={()=>setChatOpen(true)}>
                   <div className="flex items-start space-x-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src="/avatars/01.png" />
@@ -199,10 +202,10 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 <DropdownMenuSeparator />
 
                 <Link href={"/student/profile"}>
-                <DropdownMenuItem>
-                  <User className="size-6 mr-2" />
-                  Profile
-                </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <User className="size-6 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
                 </Link>
                 <Link href={"/student/bookings"}>
                   <DropdownMenuItem onClick={handleRedirect}>
@@ -351,7 +354,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button
-                  onClick={handleLogout}
+                    onClick={handleLogout}
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start"
@@ -365,6 +368,12 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
           )}
         </AnimatePresence>
       </div>
+      <ChatConversation
+        open={chatOpen}
+        setOpen={setChatOpen}
+        otherUserName="John Trainer"
+        currentUserName="You"
+      />
     </nav>
   );
 };
