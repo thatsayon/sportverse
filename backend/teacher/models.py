@@ -1,5 +1,6 @@
 from django.db import models
 from teacher.session.models import *
+from teacher.dashboard.models import *
 from account.models import Teacher, Student
 import uuid
 

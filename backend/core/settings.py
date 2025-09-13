@@ -28,7 +28,7 @@ ALLOWED_HOSTS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://a3fee7aff719.ngrok-free.app",
+    "https://stingray-intimate-sincerely.ngrok-free.app",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -42,7 +42,7 @@ CORS_ALLOW_METHODS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
-    "https://a3fee7aff719.ngrok-free.app",
+    "https://stingray-intimate-sincerely.ngrok-free.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

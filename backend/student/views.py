@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from teacher.session.models import SessionOption, BookedSession, AvailableTimeSlot
 from payment.utils import create_stripe_checkout_session
+from teacher.dashboard.utils import increment_dashboard_visit
 
 from .serializers import (
     SessionOptionSerializer,
@@ -50,11 +51,24 @@ class TrainerDetailView(generics.RetrieveAPIView):
     queryset = SessionOption.objects.all()
     lookup_field = 'id'
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if hasattr(instance.teacher, 'dashboard'):
+            increment_dashboard_visit(instance.teacher.dashboard)
+        
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 class SessionDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, id):
         session = get_object_or_404(SessionOption, id=id)
+
+        if hasattr(session.teacher, 'dashboard'):
+            increment_dashboard_visit(session.teacher.dashboard)
+
         serializer = SessionDetailsSerializer(session)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

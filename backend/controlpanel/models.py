@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from cloudinary.models import CloudinaryField
 import uuid
 
@@ -29,6 +31,41 @@ class Sport(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TeacherDeduction(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    first_time = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=1.00,
+        validators=[MinValueValidator(1.00), MaxValueValidator(100.00)]
+    )
+    second_time = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=1.00,
+        validators=[MinValueValidator(1.00), MaxValueValidator(100.00)]
+    )
+
+    def clean(self):
+        if self.first_time <= self.second_time:
+            raise ValidationError("first_time must be greater than second_time.")
+
+    def __str__(self):
+        return f"{self.first_time} : {self.second_time}"
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(first_time__gt=models.F("second_time")),
+                name="first_time_gt_second_time"
+            )
+        ]
 
 class Statistic(models.Model):
     id = models.UUIDField(
