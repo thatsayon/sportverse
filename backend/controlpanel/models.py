@@ -203,3 +203,28 @@ class SessionBreakdown(models.Model):
 
     def __str__(self):
         return f"Session Breakdown for {self.statistic.id}"
+
+class AdminIncome(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    student_paid = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0.0
+    )
+    after_deduction = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0.0
+    )
+    deduction_percent = models.DecimalField(
+        max_digits=2,
+        decimal_places=2,
+        default=0.0
+    )
+
+    def __str__(self):
+        return f"{self.student_paid}: {self.after_deduction}"

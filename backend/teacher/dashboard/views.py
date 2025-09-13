@@ -64,6 +64,8 @@ class TeacherDashboard(APIView):
 
         return Response({
             **serializer.data,
-            "last_7_days": get_last_7_days_visits(dashboard),
-            "last_30_days": get_last_30_days_visits(dashboard),
+            "visit_count": {
+                "last_7_days": get_last_7_days_visits(dashboard),
+                "last_30_days": get_last_30_days_visits(dashboard),
+            }
         }, status=status.HTTP_200_OK)
