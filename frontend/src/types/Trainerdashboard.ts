@@ -13,9 +13,9 @@ export interface Reservation {
   id: string;
   name: string;
   avatar: string;
-  time: string;
-  table: string;
-  status: 'Confirmed' | 'Pending' | 'Cancelled';
+  sessionType: 'Virtual' | 'Mindset' | 'In-Person';
+  price: string;
+  status: 'Complete' | 'On Going' | 'Up Coming';
 }
 
 export interface ChartData {

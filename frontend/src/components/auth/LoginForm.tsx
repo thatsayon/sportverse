@@ -31,6 +31,7 @@ import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
 import { useRouter } from "next/navigation";
 import { setCookie } from "@/hooks/cookie";
 import { useJwt } from "@/hooks/useJwt";
+import { decodeToken } from "@/hooks/decodeToken";
 
 // Cookie utility function
 
@@ -41,7 +42,7 @@ export function LoginForm() {
   const { decoded } = useJwt();
   const [login, { isLoading }] = useLoginMutation();
   //   const [getUserPackage] = useLazyGetUserpackageQuery();
-
+  // console.log("Decoded user info:", decoded);
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -62,11 +63,14 @@ export function LoginForm() {
 
         // Store tokens in cookies
         setCookie("access_token", result.access_token, 7); // 7 days expiry
+        // setCookie("refresh_token", result.refresh_token, 7); // 7 days expiry
 
-        if (decoded?.role === "admin") {
+        const user = decodeToken(result.access_token);
+        console.log("user information", user)
+        if (user?.role === "admin") {
           router.push("/dashboard");
         } else {
-          if (decoded?.role === "student") {
+          if (user?.role === "student") {
             router.push("/student");
           } else {
             router.push("/trainer");

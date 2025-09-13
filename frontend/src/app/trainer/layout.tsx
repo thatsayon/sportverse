@@ -9,7 +9,6 @@ function layout({children}:{children:ReactNode}) {
       <div className='min-h-screen'>
         {children}
       </div>
-      {/* <Footer/> */}
     </div>
   )
 }

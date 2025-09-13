@@ -22,8 +22,8 @@ export const ReservationChart: React.FC<ReservationChartProps> = ({
         <div className="bg-gray-900 text-white px-3 py-2 rounded-lg shadow-lg border">
           <p className="text-sm font-medium">{label}</p>
           <p className="text-sm">
-            <span className="text-[#FF4909]">Reservations: </span>
-            {payload[0].value}
+            <span className="text-[#FF4909]">Revenue: </span>
+            ${payload[0].value}
           </p>
         </div>
       );
@@ -34,7 +34,7 @@ export const ReservationChart: React.FC<ReservationChartProps> = ({
   return (
     <Card className="bg-white border border-gray-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="text-lg font-semibold">Reservation</CardTitle>
+        <CardTitle className="text-lg font-semibold">Revenue</CardTitle>
         <div className="flex gap-2">
           <Button
             variant={period === 'Weekly' ? 'default' : 'outline'}

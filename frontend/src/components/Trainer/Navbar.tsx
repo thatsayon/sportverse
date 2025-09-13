@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -37,6 +37,7 @@ interface NavProps {
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const router = useRouter()
   const pathname = usePathname();
 
   console.log("conversation state:", chatOpen)
@@ -215,7 +216,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="size-6 mr-2" />
                   Logout
                 </DropdownMenuItem>

@@ -10,8 +10,8 @@ import {
   Reservation,
   ChartData,
   VisitData,
-  TopStudent,
 } from "@/types/Trainerdashboard";
+import { reservations } from "@/data/TrainerDashboardBookings";
 // Sample data - replace with your actual API calls
 const sampleMetrics: DashboardMetrics = {
   totalRevenue: 12869,
@@ -23,41 +23,6 @@ const sampleMetrics: DashboardMetrics = {
   reservationChange: 3.67,
   occupancyChange: -2.4,
 };
-
-const sampleReservations: Reservation[] = [
-  {
-    id: "1",
-    name: "Iva Ryan",
-    avatar: "/avatars/iva.jpg",
-    time: "17:40",
-    table: "K-1",
-    status: "Confirmed",
-  },
-  {
-    id: "2",
-    name: "Lorri Warf",
-    avatar: "/avatars/lorri.jpg",
-    time: "12:10",
-    table: "L-8",
-    status: "Confirmed",
-  },
-  {
-    id: "3",
-    name: "James Hall",
-    avatar: "/avatars/james.jpg",
-    time: "10:40",
-    table: "J-2",
-    status: "Confirmed",
-  },
-  {
-    id: "4",
-    name: "Joshua Jones",
-    avatar: "/avatars/joshua.jpg",
-    time: "13:40",
-    table: "I-2",
-    status: "Confirmed",
-  },
-];
 
 const sampleReservationChartData: ChartData[] = [
   { day: "Mon", value: 110 },
@@ -103,7 +68,7 @@ const DashboardPage: React.FC = () => {
       <div className="min-h-screen bg-white -mt-5">
         <TrainerDashboard
           metrics={sampleMetrics}
-          reservations={sampleReservations}
+          reservations={reservations}
           reservationChartData={sampleReservationChartData}
           visitsChartData={sampleVisitsChartData}
           onViewAllReservations={handleViewAllReservations}
@@ -114,7 +79,7 @@ const DashboardPage: React.FC = () => {
     );
   if (decoded?.role === "admin")
     return (
-      <div className="min-h-screen bg-white -mt-5">
+      <div className="min-h-screen bg-white">
         <AdminDashboard />
       </div>
     );

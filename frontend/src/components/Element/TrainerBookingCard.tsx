@@ -144,12 +144,20 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
               {status}
             </Badge>
 
-            {status === "On Going" && (
+            {status === "On Going" ? (
               <Button
                 onClick={handleJoinSession}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm"
               >
                 Join Session
+              </Button>
+            ) : (
+              <Button
+                onClick={handleJoinSession}
+                disabled
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 text-sm"
+              >
+                {status}
               </Button>
             )}
           </div>

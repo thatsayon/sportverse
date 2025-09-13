@@ -28,105 +28,59 @@ import {
 } from "lucide-react";
 import WithdrawRequest from "./WithdrawRequest";
 
-export interface invoiceType {
-  transition_Id: string;
-  trainer_name: string;
-  location: string;
+export interface InvoiceType {
+  transaction_Id: string;      // updated typo from transition_Id
+  walletType: "Card" | "Paypal";
   date: string;
   amount: string;
+  leftAmount: string;
   status: string;
 }
 
-export const invoices: invoiceType[] = [
+
+export const invoices: InvoiceType[] = [
   {
-    transition_Id: "INV001",
-    trainer_name: "Sarah Johnson",
-    location: "New York",
-    date: "2024-01-15",
-    amount: "$250.00",
+    transaction_Id: "TXN001",
+    walletType: "Card",
+    date: "2025-09-10",
+    amount: "150.00",
+    leftAmount: "50.00",
     status: "Pending",
   },
   {
-    transition_Id: "INV002",
-    trainer_name: "Michael Rodriguez",
-    location: "Los Angeles",
-    date: "2024-01-20",
-    amount: "$300.00",
-    status: "Accepted",
+    transaction_Id: "TXN002",
+    walletType: "Paypal",
+    date: "2025-09-08",
+    amount: "200.00",
+    leftAmount: "0.00",
+    status: "Completed",
   },
   {
-    transition_Id: "INV003",
-    trainer_name: "David Kim",
-    location: "San Francisco",
-    date: "2024-01-22",
-    amount: "$150.00",
-    status: "Rejected",
-  },
-  {
-    transition_Id: "INV004",
-    trainer_name: "Lisa Anderson",
-    location: "Chicago",
-    date: "2024-02-01",
-    amount: "$400.00",
+    transaction_Id: "TXN003",
+    walletType: "Card",
+    date: "2025-09-05",
+    amount: "120.00",
+    leftAmount: "20.00",
     status: "Pending",
   },
   {
-    transition_Id: "INV005",
-    trainer_name: "Robert Taylor",
-    location: "Houston",
-    date: "2024-02-05",
-    amount: "$350.00",
-    status: "Accepted",
+    transaction_Id: "TXN004",
+    walletType: "Paypal",
+    date: "2025-09-03",
+    amount: "180.00",
+    leftAmount: "0.00",
+    status: "Completed",
   },
   {
-    transition_Id: "INV006",
-    trainer_name: "Jennifer Lopez",
-    location: "Miami",
-    date: "2024-02-10",
-    amount: "$200.00",
+    transaction_Id: "TXN005",
+    walletType: "Card",
+    date: "2025-09-01",
+    amount: "100.00",
+    leftAmount: "100.00",
     status: "Pending",
-  },
-  {
-    transition_Id: "INV007",
-    trainer_name: "Mark Wilson",
-    location: "Austin",
-    date: "2024-02-12",
-    amount: "$220.00",
-    status: "Accepted",
-  },
-  {
-    transition_Id: "INV008",
-    trainer_name: "Rachel Green",
-    location: "Seattle",
-    date: "2024-02-15",
-    amount: "$180.00",
-    status: "Rejected",
-  },
-  {
-    transition_Id: "INV009",
-    trainer_name: "Monica Geller",
-    location: "Boston",
-    date: "2024-02-18",
-    amount: "$250.00",
-    status: "Pending",
-  },
-  {
-    transition_Id: "INV010",
-    trainer_name: "Phoebe Buffay",
-    location: "Philadelphia",
-    date: "2024-02-20",
-    amount: "$275.00",
-    status: "Accepted",
-  },
-  {
-    transition_Id: "INV011",
-    trainer_name: "Chandler Bing",
-    location: "Dallas",
-    date: "2024-02-22",
-    amount: "$310.00",
-    status: "Rejected",
   },
 ];
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -237,16 +191,19 @@ const WithdrawTable = () => {
                     No.
                   </TableHead>
                   <TableHead className="font-semibold py-2 text-gray-900">
-                    Request Name
+                    Wallet Type
                   </TableHead>
                   <TableHead className="font-semibold py-2 text-gray-900">
-                    Location
+                    Transition Type
                   </TableHead>
                   <TableHead className="font-semibold py-2 text-gray-900">
                     Date
                   </TableHead>
                   <TableHead className="font-semibold py-2 text-gray-900">
                     Amount
+                  </TableHead>
+                  <TableHead className="font-semibold py-2 text-gray-900">
+                    Left Amount
                   </TableHead>
                   <TableHead className="font-semibold py-2 text-gray-900">
                     Status
@@ -257,23 +214,26 @@ const WithdrawTable = () => {
                 {currentData.length > 0 ? (
                   currentData.map((invoice, index) => (
                     <TableRow
-                      key={invoice.transition_Id}
+                      key={invoice.transaction_Id}
                       className="hover:bg-gray-50"
                     >
                       <TableCell className="font-medium text-gray-600 py-4">
                         {startIndex + index + 1}
                       </TableCell>
                       <TableCell className="font-medium text-gray-900">
-                        {invoice.trainer_name}
+                        {invoice.walletType}
                       </TableCell>
                       <TableCell className="text-gray-600">
-                        {invoice.location}
+                        {invoice.transaction_Id}
                       </TableCell>
                       <TableCell className="text-gray-600">
                         {formatDate(invoice.date)}
                       </TableCell>
                       <TableCell className="font-semibold text-gray-900">
                         {invoice.amount}
+                      </TableCell>
+                      <TableCell className="font-semibold text-gray-900">
+                        {invoice.leftAmount}
                       </TableCell>
                       <TableCell>
                         <Badge

@@ -8,14 +8,12 @@ import {
   Menu,
   X,
   User,
-  BarChart3,
   LogOut,
   Bell,
   Mail,
   MessageCircle,
   ChevronDown,
   Calendar,
-  Settings,
 } from "lucide-react";
 import {
   DropdownMenu,

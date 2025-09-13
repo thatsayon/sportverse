@@ -22,9 +22,9 @@ const getStatusStyles = (status: Manager["status"]) => {
   switch (status) {
     case "Complete":
       return "bg-green-100 text-green-700 hover:bg-green-100 border-green-200";
-    case "Cancelled":
-      return "bg-red-100 text-red-700 hover:bg-red-100 border-red-200";
-    case "Pending":
+    case "On Going":
+      return "bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200";
+    case "Up Comming":
       return "bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-yellow-200";
     default:
       return "bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200";

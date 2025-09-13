@@ -4,7 +4,7 @@ import React from "react";
 
 function Logo({href}:{href: string;}) {
   return (
-    <div className="flex items-center space-x-2 mb-8">
+    <div className="flex items-center space-x-2">
       <Link href={href} className="flex items-center space-x-2">
         <Image
           src={"/image/logo.png"}

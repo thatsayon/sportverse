@@ -83,7 +83,7 @@ function VirtualTraining() {
       <div className="flex flex-col-reverse lg:flex-row items-start justify-between sm:flex-row gap-4 w-full md:w-auto mb-2">
         {/* Search Input */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/3 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Search trainers by name..."
             value={searchQuery}

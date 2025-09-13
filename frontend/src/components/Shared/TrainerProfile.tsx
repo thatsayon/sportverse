@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -9,10 +9,60 @@ import {
   Calendar,
   MessageCircle,
   ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import { Diversity, Interactive } from "@/SVG/TrainerSVG";
+import { Interactive } from "@/SVG/TrainerSVG";
+import { useJwt } from "@/hooks/useJwt";
+
+// Sample review data with full text
+const reviewsData = [
+  {
+    id: 1,
+    name: "Judith Rodriguez",
+    role: "Student",
+    date: "August 16, 2025",
+    rating: 5,
+    shortText: "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp.",
+    fullText: "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp. I feel more confident on the court, and my performance has improved significantly since I started training with them. What I appreciate most is the personalized attention and how they adapt their teaching style to match my learning pace. The drills are challenging but never overwhelming, and I can see measurable progress in my game. Coach also focuses on mental preparation, which has been just as valuable as the physical training. I would highly recommend this training program to anyone looking to improve their basketball skills."
+  },
+  {
+    id: 2,
+    name: "Marcus Johnson",
+    role: "Student",
+    date: "July 28, 2025",
+    rating: 5,
+    shortText: "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically.",
+    fullText: "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically since starting sessions three months ago. The structured approach to skill development is outstanding, and I've learned proper shooting form, defensive positioning, and court awareness. Coach creates a supportive environment where making mistakes is part of learning. The feedback is always constructive and specific, helping me understand exactly what to work on. I've gone from struggling with basic dribbling to confidently handling the ball under pressure. The training sessions are well-planned and progressive, building on previous lessons seamlessly."
+  },
+  {
+    id: 3,
+    name: "Sarah Chen",
+    role: "Student", 
+    date: "July 15, 2025",
+    rating: 4,
+    shortText: "Great training program with excellent results. Coach really knows how to motivate and push you to excel.",
+    fullText: "Great training program with excellent results. Coach really knows how to motivate and push you to excel while maintaining a positive atmosphere. The combination of technical skill work and game-situation practice has been perfect for my development. I particularly appreciate how Coach explains the 'why' behind each drill and technique, which helps me understand the game better. The progress tracking and regular feedback sessions keep me motivated and focused on improvement. While the training is intensive, it's never boring thanks to the variety of exercises and the coach's engaging teaching style. I've recommended this program to several friends."
+  }
+];
 
 const TrainerProfile: React.FC = () => {
+  const { decoded } = useJwt();
+  const [expanded, setExpanded] = useState(false);
+  const [expandedReviews, setExpandedReviews] = useState<{ [key: number]: boolean }>({});
+  
+  const text =
+    "With years of coaching experience and a passion for athlete development, I focus on understanding each student's strengths and challenges to create a training plan that fits their goals. My approach goes beyond drills — I emphasize discipline, teamwork, and confidence while offering patience, encouragement, and step-by-step guidance";
+  const displayText = expanded
+    ? text
+    : text.slice(0, 200) + (text.length > 200 ? "..." : "");
+
+  const toggleReviewExpansion = (reviewId: number) => {
+    setExpandedReviews(prev => ({
+      ...prev,
+      [reviewId]: !prev[reviewId]
+    }));
+  };
+
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
     animate: { opacity: 1, y: 0 },
@@ -113,13 +163,15 @@ const TrainerProfile: React.FC = () => {
                   {...fadeInUp}
                   transition={{ delay: 0.4 }}
                 >
-                  <motion.button
-                    className="bg-[#F15A24] hover:bg-[#D27656] text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 "
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Get started
-                  </motion.button>
+                  {decoded?.role === "student" && (
+                    <motion.button
+                      className="bg-[#F15A24] hover:bg-[#D27656] text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 "
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Get started
+                    </motion.button>
+                  )}
                   <div className="flex items-center gap-2 text-gray-700">
                     <span className="text-2xl font-bold">$10 - $30</span>
                     <span className="text-sm">/session</span>
@@ -257,21 +309,19 @@ const TrainerProfile: React.FC = () => {
 
             <motion.div className="space-y-6 col-span-2" variants={fadeInUp}>
               <p className="text-[#808080] leading-relaxed text-lg lg:text-2xl font-semibold max-w-[950px]">
-                With years of coaching experience and a passion for athlete
-                development, I focus on understanding each student’s strengths
-                and challenges to create a training plan that fits their goals.
-                My approach goes beyond drills — I emphasize discipline,
-                teamwork, and confidence while offering patience, encouragement,
-                and step-by-step guidance......
+                {displayText}
               </p>
 
-              <motion.button
-                className="border-2 border-orange-500 text-[#808080] hover:bg-orange-500 hover:text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Learn more →
-              </motion.button>
+              {text.length > 200 && (
+                <motion.button
+                  onClick={() => setExpanded(!expanded)}
+                  className="border-2 border-orange-500 text-[#808080] hover:bg-orange-500 hover:text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {expanded ? "Show less ↑" : "Learn more →"}
+                </motion.button>
+              )}
             </motion.div>
           </div>
         </motion.section>
@@ -292,9 +342,9 @@ const TrainerProfile: React.FC = () => {
           </motion.h2>
 
           <div className="space-y-8 lg:px-16">
-            {[1, 2, 3].map((index) => (
+            {reviewsData.map((review) => (
               <motion.div
-                key={index}
+                key={review.id}
                 className="bg-white rounded-2xl p-6 border border-gray-100"
                 variants={fadeInUp}
                 transition={{ duration: 0.3 }}
@@ -311,9 +361,9 @@ const TrainerProfile: React.FC = () => {
                       />
                     </div>
                     <h4 className="font-semibold text-gray-900">
-                      Judith Rodriguez
+                      {review.name}
                     </h4>
-                    <p className="text-gray-600 text-sm">Student</p>
+                    <p className="text-gray-600 text-sm">{review.role}</p>
                   </div>
 
                   <div className="flex-1 space-y-4">
@@ -321,33 +371,48 @@ const TrainerProfile: React.FC = () => {
                       <div></div>
                       <div className="flex w-full justify-between items-start md:items-end gap-2">
                         <div className="flex text-yellow-400">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star key={star} className="w-4 h-4 fill-current" />
+                          {Array.from({ length: 5 }, (_, index) => (
+                            <Star 
+                              key={index} 
+                              className={`w-4 h-4 ${
+                                index < review.rating ? 'fill-current' : 'stroke-current fill-transparent'
+                              }`} 
+                            />
                           ))}
                         </div>
                         <span className="text-gray-500 text-sm">
-                          August 16, 2025
+                          {review.date}
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <p className="text-gray-700 leading-relaxed">
-                        The way Coach breaks down complex techniques into small,
-                        clear steps has made basketball so much easier to grasp.
-                      </p>
-                      <p className="text-gray-600">
-                        I feel more confident on the court, and my performance
-                        has improved significantly since I started training with
-                        them.
-                      </p>
+                      <motion.div
+                        initial={false}
+                        animate={{ 
+                          height: expandedReviews[review.id] ? 'auto' : 'auto',
+                          opacity: 1 
+                        }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <p className="text-gray-700 leading-relaxed">
+                          {expandedReviews[review.id] ? review.fullText : review.shortText}
+                        </p>
+                      </motion.div>
 
                       <motion.button
+                        onClick={() => toggleReviewExpansion(review.id)}
                         className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
                         whileHover={{ x: 5 }}
                       >
-                        <span className="text-sm">Show more</span>
-                        <ChevronDown className="w-4 h-4" />
+                        <span className="text-sm">
+                          {expandedReviews[review.id] ? "Show less" : "Show more"}
+                        </span>
+                        {expandedReviews[review.id] ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
                       </motion.button>
                     </div>
                   </div>

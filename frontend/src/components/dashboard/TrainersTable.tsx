@@ -15,46 +15,49 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Edit } from "lucide-react";
+import Link from "next/link";
 
 interface Trainer {
   id: string;
   name: string;
   state: string;
-  status: "Confirmed" | "Pending" | "Reject";
+  status: "Verified" | "Unverified";
   avatar?: string;
+  sports: string;
 }
 
 const trainersData: Trainer[] = [
   {
     id: "1",
     name: "Iva Ryan",
-    state: "AL",
-    status: "Confirmed",
+    state: "California",
+    status: "Verified",
     avatar: "/avatars/iva.jpg",
+    sports: "Football"
   },
   {
     id: "2",
     name: "Lorri Warf",
-    state: "FL",
-    status: "Confirmed",
+    state: "Washington",
+    status: "Unverified",
     avatar: "/avatars/lorri.jpg",
+    sports: "Basketball"
   },
   {
     id: "3",
     name: "James Hall",
-    state: "MD",
-    status: "Confirmed",
+    state: "Texas",
+    status: "Verified",
     avatar: "/avatars/james.jpg",
+    sports: "Football"
   },
 ];
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "Confirmed":
+    case "Verified":
       return "bg-green-100 text-green-800 hover:bg-green-100";
-    case "Pending":
-      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
-    case "Reject":
+    case "Unverified":
       return "bg-red-100 text-red-800 hover:bg-red-100";
     default:
       return "bg-gray-100 text-gray-800 hover:bg-gray-100";
@@ -66,8 +69,9 @@ const TrainersTable: React.FC = () => {
     <Card className="border-0 shadow-sm">
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <div className="flex itec justify-between mb-4 px-4">
+          <div className="flex items-center justify-between mb-4 px-4">
             <h3 className="text-xl font-semibold">Total trainers</h3>
+            <Link href={"/dashboard/trainers"}>
             <Button
               variant="ghost"
               size="sm"
@@ -75,6 +79,7 @@ const TrainersTable: React.FC = () => {
             >
               View all
             </Button>
+            </Link>
           </div>
           <Table>
             <TableHeader>
@@ -94,7 +99,7 @@ const TrainersTable: React.FC = () => {
                     size="sm"
                     className="text-[#808080] hover:text-[#F15A24]"
                   >
-                    Action
+                    Sport
                   </Button>
                 </TableHead>
               </TableRow>
@@ -133,14 +138,7 @@ const TrainersTable: React.FC = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-[#808080] hover:text-[#F15A24]"
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
+                   {trainer.sports}
                   </TableCell>
                 </TableRow>
               ))}

@@ -58,6 +58,7 @@ export interface SignUpResponse {
 
 export interface LoginResponse {
   access_token: string;
+  // refresh_token: string;
 }
 export interface verifyEmailCodeResponse {
   access_token: string;

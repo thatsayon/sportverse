@@ -226,9 +226,9 @@ function UpdateSportsPopUp({ open, setOpen, refetch }: UpdateSportsPopUpProps) {
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-lg max-h-[75%]">
+      <DialogContent className="max-w-lg max-h-[75%] overflow-scroll scrollbar-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <DialogTitle>Add New Sports</DialogTitle>
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <div className="max-w-md mx-auto bg-white rounded-lg  p-4 sm:p-6">
           <form onSubmit={onSubmit}>
             <div className="space-y-6">
               {/* File Upload Section */}

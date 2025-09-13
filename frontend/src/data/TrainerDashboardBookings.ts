@@ -1,0 +1,42 @@
+export const reservations: Reservation[] = [
+  {
+    id: "1",
+    name: "John Doe",
+    avatar: "/avatars/john.png",
+    sessionType: "Virtual",
+    price: "50.00",
+    status: "Complete",
+  },
+  {
+    id: "2",
+    name: "Emily Smith",
+    avatar: "/avatars/emily.png",
+    sessionType: "Mindset",
+    price: "75.00",
+    status: "On Going",
+  },
+  {
+    id: "3",
+    name: "Michael Johnson",
+    avatar: "/avatars/michael.png",
+    sessionType: "In-Person",
+    price: "100.00",
+    status: "Up Coming",
+  },
+  {
+    id: "4",
+    name: "Sophia Martinez",
+    avatar: "/avatars/sophia.png",
+    sessionType: "Virtual",
+    price: "60.00",
+    status: "On Going",
+  },
+  {
+    id: "5",
+    name: "David Brown",
+    avatar: "/avatars/david.png",
+    sessionType: "Mindset",
+    price: "80.00",
+    status: "Complete",
+  },
+];

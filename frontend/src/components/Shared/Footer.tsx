@@ -43,7 +43,7 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
     visible: { opacity: 1, y: 0 },
   };
 
-  if (pathname === "/login" || pathname === "/signup" || pathname === "/video"){
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/video" || pathname === "/forget-password/success" || pathname === "/forget-password/verify-code" || pathname === "/forget-password" || pathname === "/forget-password/reset-password" || pathname === "forget-password/success" || pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
     return null;
   }
 

@@ -15,13 +15,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Edit } from 'lucide-react'
+import Link from 'next/link'
 
 interface Trainee {
   id: string
   name: string
-  state: string
-  tags: string
-  status: 'Confirmed' | 'Pending' | 'Reject'
+  lastTrainer: string
+  sports: "Football"|"Basketball";
+  status: 'Pro' | 'Basic';
   avatar?: string
 }
 
@@ -29,49 +30,49 @@ const traineesData: Trainee[] = [
   {
     id: '1',
     name: 'Iva Ryan',
-    state: 'CA',
-    tags: 'K-1',
-    status: 'Confirmed',
+    lastTrainer: 'Sophia Martinez',
+    sports: 'Basketball',
+    status: 'Pro',
     avatar: '/avatars/iva.jpg',
   },
   {
     id: '2',
     name: 'Lorri Warf',
-    state: 'NC',
-    tags: 'L-8',
-    status: 'Pending',
+    lastTrainer: 'Michael Anderson',
+    sports: 'Basketball',
+    status: 'Pro',
     avatar: '/avatars/lorri.jpg',
   },
   {
     id: '3',
     name: 'James Hall',
-    state: 'SC',
-    tags: 'J-2',
-    status: 'Reject',
+    lastTrainer: 'Jessica Williams',
+    sports: 'Basketball',
+    status: 'Basic',
     avatar: '/avatars/james.jpg',
   },
   {
     id: '4',
     name: 'Joshua Jones',
-    state: 'GA',
-    tags: 'I-2',
-    status: 'Confirmed',
+    lastTrainer: 'David Johnson',
+    sports: 'Basketball',
+    status: 'Pro',
     avatar: '/avatars/joshua.jpg',
   },
   {
     id: '5',
     name: 'Lorri Warf',
-    state: 'TN',
-    tags: 'L-8',
-    status: 'Confirmed',
+    lastTrainer: 'Emily Brown',
+    sports: 'Basketball',
+    status: 'Pro',
     avatar: '/avatars/lorri2.jpg',
   },
   {
     id: '6',
     name: 'James Hall',
-    state: 'VA',
-    tags: 'J-2',
-    status: 'Pending',
+    lastTrainer: 'Christopher Miller',
+    sports: 'Football',
+    status: 'Pro',
     avatar: '/avatars/james2.jpg',
   },
 ]
@@ -95,6 +96,7 @@ const TraineesTable: React.FC = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-semibold">Total trainee</CardTitle>
+          <Link href={"/dashboard/trainees"}>
           <Button
             variant="ghost"
             size="sm"
@@ -102,6 +104,7 @@ const TraineesTable: React.FC = () => {
           >
             View all
           </Button>
+          </Link>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -113,16 +116,13 @@ const TraineesTable: React.FC = () => {
                   Name
                 </TableHead>
                 <TableHead className="px-6 py-4 text-left text-[#808080] font-medium">
-                  State
+                Last Trainer
                 </TableHead>
                 <TableHead className="px-6 py-4 text-left text-[#808080] font-medium">
-                  Tags
+                  Sport
                 </TableHead>
                 <TableHead className="px-6 py-4 text-left text-[#808080] font-medium">
-                  Status
-                </TableHead>
-                <TableHead className="px-6 py-4 text-right text-[#808080] font-medium">
-                  Action
+                  Subscription
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -140,14 +140,14 @@ const TraineesTable: React.FC = () => {
                     <span className="font-medium">{trainee.name}</span>
                   </TableCell>
 
-                  {/* State */}
+                  {/* Last Trainer */}
                   <TableCell className="px-6 py-4 text-[#333]">
-                    {trainee.state}
+                    {trainee.lastTrainer}
                   </TableCell>
 
-                  {/* Tags */}
+                  {/* Sports */}
                   <TableCell className="px-6 py-4">
-                    <Badge variant="outline">{trainee.tags}</Badge>
+                    <Badge variant="outline">{trainee.sports}</Badge>
                   </TableCell>
 
                   {/* Status */}
@@ -155,18 +155,6 @@ const TraineesTable: React.FC = () => {
                     <Badge className={getStatusColor(trainee.status)}>
                       {trainee.status}
                     </Badge>
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell className="px-6 py-4 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-[#808080] hover:text-[#F15A24] flex items-center gap-1"
-                    >
-                      <Edit className="h-4 w-4" />
-                      Edit
-                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

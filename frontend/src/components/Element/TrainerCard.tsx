@@ -90,7 +90,7 @@ export default function TrainerCard({
 
   // Build a booking URL with a session id, so backend knows exactly which one
   const buildBookingHref = (sessionId: string) =>
-    `/trainer/${id}?sessionId=${encodeURIComponent(sessionId)}`;
+    `/trainer/${id}`;
 
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100">

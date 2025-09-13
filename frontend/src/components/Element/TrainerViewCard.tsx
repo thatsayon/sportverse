@@ -9,6 +9,7 @@ import {
 import Image from "next/image";
 import { Star } from "lucide-react";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 interface TrainerviewCardProps {
   image: string;
@@ -66,9 +67,11 @@ function TrainerviewCard({
               /Session
             </span>
           </p>
+          <Link href={'/trainer/profile'}>
           <Button className="text-base lg:text-lg font-semibold">
             View Profile
           </Button>
+          </Link>
         </CardFooter>
       </CardContent>
     </Card>

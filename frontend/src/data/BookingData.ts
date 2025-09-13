@@ -5,7 +5,7 @@ export interface Manager {
   idNo: number;
   sport: string;
   state: string;
-  status: "Complete" | "Cancelled" | "Pending";
+  status: "Complete" | "On Going" | "Up Comming";
   studentName: string;
   studentPhoto: string;
 }
@@ -58,7 +58,7 @@ export const managersData: Manager[] = [
     idNo: 789321,
     sport: "Football",
     state: "Tennessee",
-    status: "Cancelled",
+    status: "On Going",
     studentName: "Liam Johnson", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1516309928240-cafec7fdd07b?w=150", // New property
@@ -71,7 +71,7 @@ export const managersData: Manager[] = [
     idNo: 546978,
     sport: "Basketball",
     state: "Virginia",
-    status: "Pending",
+    status: "Up Comming",
     studentName: "Olivia Garcia", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1499917398990-d724e1f12216?w=150", // New property
@@ -96,7 +96,7 @@ export const managersData: Manager[] = [
     idNo: 789621,
     sport: "Basketball",
     state: "Alabama",
-    status: "Cancelled",
+    status: "On Going",
     studentName: "Sophia Robinson", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1463598434944-315cfb5fd9b2?w=150", // New property
@@ -109,7 +109,7 @@ export const managersData: Manager[] = [
     idNo: 369841,
     sport: "Football",
     state: "West Virginia",
-    status: "Pending",
+    status: "Up Comming",
     studentName: "Mason Lee", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1509714400243-d29f1907b89f?w=150", // New property
@@ -122,7 +122,7 @@ export const managersData: Manager[] = [
     idNo: 369841,
     sport: "Basketball",
     state: "Florida",
-    status: "Pending",
+    status: "Up Comming",
     studentName: "Amelia White", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1519300702328-31feef1e1f80?w=150", // New property
@@ -135,7 +135,7 @@ export const managersData: Manager[] = [
     idNo: 369841,
     sport: "Football",
     state: "West Virginia",
-    status: "Pending",
+    status: "Up Comming",
     studentName: "Isabella Harris", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1518301138939-cde8d4a5ec8a?w=150", // New property
@@ -148,7 +148,7 @@ export const managersData: Manager[] = [
     idNo: 369841,
     sport: "Basketball",
     state: "Florida",
-    status: "Pending",
+    status: "Up Comming",
     studentName: "Elijah Walker", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1517707602217-3e21e4ff2ba4?w=150", // New property
@@ -161,7 +161,7 @@ export const managersData: Manager[] = [
     idNo: 478291,
     sport: "Basketball",
     state: "California",
-    status: "Pending",
+    status: "Up Comming",
     studentName: "Ava Cooper", // New property
     studentPhoto:
       "https://images.unsplash.com/photo-1502081510177-717b156b7aeb?w=150", // New property

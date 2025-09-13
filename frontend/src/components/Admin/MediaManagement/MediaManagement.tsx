@@ -203,7 +203,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
   };
 
   return (
-    <div className={`md:px-6 ${isAdmin ? "-mt-6":"mt-6 mb-6"}`}>
+    <div className={`md:px-6 ${isAdmin ? "" : "mt-6 mb-6"}`}>
       {/* Header */}
       <div className="flex flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
@@ -230,8 +230,8 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <div className="relative border-4 border-green-800">
+          <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Search videos..."
             value={searchTerm}
@@ -308,7 +308,11 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
           </Button>
         </div>
       ) : (
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${isAdmin ? "xl:grid-cols-3":"lg: grid-cols-3 xl:grid-cols-4"} gap-6 mb-8`}>
+        <div
+          className={`grid grid-cols-1 md:grid-cols-2 ${
+            isAdmin ? "xl:grid-cols-3" : "lg: grid-cols-3 xl:grid-cols-4"
+          } gap-6 mb-8`}
+        >
           {paginatedVideos.map((video) => (
             <MediaCard
               key={video.id}
@@ -341,7 +345,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
               disabled={currentPage === 1}
               className="flex items-center gap-1 w-8 h-8"
             >
-              <ChevronLeft className="w-4 h-4" />              
+              <ChevronLeft className="w-4 h-4" />
             </Button>
 
             <div className="flex gap-1">

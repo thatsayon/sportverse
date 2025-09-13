@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const HeroSection = () => {
   return (
@@ -25,7 +26,9 @@ const HeroSection = () => {
           </p>
           
           {/* CTA Button - keep original styling */}
+          <Link href={"/signup"}>
           <Button className="mt-6 px-7 md:px-14 py-4 md:text-lg md:font-bold">Join Academy</Button>
+          </Link>
           
           {/* First Image - keep original dimensions for lg+, responsive for smaller */}
           <div className="w-full max-w-full lg:max-w-full lg:max-h-[435px] h-[250px] sm:h-[300px] lg:h-[435px] overflow-hidden relative rounded-2xl mt-8">
