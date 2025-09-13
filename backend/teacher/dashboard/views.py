@@ -10,7 +10,8 @@ from datetime import timedelta
 from core.permissions import IsTeacher
 
 from .models import (
-    Dashboard
+    Dashboard,
+    IncomeHistory
 )
 from .serializers import (
     DashboardSerializer
@@ -48,6 +49,41 @@ def get_last_30_days_visits(dashboard):
     return {str(start_date + timedelta(days=i)): results.get(str(start_date + timedelta(days=i)), 0) for i in range(30)}
 
 
+def get_last_7_days_income(teacher):
+    today = now().date()
+    start_date = today - timedelta(days=6)
+
+    incomes = (
+        IncomeHistory.objects.filter(teacher=teacher, date__range=[start_date, today])
+        .values("date")
+        .annotate(total=Sum("after_deduction"))
+        .order_by("date")
+    )
+
+    results = {str(v["date"]): float(v["total"]) for v in incomes}
+    return {
+        str(start_date + timedelta(days=i)): results.get(str(start_date + timedelta(days=i)), 0.0)
+        for i in range(7)
+    }
+
+
+def get_last_30_days_income(teacher):
+    today = now().date()
+    start_date = today - timedelta(days=29)
+
+    incomes = (
+        IncomeHistory.objects.filter(teacher=teacher, date__range=[start_date, today])
+        .values("date")
+        .annotate(total=Sum("after_deduction"))
+        .order_by("date")
+    )
+
+    results = {str(v["date"]): float(v["total"]) for v in incomes}
+    return {
+        str(start_date + timedelta(days=i)): results.get(str(start_date + timedelta(days=i)), 0.0)
+        for i in range(30)
+    }
+
 class TeacherDashboard(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
@@ -67,5 +103,9 @@ class TeacherDashboard(APIView):
             "visit_count": {
                 "last_7_days": get_last_7_days_visits(dashboard),
                 "last_30_days": get_last_30_days_visits(dashboard),
+            },
+            "income_history": {
+                "last_7_days": get_last_7_days_income(request.user.teacher),
+                "last_30_days": get_last_30_days_income(request.user.teacher),
             }
         }, status=status.HTTP_200_OK)

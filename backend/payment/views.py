@@ -4,10 +4,14 @@ from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+
+from decimal import Decimal
 from rest_framework.views import APIView
 
 from account.models import Subscription, Student
 from teacher.session.models import BookedSession
+from teacher.dashboard.models import IncomeHistory
+from controlpanel.models import TeacherDeduction, AdminIncome
 
 
 
@@ -61,6 +65,50 @@ class StripeWebhookView(APIView):
         except BookedSession.DoesNotExist:
             return
 
+        teacher = booked_session.teacher
+        student = booked_session.student
+        if not teacher or not student:
+            return
+
+        # Mark session as paid
         booked_session.is_paid = True
         booked_session.save()
 
+        # Total amount from Stripe (in USD cents, so divide by 100)
+        total_paid = Decimal(session.get("amount_total", 0)) / 100
+
+        # Get deduction config (just grab first, or enforce one exists)
+        deduction = TeacherDeduction.objects.first()
+        if not deduction:
+            return  # or raise error
+
+        # Count how many times this student booked this teacher before
+        previous_bookings = BookedSession.objects.filter(
+            teacher=teacher, student=student, is_paid=True
+        ).exclude(id=booked_session.id).count()
+
+        if previous_bookings == 0:
+            deduction_percent = deduction.first_time
+        else:
+            deduction_percent = deduction.second_time
+
+        # Calculate amounts
+        admin_cut = (total_paid * deduction_percent) / Decimal(100)
+        teacher_income = total_paid - admin_cut
+
+        # Save AdminIncome
+        AdminIncome.objects.create(
+            student_paid=total_paid,
+            after_deduction=admin_cut,
+            deduction_percent=deduction_percent,
+            date=timezone.now().date()
+        )
+
+        # Save Teacher IncomeHistory
+        IncomeHistory.objects.create(
+            teacher=teacher,
+            student_paid=total_paid,
+            after_deduction=teacher_income,
+            deduction_percent=deduction_percent,
+            date=timezone.now().date()
+        ) 
