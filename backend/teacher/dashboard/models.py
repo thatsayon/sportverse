@@ -83,3 +83,50 @@ class IncomeHistory(models.Model):
 
     def __str__(self):
         return f"{self.teacher.user.username}: {self.after_deduction}"
+
+
+
+class Bank(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    teacher = models.OneToOneField(
+        Teacher,
+        on_delete=models.CASCADE,
+        related_name="bank_account"
+    )
+    full_name = models.CharField(max_length=255)
+    bank_name = models.CharField(max_length=255)
+    bank_acc_num = models.CharField(max_length=50)
+    bank_routing_num = models.CharField(max_length=50)
+
+    from django.contrib.postgres.fields import ArrayField
+    account_type = ArrayField(
+        models.CharField(max_length=50),
+        default=list,
+        blank=False,
+        null=False
+    )
+
+    def __str__(self):
+        return f"{self.full_name} - {self.bank_name}"
+
+class PayPal(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    teacher = models.OneToOneField(
+        Teacher,
+        on_delete=models.CASCADE,
+        related_name="paypal_accounts"
+    )
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)   
+    country = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.email})"
