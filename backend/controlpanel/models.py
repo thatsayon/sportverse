@@ -1,8 +1,14 @@
-from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from cloudinary.models import CloudinaryField
+from decimal import Decimal
+from django.db import models
+
+
 import uuid
+import random
+import string
 
 class Sport(models.Model):
     id = models.UUIDField(
@@ -230,3 +236,41 @@ class AdminIncome(models.Model):
 
     def __str__(self):
         return f"{self.student_paid}: {self.after_deduction}"
+
+class Withdraw(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    teacher = models.ForeignKey(
+        'account.Teacher',
+        on_delete=models.CASCADE,
+        related_name='withdraws'
+    )
+    wallet_type = models.CharField(
+        max_length=8,
+        choices=[
+            ('bank', 'Bank'),
+            ('paypal', 'PayPal')
+        ]
+    )
+    transaction_id = models.CharField(
+        max_length=100,
+        unique=True
+    )
+    date = models.DateField(auto_now_add=True)
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    left_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
+
+    def __str__(self):
+        return f"{self.teacher} - {self.wallet_type} - {self.amount}"
+

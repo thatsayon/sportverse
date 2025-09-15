@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import status, generics
 
 from django.utils.timezone import now
@@ -8,6 +9,7 @@ from django.db.models import Sum
 from datetime import timedelta, date
 
 from core.permissions import IsTeacher
+from controlpanel.models import Withdraw
 
 from .models import (
     Dashboard,
@@ -18,7 +20,8 @@ from .models import (
 from .serializers import (
     DashboardSerializer,
     BankSerializer,
-    PayPalSerializer
+    PayPalSerializer,
+    WithdrawSerializer
 )
 
 import calendar
@@ -270,3 +273,23 @@ class PayPalView(generics.GenericAPIView):
             return Response({"detail": "PayPal info not found."}, status=status.HTTP_404_NOT_FOUND)
         paypal.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class WithdrawView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request):
+        withdraws = Withdraw.objects.filter(
+            teacher=request.user.teacher
+        ).order_by('-date')
+
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(withdraws, request, view=self)
+        serializer = WithdrawSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request):
+        serializer = WithdrawSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        withdraw = serializer.save()
+        return Response(WithdrawSerializer(withdraw).data, status=status.HTTP_201_CREATED)
