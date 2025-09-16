@@ -1,12 +1,12 @@
 export interface invoiceType {
-    transition_Id:string;
-    trainer_name:string;
-    location:string;
-    date:string;
-    amount:string;
-    status:string;
+  transition_Id: string;
+  trainer_name: string;
+  location: string;
+  date: string;
+  amount: string;
+  status: string;
+  withdrawType: "Card" | "Paypal"; // new field
 }
-
 
 export const invoices: invoiceType[] = [
   {
@@ -15,7 +15,8 @@ export const invoices: invoiceType[] = [
     location: "New York",
     date: "2024-01-15",
     amount: "$250.00",
-    status: "Pending"
+    status: "Pending",
+    withdrawType: "Card"
   },
   {
     transition_Id: "INV002",
@@ -23,7 +24,8 @@ export const invoices: invoiceType[] = [
     location: "Los Angeles",
     date: "2024-01-20",
     amount: "$300.00",
-    status: "Accepted"
+    status: "Accepted",
+    withdrawType: "Paypal"
   },
   {
     transition_Id: "INV003",
@@ -31,7 +33,8 @@ export const invoices: invoiceType[] = [
     location: "San Francisco",
     date: "2024-01-22",
     amount: "$150.00",
-    status: "Rejected"
+    status: "Rejected",
+    withdrawType: "Card"
   },
   {
     transition_Id: "INV004",
@@ -39,7 +42,8 @@ export const invoices: invoiceType[] = [
     location: "Chicago",
     date: "2024-02-01",
     amount: "$400.00",
-    status: "Pending"
+    status: "Pending",
+    withdrawType: "Paypal"
   },
   {
     transition_Id: "INV005",
@@ -47,7 +51,8 @@ export const invoices: invoiceType[] = [
     location: "Houston",
     date: "2024-02-05",
     amount: "$350.00",
-    status: "Accepted"
+    status: "Accepted",
+    withdrawType: "Card"
   },
   {
     transition_Id: "INV006",
@@ -55,7 +60,8 @@ export const invoices: invoiceType[] = [
     location: "Miami",
     date: "2024-02-10",
     amount: "$200.00",
-    status: "Pending"
+    status: "Pending",
+    withdrawType: "Paypal"
   },
   {
     transition_Id: "INV007",
@@ -63,7 +69,8 @@ export const invoices: invoiceType[] = [
     location: "Austin",
     date: "2024-02-12",
     amount: "$220.00",
-    status: "Accepted"
+    status: "Accepted",
+    withdrawType: "Card"
   },
   {
     transition_Id: "INV008",
@@ -71,7 +78,8 @@ export const invoices: invoiceType[] = [
     location: "Seattle",
     date: "2024-02-15",
     amount: "$180.00",
-    status: "Rejected"
+    status: "Rejected",
+    withdrawType: "Paypal"
   },
   {
     transition_Id: "INV009",
@@ -79,7 +87,8 @@ export const invoices: invoiceType[] = [
     location: "Boston",
     date: "2024-02-18",
     amount: "$250.00",
-    status: "Pending"
+    status: "Pending",
+    withdrawType: "Card"
   },
   {
     transition_Id: "INV010",
@@ -87,7 +96,8 @@ export const invoices: invoiceType[] = [
     location: "Philadelphia",
     date: "2024-02-20",
     amount: "$275.00",
-    status: "Accepted"
+    status: "Accepted",
+    withdrawType: "Paypal"
   },
   {
     transition_Id: "INV011",
@@ -95,6 +105,7 @@ export const invoices: invoiceType[] = [
     location: "Dallas",
     date: "2024-02-22",
     amount: "$310.00",
-    status: "Rejected"
+    status: "Rejected",
+    withdrawType: "Card"
   }
 ];

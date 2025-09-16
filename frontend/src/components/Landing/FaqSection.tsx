@@ -51,7 +51,7 @@ const FaqSection = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1993&q=80')`,
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.7)), url('/Landing/faq2.jpg')`,
         }}
       />
 
@@ -59,10 +59,10 @@ const FaqSection = () => {
       <div className="relative z-10 container mx-auto px-4 py-16 lg:py-24">
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 lg:mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-black mb-4 lg:mb-6">
             Frequently asked Question
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Have questions about Sportverse? Explore how the platform connects athletes and trainers, the different training methods offered, and the ways you can start your journey today
           </p>
         </div>
@@ -74,12 +74,12 @@ const FaqSection = () => {
               <AccordionItem
                 key={faq.id}
                 value={faq.id}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-6 py-2 hover:bg-white/15 transition-all duration-300"
+                className="bg-black/10 backdrop-blur-sm border border-black/20 rounded-lg px-6 py-2 hover:bg-black/15 transition-all duration-300"
               >
-                <AccordionTrigger className="text-left text-lg sm:text-xl font-semibold text-white hover:text-gray-200 py-6 [&[data-state=open]>svg]:rotate-180">
+                <AccordionTrigger className="text-left text-lg sm:text-xl font-semibold text-black hover:text-gray-700 py-6 [&[data-state=open]>svg]:rotate-180">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-300 text-base sm:text-lg leading-relaxed pb-6 pt-2">
+                <AccordionContent className="text-gray-800 text-base sm:text-lg leading-relaxed pb-6 pt-2">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

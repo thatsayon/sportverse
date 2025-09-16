@@ -77,7 +77,7 @@ export function SignUpForm() {
         setCookie("verificationToken", result.verificationToken, 7);
         dispatch(setEmail(result?.user?.email ?? ""));
         dispatch(setUserQuery("signup"));
-        router.push("/forget-password/verify-code");
+        router.push("/forget-password/verify-code"); 
       } else {
         toast.error(result.message || "Signup failed");
       }
@@ -89,7 +89,7 @@ export function SignUpForm() {
   };
 
   return (
-    <Card className="w-full max-w-lg border-none shadow-none">
+    <Card className="w-full max-w-lg scroll-auto border-none shadow-none">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mb-0 md:mb-1 lg:mb-2">
          <Link href={"/"}>
@@ -104,13 +104,13 @@ export function SignUpForm() {
          </Link>
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
-          <h2 className="text-3xl font-medium">Create your account</h2>
-          <div className="flex items-center justify-center gap-4 mt-4">
+          <h2 className="text-lg md:text-2xl lg:text-3xl font-medium">Create your account</h2>
+          <div className="flex items-center justify-center md:gap-4 mt-2 md:mt-4">
             {/* ShadCN Toggle component */}
             <div
               value={selectedRole}
               // onChange={handleRoleChange}
-              className="flex items-center border-2 p-1 rounded-md text-lg font-semibold"
+              className="flex items-center border-2 md:p-1 rounded-md text-lg font-semibold"
             >
               {/* Student Option */}
               <div className="flex items-center p-1 rounded-md text-lg font-semibold">
@@ -139,9 +139,9 @@ export function SignUpForm() {
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="-mt-3 md:mt-0 lg:-mt-3 xl:mt-0">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 xl:space-y-6">
             <FormField
               control={form.control}
               name="full_name"
@@ -278,7 +278,7 @@ export function SignUpForm() {
           </form>
         </Form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-3 md:mt-4 lg:mt-3 xl:mt-6 text-center">
           <p className="text-sm text-[#232323]">
             Already Have An Account?{" "}
             <Link
@@ -289,12 +289,12 @@ export function SignUpForm() {
             </Link>
           </p>
         </div>
-        <div className="flex items-center gap-4 mt-6">
+        <div className="flex items-center gap-4 md:mt-6 lg:mt-0 xl:mt-6">
           <div className="w-full h-[2px] bg-[#C4C3C3]" />
           or
           <div className="w-full h-[2px] bg-[#C4C3C3]" />
         </div>
-        <div className="flex items-center justify-center gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
           <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
             <GoogleIcon size={22} />
             Continue with Google

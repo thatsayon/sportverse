@@ -58,8 +58,10 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-36">
           {/* Brand Section */}
-          <motion.div variants={itemVariants} className="lg:col-span-1">
-            <Logo href={decoded?.role=== "student" ? "/student":"/trainer"}/>
+          <motion.div variants={itemVariants} className="lg:col-span-1 ">
+            <div className="mb-4">
+              <Logo href={decoded?.role=== "student" ? "/student":"/trainer"}/>
+            </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
               SportVerse is your all-in-one online sports training platform,
               dedicated to helping athletes of all levels improve their game in

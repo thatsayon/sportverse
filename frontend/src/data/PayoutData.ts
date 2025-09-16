@@ -1,8 +1,20 @@
-export const invoices = [
+
+
+export interface invoiceType {
+  invoiceId: string;
+  recementName: string;
+  paymentType: "Paypal" | "Card";
+  date: string;
+  amount: string;
+  status: "Complete" | "Pending" | "Cancelled";
+}
+
+
+export const invoices:invoiceType[] = [
   {
     invoiceId: "EKG46SJFNI7",
     recementName: "Christine Brooks",
-    location: "North Carolina",
+    paymentType: "Paypal",
     date: "14 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",
@@ -10,7 +22,7 @@ export const invoices = [
   {
     invoiceId: "258963",
     recementName: "Rosie Pearson",
-    location: "South Carolina",
+    paymentType: "Card",
     date: "14 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",
@@ -18,7 +30,7 @@ export const invoices = [
   {
     invoiceId: "357951",
     recementName: "Darrell Caldwell",
-    location: "Georgia",
+    paymentType: "Paypal",
     date: "14 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",
@@ -26,7 +38,7 @@ export const invoices = [
   {
     invoiceId: "789321",
     recementName: "Gilbert Johnston",
-    location: "Tennessee",
+    paymentType: "Card",
     date: "14 Aug 2025",
     amount: "$129.99 USD",
     status: "Cancelled",
@@ -34,7 +46,7 @@ export const invoices = [
   {
     invoiceId: "546978",
     recementName: "Alan Cain",
-    location: "Virginia",
+    paymentType: "Paypal",
     date: "15 Aug 2025",
     amount: "$129.99 USD",
     status: "Pending",
@@ -42,7 +54,7 @@ export const invoices = [
   {
     invoiceId: "256314",
     recementName: "Gilbert Johnston",
-    location: "Kentucky",
+    paymentType: "Card",
     date: "15 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",
@@ -50,7 +62,7 @@ export const invoices = [
   {
     invoiceId: "789621",
     recementName: "Bradley Lawlor",
-    location: "Alabama",
+    paymentType: "Paypal",
     date: "17 Aug 2025",
     amount: "$129.99 USD",
     status: "Cancelled",
@@ -58,7 +70,7 @@ export const invoices = [
   {
     invoiceId: "369841",
     recementName: "John Dukes",
-    location: "Florida",
+    paymentType: "Card",
     date: "20 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",
@@ -66,7 +78,7 @@ export const invoices = [
   {
     invoiceId: "369842",
     recementName: "Kathy Pacheco",
-    location: "West Virginia",
+    paymentType: "Paypal",
     date: "21 Aug 2025",
     amount: "$129.99 USD",
     status: "Pending",
@@ -74,7 +86,7 @@ export const invoices = [
   {
     invoiceId: "459873",
     recementName: "Emily Watson",
-    location: "Texas",
+    paymentType: "Card",
     date: "22 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",
@@ -82,7 +94,7 @@ export const invoices = [
   {
     invoiceId: "589321",
     recementName: "Michael Lee",
-    location: "California",
+    paymentType: "Paypal",
     date: "23 Aug 2025",
     amount: "$129.99 USD",
     status: "Pending",
@@ -90,7 +102,7 @@ export const invoices = [
   {
     invoiceId: "698742",
     recementName: "Sophia Turner",
-    location: "New York",
+    paymentType: "Card",
     date: "24 Aug 2025",
     amount: "$129.99 USD",
     status: "Cancelled",
@@ -98,7 +110,7 @@ export const invoices = [
   {
     invoiceId: "785932",
     recementName: "James Carter",
-    location: "Illinois",
+    paymentType: "Paypal",
     date: "25 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",
@@ -106,7 +118,7 @@ export const invoices = [
   {
     invoiceId: "879654",
     recementName: "Olivia Martinez",
-    location: "Nevada",
+    paymentType: "Card",
     date: "26 Aug 2025",
     amount: "$129.99 USD",
     status: "Pending",
@@ -114,7 +126,7 @@ export const invoices = [
   {
     invoiceId: "985621",
     recementName: "William Harris",
-    location: "Ohio",
+    paymentType: "Paypal",
     date: "27 Aug 2025",
     amount: "$129.99 USD",
     status: "Complete",

@@ -95,7 +95,7 @@ const SportSelection: React.FC = () => {
           >
             <p className="text-sm sm:text-base text-gray-600">
               Selected:{" "}
-              <span className="font-semibold text-blue-600">
+              <span className="font-semibold text-orange-600">
                 {selectedSports
                   .map((id) => sports.find((s) => s.id === id)?.name)
                   .join(", ")}
@@ -132,7 +132,7 @@ const SportSelection: React.FC = () => {
                 <div
                   className={`bg-white rounded-2xl shadow-lg overflow-hidden border-4 transition-all duration-300 ${
                     isSelected
-                      ? "border-blue-500 shadow-xl shadow-blue-500/20"
+                      ? "border-orange-500 shadow-xl shadow-orange-500/20"
                       : "border-transparent hover:border-gray-200"
                   }`}
                 >
@@ -151,13 +151,13 @@ const SportSelection: React.FC = () => {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="absolute inset-0 bg-blue-500/20 flex items-center justify-center"
+                        className="absolute inset-0 bg-orange-500/20 flex items-center justify-center"
                       >
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ delay: 0.1 }}
-                          className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500 rounded-full flex items-center justify-center"
+                          className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-500 rounded-full flex items-center justify-center"
                         >
                           <svg
                             className="w-6 h-6 sm:w-8 sm:h-8 text-white"
@@ -181,7 +181,7 @@ const SportSelection: React.FC = () => {
                   <div className="p-4 sm:p-6">
                     <h3
                       className={`text-lg sm:text-xl font-semibold text-center transition-colors duration-300 ${
-                        isSelected ? "text-blue-600" : "text-gray-900"
+                        isSelected ? "text-orange-600" : "text-gray-900"
                       }`}
                     >
                       {sport.name}

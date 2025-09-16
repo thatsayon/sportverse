@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { invoices } from "@/data/PayoutData";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -37,21 +37,19 @@ const getStatusStyles = (status: string) => {
 
 const PayoutTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState<"all" | "Complete" | "Pending" | "Cancelled">("all");
   const itemsPerPage = 10;
 
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      // 🚀 Trigger fetch, router push, or data reload here
-    }
-  };
+  // Filter logic
+  const filteredInvoices =
+    filter === "all" ? invoices : invoices.filter((inv) => inv.status === filter);
 
   // Pagination logic
-  const totalPages = Math.ceil(invoices.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = invoices.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedData = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
 
-  const handlePageChange = (page: number) => {
+  const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
@@ -60,27 +58,29 @@ const PayoutTable: React.FC = () => {
   return (
     <div className="w-full">
       <div className="mb-4 md:mb-8 flex items-center justify-between">
-        <div>
-            <h1 className="text-xl md:text-2xl font-semibold font-montserrat">All Incoive History</h1>
-        </div>
-        <Select defaultValue="weekly">
-          <SelectTrigger defaultValue={"weekly"} className="text-[#F15A24] border-[#F15A24] w-[130px] ">
-            <SelectValue defaultValue={"weekly"} placeholder="Filter" />
+        <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
+          All Invoice History
+        </h1>
+        <Select value={filter} onValueChange={(value: any) => { setFilter(value); setCurrentPage(1); }}>
+          <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[160px]">
+            <SelectValue placeholder="Filter by Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="monthly">Monthly</SelectItem>
-            <SelectItem value="yearly">Yearly</SelectItem>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="Complete">Complete</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
       </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="px-6 py-4">Invoice ID</TableHead>
               <TableHead className="px-6 py-4">Recement Name</TableHead>
-              <TableHead className="px-6 py-4">Location</TableHead>
+              <TableHead className="px-6 py-4">Payment Type</TableHead>
               <TableHead className="px-6 py-4">Date</TableHead>
               <TableHead className="px-6 py-4">Amount</TableHead>
               <TableHead className="px-6 py-4">Status</TableHead>
@@ -91,7 +91,7 @@ const PayoutTable: React.FC = () => {
               <TableRow key={item.invoiceId}>
                 <TableCell className="px-6 py-4">{item.invoiceId}</TableCell>
                 <TableCell className="px-6 py-4">{item.recementName}</TableCell>
-                <TableCell className="px-6 py-4">{item.location}</TableCell>
+                <TableCell className="px-6 py-4">{item.paymentType}</TableCell>
                 <TableCell className="px-6 py-4">{item.date}</TableCell>
                 <TableCell className="px-6 py-4">{item.amount}</TableCell>
                 <TableCell className="px-6 py-4">
@@ -114,7 +114,7 @@ const PayoutTable: React.FC = () => {
           {/* Prev */}
           <Button
             variant="outline"
-            size="icon"
+            className="size-9"
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
@@ -127,7 +127,7 @@ const PayoutTable: React.FC = () => {
               key={page}
               variant={currentPage === page ? "default" : "outline"}
               className={cn(
-                "w-10 h-10",
+                "size-9",
                 currentPage === page
                   ? "bg-orange-500 text-white hover:bg-orange-600"
                   : ""
@@ -141,7 +141,7 @@ const PayoutTable: React.FC = () => {
           {/* Next */}
           <Button
             variant="outline"
-            size="icon"
+            className="size-9"
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
           >

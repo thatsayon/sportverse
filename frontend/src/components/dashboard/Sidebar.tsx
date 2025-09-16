@@ -64,11 +64,6 @@ const adminNavItems: NavItem[] = [
     icon: UserRound,
   },
   {
-    name: 'Visitors',
-    href: '/dashboard/visitors',
-    icon: Users,
-  },
-  {
     name: 'Media management',
     href: '/dashboard/media',
     icon: Image,

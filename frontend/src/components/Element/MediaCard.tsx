@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Play, Clock, User, Trophy } from "lucide-react";
+import { Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
+import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
 
 interface MediaCardProps {
+  id: number | string | null;
   isAdmin?: boolean;
   title: string;
   description: string;
@@ -12,20 +15,25 @@ interface MediaCardProps {
   sports: "basketball" | "football";
   consumer: "student" | "teacher";
   thumbnail?: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }
 
 const MediaCard: React.FC<MediaCardProps> = ({
-  isAdmin= true,
+  id,
+  isAdmin = true,
   title,
   description,
   duration,
   sports,
   consumer,
   thumbnail,
+  setOpen,
+  open,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [imageError, setImageError] = useState(false);
-
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<boolean>(false);
+  const router = useRouter();
   const getSportsColor = (sport: string) => {
     switch (sport) {
       case "football":
@@ -69,13 +77,19 @@ const MediaCard: React.FC<MediaCardProps> = ({
     }
   };
 
+  const hendleRoute = () => {
+    router.push(`/dashboard/media/${id}`);
+  };
   return (
     <Card
-      className="group cursor-pointer transition-all duration-300 hover:shadow-lg overflow-hidden py-0 pb-2 "
+      className="group cursor-pointer h-[400px] transition-all duration-300 hover:shadow-lg overflow-hidden py-0 pb-2 "
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-video bg-gray-100 overflow-hidden">
+      <div
+        onClick={hendleRoute}
+        className="relative aspect-video bg-gray-100 overflow-hidden"
+      >
         {/* Thumbnail or Placeholder */}
         {thumbnail && !imageError ? (
           <Image
@@ -107,8 +121,8 @@ const MediaCard: React.FC<MediaCardProps> = ({
         </div>
       </div>
 
-      <CardContent className="p-4 -mt-6">
-        <div className="mb-3">
+      <CardContent className="p-4 -mt-6 relative">
+        <div onClick={hendleRoute} className="mb-3">
           <h3 className="font-semibold text-xl flex items-center justify-between text-gray-900 mb-2 line-clamp-1">
             <span className="group-hover:text-[#F15A24] transition-colors">
               {title}
@@ -121,23 +135,37 @@ const MediaCard: React.FC<MediaCardProps> = ({
         </div>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-2">
-          <Badge
-            variant="outline"
-            className={`text-xs ${getSportsColor(sports)} capitalize`}
-          >
-            {getSportsIcon(sports)} {sports}
-          </Badge>
-          {isAdmin && (
+        <div
+          onClick={hendleRoute}
+          className="flex items-center justify-between"
+        >
+          <div className="flex flex-wrap gap-2">
             <Badge
               variant="outline"
-              className={`text-xs ${getConsumerColor(consumer)} capitalize`}
+              className={`text-xs ${getSportsColor(sports)} capitalize`}
             >
-              {/* <User className="w-3 h-3 mr-1" /> */}
-              {getConsumerIcon(consumer)}
-              {consumer}
+              {getSportsIcon(sports)} {sports}
             </Badge>
-          )}
+            {isAdmin && (
+              <Badge
+                variant="outline"
+                className={`text-xs ${getConsumerColor(consumer)} capitalize`}
+              >
+                {/* <User className="w-3 h-3 mr-1" /> */}
+                {getConsumerIcon(consumer)}
+                {consumer}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <div className="absolute right-5 bottom-2">
+          <Button
+            onClick={() => setOpen(true)}
+            variant={"outline"}
+            className="py-2 px-6"
+          >
+            Edit
+          </Button>
         </div>
       </CardContent>
     </Card>

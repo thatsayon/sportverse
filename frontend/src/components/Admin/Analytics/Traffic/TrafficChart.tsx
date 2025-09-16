@@ -36,15 +36,15 @@ const chartConfig = {
     label: "Visitors",
   },
   northCarolina: {
-    label: "North Carolina",
+    label: "Income",
     color: "var(--chart-1)",
   },
   southCarolina: {
-    label: "South Carolina",
+    label: "Expance",
     color: "var(--chart-2)",
   },
   tennessee: {
-    label: "Tennessee",
+    label: "Profite",
     color: "var(--chart-2)",
   },
 } satisfies ChartConfig;

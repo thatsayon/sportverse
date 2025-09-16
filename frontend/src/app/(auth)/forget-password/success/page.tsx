@@ -54,7 +54,7 @@ const dispatch = useDispatch()
             className="w-full py-4"
           >
             {
-              userQuery === "signup" ? "Dashboad":"Sign In"
+              userQuery === "signup" ? `${decoded?.role === "student" ? "Select Sport" : "Home Pages"}` : "Sign In"
             }
           </Button>
         </div>

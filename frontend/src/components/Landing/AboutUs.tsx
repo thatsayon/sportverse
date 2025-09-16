@@ -63,7 +63,11 @@ const AboutUs = () => {
   return (
     <section className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-blue-50">
       {/* Hero Section */}
-      <div className="relative py-16 lg:py-24">
+      <div className="relative py-16 lg:py-24"
+      style={{
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.7)), url('/Landing/about.jpg')`,
+        }}
+      >
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="text-center mb-16">

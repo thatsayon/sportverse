@@ -6,8 +6,7 @@ import AdminDashboard from "@/components/Admin/Dashboard/AdminDashboard";
 import { useRouter } from "next/navigation";
 import { TrainerDashboard } from "@/components/Trainer/Dashboard/TrainerDashboard";
 import {
-  DashboardMetrics,
-  Reservation,
+  DashboardMetrics,  
   ChartData,
   VisitData,
 } from "@/types/Trainerdashboard";

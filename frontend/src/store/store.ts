@@ -3,18 +3,25 @@ import { setupListeners } from '@reduxjs/toolkit/query'
 import storage from 'redux-persist/lib/storage' // defaults to localStorage for web
 import { persistReducer, persistStore } from 'redux-persist'
 
+// Existing imports
 import stateReducer from "./Slices/stateSlices/stateSlice"
 import { apiSlice } from "./Slices/apiSlices/apiSlice"
+
+// ✅ New imports
+import trainerReducer from "./Slices/stateSlices/trainerStateSlice"
+import studentReducer from "./Slices/stateSlices/studentSlice"
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['state'], // ✅ only persist your custom state slice
+  whitelist: ['state', 'trainer', 'student'], // persist these slices
 }
 
 const rootReducer = combineReducers({
   state: stateReducer,
-  [apiSlice.reducerPath]: apiSlice.reducer, // RTK Query state is NOT persisted
+  trainer: trainerReducer,   // ✅ added
+  student: studentReducer,   // ✅ added
+  [apiSlice.reducerPath]: apiSlice.reducer, // RTK Query state (not persisted)
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
@@ -24,7 +31,7 @@ export const makeStore = () => {
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
-        serializableCheck: false, // ⚠️ redux-persist uses non-serializable values
+        serializableCheck: false, // ⚠️ needed for redux-persist
       }).concat(apiSlice.middleware),
   })
 

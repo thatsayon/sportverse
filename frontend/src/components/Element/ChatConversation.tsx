@@ -2,14 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Message {
   id: string;
@@ -101,18 +93,27 @@ const ChatConversation: React.FC<ChatDialogProps> = ({
 }) => {
   const [messages, setMessages] = useState<Message[]>(dummyMessages);
   const [newMessage, setNewMessage] = useState('');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto scroll to bottom when new messages arrive
+  // Improved scroll to bottom function
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+    }
+  };
+
+  // Auto scroll to bottom when messages change or dialog opens
   useEffect(() => {
-    if (scrollAreaRef.current && open) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        setTimeout(() => {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }, 100);
-      }
+    if (open) {
+      // Use multiple timeouts to ensure scroll happens after all animations
+      const timeouts = [100, 300, 500];
+      timeouts.forEach(delay => {
+        setTimeout(scrollToBottom, delay);
+      });
     }
   }, [messages, open]);
 
@@ -176,18 +177,22 @@ const ChatConversation: React.FC<ChatDialogProps> = ({
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent 
-        className="max-w-md w-[95%] h-[600px] max-h-[90vh] p-0 gap-0 flex flex-col overflow-hidden"
-        showCloseButton={false}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        className="bg-white rounded-lg shadow-xl max-w-md w-full h-[600px] max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Custom Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-[#F15A24] text-white p-4 flex items-center justify-between"
+          className="bg-[#8a3618] text-white p-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <motion.div 
@@ -198,18 +203,16 @@ const ChatConversation: React.FC<ChatDialogProps> = ({
               <User className="w-5 h-5" />
             </motion.div>
             <div>
-              <DialogTitle className="font-semibold text-white">{otherUserName}</DialogTitle>
+              <h2 className="font-semibold text-white">{otherUserName}</h2>
               <p className="text-xs text-white/80">Online</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={() => setOpen(false)}
-            className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />
-          </Button>
+          </button>
         </motion.div>
 
         {/* Messages Area */}
@@ -219,7 +222,7 @@ const ChatConversation: React.FC<ChatDialogProps> = ({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <ScrollArea ref={scrollAreaRef} className="h-full">
+          <div className="h-full overflow-y-auto">
             <div className="p-4 space-y-4">
               <AnimatePresence>
                 {messages.map((message, index) => (
@@ -260,8 +263,10 @@ const ChatConversation: React.FC<ChatDialogProps> = ({
                   </motion.div>
                 ))}
               </AnimatePresence>
+              {/* Invisible element to scroll to */}
+              <div ref={messagesEndRef} />
             </div>
-          </ScrollArea>
+          </div>
         </motion.div>
 
         {/* Input Area */}
@@ -272,27 +277,24 @@ const ChatConversation: React.FC<ChatDialogProps> = ({
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           <div className="flex gap-3">
-            <Input
+            <input
               ref={inputRef}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="flex-1 border-gray-300 focus:border-[#F15A24] focus:ring-[#F15A24] rounded-full px-4 py-2"
+              className="flex-1 border border-gray-300 focus:border-[#F15A24] focus:ring-1 focus:ring-[#F15A24] focus:outline-none rounded-full px-4 py-2"
               maxLength={500}
             />
-            <motion.div
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+              className="bg-[#F15A24] hover:bg-[#F15A24]/90 text-white rounded-full w-10 h-10 p-0 disabled:opacity-50 flex items-center justify-center transition-colors"
             >
-              <Button
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim()}
-                className="bg-[#F15A24] hover:bg-[#F15A24]/90 text-white rounded-full w-10 h-10 p-0 disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </motion.div>
+              <Send className="w-4 h-4" />
+            </motion.button>
           </div>
           
           {/* Character Counter */}
@@ -305,8 +307,8 @@ const ChatConversation: React.FC<ChatDialogProps> = ({
             </span>
           </div>
         </motion.div>
-      </DialogContent>
-    </Dialog>
+      </motion.div>
+    </div>
   );
 };
 

@@ -90,7 +90,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       <div className=" px-4 sm:px-6 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="mt-7"> 
+          <div className=""> 
             <Logo href="/trainer"/>
 
           </div>

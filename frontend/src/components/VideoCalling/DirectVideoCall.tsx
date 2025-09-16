@@ -520,9 +520,10 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen py-8">
       <div className="">
-        {/* Header */}
+        <div>
+          {/* Header */}
         {!isJoined && (
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
@@ -619,11 +620,12 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
             )}
           </div>
         )}
+        </div>
 
         {/* Main Call Interface */}
-        <div className={`${isJoined ? "w-full" : "max-w-6xl mx-auto"}`}>
+        <div className={`${isJoined ? "w-full" : "max-w-6xl  mx-auto"}`}>
           {/* Video Grid */}
-          <div className="bg-black max-h-screen w-full overflow-hidden shadow-lg mb-6 aspect-video relative">
+          <div className={`bg-black ${isJoined? "max-h-screen":"max-h-[440px]"} w-full overflow-hidden shadow-lg mb-6 aspect-video relative`}>
             {/* Local Video */}
             {isJoined && (
               <div className="absolute z-20 top-4 right-4 w-64 aspect-video bg-gray-900 rounded-lg overflow-hidden border-2 border-gray-600">

@@ -1,3 +1,4 @@
+import { TeacherDashboardResponse } from "@/types/teacher/dashboard";
 import { apiSlice } from "./apiSlice";
 export type CreateSessionRequest = {
   id?: string;
@@ -78,6 +79,12 @@ export interface TimeCheckResponse{
 
 export const trainerApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    //Dashboard API
+    getTeacherDashboard: builder.query<TeacherDashboardResponse, void>({
+      query: ()=> "/teacher/d/dashboard/"
+    }),
+
+    //session management API
     createSession: builder.mutation<CreateSessionResponse, CreateSessionRequest>({
       query: (body) => ({
         url: "/teacher/session/create-session/",
@@ -116,4 +123,4 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
   overrideExisting: true,
 });
 
-export const { useCreateSessionMutation, useGetSessionQuery, useUpdateSessionMutation, useDeleteSessionMutation, useLazyTimeCheckQuery } = trainerApiSlice;
+export const { useGetTeacherDashboardQuery ,useCreateSessionMutation, useGetSessionQuery, useUpdateSessionMutation, useDeleteSessionMutation, useLazyTimeCheckQuery } = trainerApiSlice;

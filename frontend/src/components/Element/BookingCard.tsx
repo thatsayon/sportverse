@@ -1,11 +1,16 @@
 "use client";
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Star, Calendar, Clock, MapPin, Laptop } from 'lucide-react';
-import Image from 'next/image';
-import { BookingCardProps } from '@/data/BookingPageData';
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Star, Calendar, Clock, MapPin, Laptop } from "lucide-react";
+import Image from "next/image";
+import { BookingCardProps } from "@/data/BookingPageData";
+import { getCookie } from "@/hooks/cookie";
+import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { setCallConfig } from "@/store/Slices/stateSlices/studentSlice";
+import { useRouter } from "next/navigation";
 
 const BookingCard: React.FC<BookingCardProps> = ({
   trainerName,
@@ -14,41 +19,69 @@ const BookingCard: React.FC<BookingCardProps> = ({
   sessionDate,
   sessionType,
   trainerImage,
-  rating = 5
+  rating = 5,
 }) => {
   // Get session type styling
+  const dispatch = useDispatch();
+  const router = useRouter();
   const getSessionTypeColor = (type: string) => {
     switch (type) {
-      case 'Virtual Session':
-        return 'bg-blue-100 text-blue-800';
-      case 'Mindset Session':
-        return 'bg-purple-100 text-purple-800';
-      case 'In Person':
-        return 'bg-green-100 text-green-800';
+      case "Virtual Session":
+        return "bg-blue-100 text-blue-800";
+      case "Mindset Session":
+        return "bg-purple-100 text-purple-800";
+      case "In Person":
+        return "bg-green-100 text-green-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   // Get sports icon/color
   const getSportsColor = (sport: string) => {
     switch (sport) {
-      case 'Football':
-        return 'bg-orange-100 text-orange-800';
-      case 'Basketball':
-        return 'bg-red-100 text-red-800';
+      case "Football":
+        return "bg-orange-100 text-orange-800";
+      case "Basketball":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   // Generate initials from trainer name
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
       .toUpperCase();
+  };
+
+  // video calling functions
+  const handleVideoCall = async () => {
+    const accessToken = getCookie("access_token");
+    const response = await fetch(
+      "https://stingray-intimate-sincerely.ngrok-free.app/communication/meeting/agora/token/",
+      {
+        body: JSON.stringify({ channelName: "Student" }), // Assuming it's a GET request. You can change it if needed.
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // Set the content type to application/json
+
+          Authorization: `Bearer ${accessToken}`, // Un-comment and replace this if using token-based auth
+        },
+      }
+    );
+    if (response) {
+      const data = await response.json();
+      dispatch(setCallConfig(data));
+
+      console.log(data);
+      router.push("/video");
+    } else {
+      console.log("error occurs");
+    }
   };
 
   return (
@@ -72,33 +105,25 @@ const BookingCard: React.FC<BookingCardProps> = ({
                 <span>{getInitials(trainerName)}</span>
               )}
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900 text-sm truncate">
                 {trainerName}
               </h3>
-              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getSportsColor(sports)}`}>
+              <span
+                className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getSportsColor(
+                  sports
+                )}`}
+              >
                 {sports}
               </span>
             </div>
 
             {/* Status and Rating */}
             <div className="flex flex-col items-end gap-1">
-              <span className="text-xs text-green-600 font-medium">Completed</span>
-              {rating && (
-                <div className="flex items-center gap-0.5">
-                  {[...Array(5)].map((_, index) => (
-                    <Star
-                      key={index}
-                      className={`w-2.5 h-2.5 ${
-                        index < rating
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'fill-gray-200 text-gray-200'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
+              <span className="text-xs text-green-600 font-medium">
+                Completed
+              </span>
             </div>
           </div>
 
@@ -122,6 +147,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
 
           {/* Action Button */}
           <Button
+            onClick={handleVideoCall}
             variant="outline"
             size="sm"
             className="w-full text-xs px-3 py-2 h-8 border-orange-300 text-orange-600 hover:bg-orange-50"
@@ -154,12 +180,16 @@ const BookingCard: React.FC<BookingCardProps> = ({
               <h3 className="font-semibold text-gray-900 text-sm md:text-base lg:text-lg truncate">
                 {trainerName}
               </h3>
-              
+
               {/* Sports Tag */}
-              <span className={`inline-block px-2 py-1 rounded-full text-xs md:text-sm font-medium mt-1 ${getSportsColor(sports)}`}>
+              <span
+                className={`inline-block px-2 py-1 rounded-full text-xs md:text-sm font-medium mt-1 ${getSportsColor(
+                  sports
+                )}`}
+              >
                 {sports}
               </span>
-              
+
               {/* Session Details */}
               <div className="flex flex-wrap items-center gap-3 lg:gap-4 mt-2 text-xs md:text-sm text-gray-600">
                 <div className="flex items-center gap-1">
@@ -179,28 +209,17 @@ const BookingCard: React.FC<BookingCardProps> = ({
           </div>
 
           {/* Right Section - Status & Actions */}
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="flex items-center gap-4 flex-shrink-0">
             {/* Status and Rating */}
             <div className="flex items-center gap-2">
-              <span className="text-xs md:text-sm text-green-600 font-medium whitespace-nowrap">Completed</span>
-              {rating && (
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, index) => (
-                    <Star
-                      key={index}
-                      className={`w-3 h-3 md:w-4 md:h-4 ${
-                        index < rating
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'fill-gray-200 text-gray-200'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
+              <span className="text-xs md:text-sm text-green-600 font-medium whitespace-nowrap">
+                Completed
+              </span>
             </div>
 
             {/* Action Button */}
             <Button
+              onClick={handleVideoCall}
               variant="outline"
               size="sm"
               className="text-xs md:text-sm px-3 py-1 h-7 md:h-8 lg:px-4 lg:py-2 lg:h-9 border-orange-300 text-orange-600 hover:bg-orange-50 whitespace-nowrap"

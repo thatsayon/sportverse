@@ -161,9 +161,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({route}) => {
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 Strength Training for Beginners
               </h1>
-              <span className="bg-[#F15A24] text-white px-2 py-1 rounded text-xs font-medium">
-                BEGINNER
-              </span>
             </div>
             <p className="text-gray-600 text-base md:text-lg leading-relaxed max-w-4xl">
               Learn the fundamentals of strength training with proper form and technique. This comprehensive guide covers basic exercises, safety tips, and how to build your first workout routine.

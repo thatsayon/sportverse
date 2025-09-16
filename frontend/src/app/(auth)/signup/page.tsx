@@ -7,10 +7,10 @@ export default function SignupPage() {
       <SignUpForm />
       <div className="hidden lg:block">
         <Image
-          src={"/auth/loginImage.png"}
+          src={"/auth/loginimage.jpg"}
           alt="login Image"
-          width={720}
-          height={820}
+          width={700}
+          height={620}
           className="object-cover"
         />
       </div>

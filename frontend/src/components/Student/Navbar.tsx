@@ -78,7 +78,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       <div className="px-4 sm:px-6 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="mt-7">
+          <div className="">
             <Logo href="/student" />
           </div>
 
@@ -216,7 +216,9 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   Settings
                 </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-[#CD5E5E]">
+                <DropdownMenuItem 
+                onClick={handleLogout}
+                className="text-[#CD5E5E]">
                   <LogOut stroke="#CD5E5E" className="size-6 mr-2" />
                   Logout
                 </DropdownMenuItem>

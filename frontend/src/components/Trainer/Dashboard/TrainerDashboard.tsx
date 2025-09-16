@@ -2,7 +2,6 @@ import React, { useState, useMemo } from "react";
 import { DollarSign, CreditCard, Calendar, Users } from "lucide-react";
 import { MetricsCard } from "./MetricsCard";
 import { CurrentReservations } from "./CurrentReservations";
-import { ReservationChart } from "./ReservationChart";
 import { AverageVisitsChart } from "./AverageVisitsChart";
 import {
   DashboardMetrics,
@@ -11,6 +10,11 @@ import {
   VisitData,
   TopStudent,
 } from "@/types/Trainerdashboard";
+import { useGetTeacherDashboardQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { LoadingSpinner } from "@/components/Element/LoadingSpinner";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
+import { RevenueChart } from "./RevenueChart";
 
 // Dummy data for different periods
 const weeklyReservationData: ChartData[] = [
@@ -44,7 +48,7 @@ const monthlyVisitsData: VisitData[] = [
   { day: "Week 1", visits: 45 },
   { day: "Week 2", visits: 62 },
   { day: "Week 3", visits: 38 },
-  { day: "Week 4", visits: 75},
+  { day: "Week 4", visits: 75 },
 ];
 
 interface TrainerDashboardProps {
@@ -68,12 +72,32 @@ export const TrainerDashboard: React.FC<TrainerDashboardProps> = ({
   const [visitsPeriod, setVisitsPeriod] = useState<"Weekly" | "Monthly">(
     "Weekly"
   );
+  const { data, isLoading, isError } = useGetTeacherDashboardQuery();
 
-  const reservationChartData = useMemo(() => {
+  console.log("Dashboard data:", data);
+  
+  // Transform data function
+  function transformData(
+    rawData: Record<string, number>,
+    type: "Weekly" | "Monthly"
+  ): ChartData[] {
+    if (!rawData) return [];
+    
+    return Object.entries(rawData).map(([date, value]) => ({
+      day: type === "Weekly" 
+        ? new Date(date).toLocaleDateString("en-US", { weekday: "short" }) 
+        : new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      value,
+    }));
+  }
+
+  const revenueChartData = useMemo(() => {
+    if (!data?.income_history) return [];
+    
     return reservationPeriod === "Weekly"
-      ? weeklyReservationData
-      : monthlyReservationData;
-  }, [reservationPeriod]);
+      ? transformData(data.income_history.last_7_days ?? {}, "Weekly")
+      : transformData(data.income_history.last_30_days ?? {}, "Monthly");
+  }, [data, reservationPeriod]);
 
   const visitsChartData = useMemo(() => {
     return visitsPeriod === "Weekly" ? weeklyVisitsData : monthlyVisitsData;
@@ -83,38 +107,48 @@ export const TrainerDashboard: React.FC<TrainerDashboardProps> = ({
     return visitsPeriod === "Weekly" ? 2203 : 3450;
   }, [visitsPeriod]);
 
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  }
+  
+  if (isError) {
+    return <ErrorLoadingPage />;
+  }
+
   return (
     <div className="space-y-6 p-4 lg:p-6 bg-white min-h-screen">
       {/* Metrics Cards - 4 columns on desktop, 2 on tablet, 1 on mobile */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <MetricsCard
           title="Total revenue"
-          value={`$${metrics.totalRevenue.toLocaleString()}`}
+          value={`$${data?.total_revenue}`}
           change={metrics.revenueChange}
           icon={<DollarSign className="h-5 w-5 text-green-600" />}
         />
         <MetricsCard
           title="Total paid fees"
-          value={`$${metrics.totalPaidFees.toLocaleString()}`}
+          value={`$${data?.total_paid_fees}`}
           change={metrics.feesChange}
           icon={<CreditCard className="h-5 w-5 text-yellow-600" />}
         />
         <MetricsCard
           title="Total reservation"
-          value={metrics.totalReservation.toString()}
+          value={data?.total_reservation}
           change={metrics.reservationChange}
           icon={<Calendar className="h-5 w-5 text-blue-600" />}
         />
         <MetricsCard
           title="Occupied sits"
-          value={`${metrics.occupiedSits}%`}
+          value={`${data?.occupied_sits}%`}
           change={metrics.occupancyChange}
           icon={<Users className="h-5 w-5 text-red-600" />}
           variant="danger"
         />
       </div>
-
-      {/* Current Reservations - Full width */}
 
       {/* Charts and Top Students - 2 columns on desktop, 1 on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -124,11 +158,14 @@ export const TrainerDashboard: React.FC<TrainerDashboardProps> = ({
           onViewAll={onViewAllReservations}
           onEdit={onEditReservation}
         />
-        <ReservationChart
-          data={reservationChartData}
+        
+        {/* Revenue Chart - Fixed props */}
+        <RevenueChart
+          data={revenueChartData}
           period={reservationPeriod}
           onPeriodChange={setReservationPeriod}
         />
+        
         <div className="lg:col-span-2">
           <AverageVisitsChart
             data={visitsChartData}

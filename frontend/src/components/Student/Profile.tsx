@@ -1,4 +1,5 @@
-import React, { ReactNode } from "react";
+"use client";
+import React, { ReactNode, useState } from "react";
 import { Mail, Calendar, Clock } from "lucide-react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import BookingPage from "./BookingPage";
 import Link from "next/link";
+import ManageSubscriptionPopUp from "../Element/ManageSubscriptionPopUp";
 
 interface StatCard {
   id: number;
@@ -48,6 +50,7 @@ const stats: StatCard[] = [
 ];
 
 const Profile = () => {
+  const [open, setOpen] = useState<boolean>(false);
   return (
     <div className=" bg-gray-50 p-4 md:p-6 lg:p-8">
       <div className="px-0 md:px-8">
@@ -133,7 +136,9 @@ const Profile = () => {
                   </span>
                 </div>
 
-                <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                <Button 
+                onClick={() => setOpen(true)}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white">
                   Manage Subscription
                 </Button>
               </CardContent>
@@ -185,6 +190,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
+      <ManageSubscriptionPopUp open={open} setOpen={setOpen}/>
     </div>
   );
 };

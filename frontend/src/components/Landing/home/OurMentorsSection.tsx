@@ -68,7 +68,7 @@ const OurMentorsSection = () => {
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-2 md:-ml-4 px-6 pb-8">
+          <CarouselContent className="-ml-2 md:-ml-4 px-6 pb-16">
             {mentors.map((mentor) => (
               <CarouselItem key={mentor.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 <Card className="h-full border-none transition-shadow hover:shadow-2xl duration-300">

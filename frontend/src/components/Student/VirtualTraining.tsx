@@ -13,6 +13,7 @@ import {
 import { Button } from "../ui/button";
 import { FilterIcon } from "lucide-react";
 import { useGetVritualTrainersQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import { LoadingSpinner } from "../Element/LoadingSpinner";
 
 function VirtualTraining() {
   const [filter, setFilter] = useState<string>("all");
@@ -36,8 +37,16 @@ function VirtualTraining() {
       return false;
     }) || [];
 
+
+    if (isLoading) {
+      return (
+
+        <LoadingSpinner size="xl" className="mx-auto my-20" />
+      )
+    }
+
   return (
-    <div>
+    <div className="min-h-[calc(100vh-240px)]">
       {/* Header + Filters */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-6 md:gap-0">
         <div>

@@ -111,6 +111,7 @@ const WithdrawTable: React.FC = () => {
               <TableHead className="px-6 py-4">No</TableHead>
               <TableHead className="px-6 py-4">Trainer Name</TableHead>
               <TableHead className="px-6 py-4">Invoice ID</TableHead>
+              <TableHead className="px-6 py-4">Withdraw Type</TableHead>
               <TableHead className="px-6 py-4">Location</TableHead>
               <TableHead className="px-6 py-4">Date</TableHead>
               <TableHead className="px-6 py-4">Amount</TableHead>
@@ -124,6 +125,7 @@ const WithdrawTable: React.FC = () => {
                 <TableCell className="px-6 py-4">{index+1}</TableCell>
                 <TableCell className="px-6 py-4">{item.trainer_name}</TableCell>
                 <TableCell className="px-6 py-4">{item.transition_Id}</TableCell>
+                <TableCell className="px-6 py-4">{item.withdrawType}</TableCell>
                 <TableCell className="px-6 py-4">{item.location}</TableCell>
                 <TableCell className="px-6 py-4">{item.date}</TableCell>
                 <TableCell className="px-6 py-4">{item.amount}</TableCell>
@@ -159,7 +161,7 @@ const WithdrawTable: React.FC = () => {
           {/* Prev */}
           <Button
             variant="outline"
-            size="icon"
+            className="size-9"
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
@@ -172,7 +174,7 @@ const WithdrawTable: React.FC = () => {
               key={page}
               variant={currentPage === page ? "default" : "outline"}
               className={cn(
-                "w-10 h-10",
+                "size-9",
                 currentPage === page
                   ? "bg-orange-500 text-white hover:bg-orange-600"
                   : ""
@@ -186,7 +188,7 @@ const WithdrawTable: React.FC = () => {
           {/* Next */}
           <Button
             variant="outline"
-            size="icon"
+            className="size-9"
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
           >

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import MediaCard from "@/components/Element/MediaCard";
+import VideoEditFrom from "@/components/Element/VideoEditForm";
 
 export interface VideoData {
   id: string;
@@ -161,6 +162,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
   const [sportsFilter, setSportsFilter] = useState<string>("all");
   const [consumerFilter, setConsumerFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [open, setOpen] = useState<boolean>(false);
   const itemsPerPage = isAdmin ? 6 : 8;
 
   // Filter videos based on search term and filters
@@ -230,7 +232,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-        <div className="relative border-4 border-green-800">
+        <div className="relative">
           <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Search videos..."
@@ -315,7 +317,10 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
         >
           {paginatedVideos.map((video) => (
             <MediaCard
+              id={video.id}
               key={video.id}
+              open={open}
+              setOpen={setOpen}
               videoUrl={video.videoUrl}
               title={video.title}
               description={video.description}
@@ -387,6 +392,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
           </div>
         </div>
       )}
+      <VideoEditFrom open={open} setOpen={setOpen} id="2" />
     </div>
   );
 };
