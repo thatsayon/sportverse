@@ -1,18 +1,21 @@
 "use client"
 import React, { useState, useMemo } from 'react';
+import moment from "moment";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
-import { monthlyEarningsData, months } from '@/data/RevenueData';
+import { months } from '@/data/RevenueData';
+import { useGetTrainerRenenueQuery } from '@/store/Slices/apiSlices/trainerApiSlice';
+import { convertDates } from '@/lib/dataFormatingname';
 
 
 const EarningsOverview = () => {
-  const [selectedMonth, setSelectedMonth] = useState('august');
-
-  const currentData = useMemo(() => {
-    return monthlyEarningsData[selectedMonth as keyof typeof monthlyEarningsData];
-  }, [selectedMonth]);
-
+  const [selectedMonth, setSelectedMonth] = useState(moment().format("MMMM").toLocaleLowerCase());
+  const {data} = useGetTrainerRenenueQuery(selectedMonth)
+  
+  console.log("Current Month", selectedMonth)
+  
+  const convertedData = convertDates(data?.monthly_overview, "date", "amount")
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -46,7 +49,7 @@ const EarningsOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl md:text-3xl font-bold text-gray-900">
-              {formatCurrency(currentData.allTime)}
+              {data?.all_time}
             </div>
           </CardContent>
         </Card>
@@ -57,7 +60,7 @@ const EarningsOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl md:text-3xl font-bold text-gray-900">
-              {formatCurrency(currentData.lastMonth)}
+              {data?.last_month}
             </div>
           </CardContent>
         </Card>
@@ -68,7 +71,7 @@ const EarningsOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl md:text-3xl font-bold text-gray-900">
-              {formatCurrency(currentData.currentMonth)}
+              {data?.current_month}
             </div>
           </CardContent>
         </Card>
@@ -99,7 +102,7 @@ const EarningsOverview = () => {
           <div className="w-full h-64 md:h-80 lg:h-96">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={currentData.chartData}
+                data={convertedData}
                 margin={{
                   top: 20,
                   right: 30,

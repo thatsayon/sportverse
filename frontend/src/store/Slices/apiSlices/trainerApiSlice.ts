@@ -4,6 +4,7 @@ import {
 } from "@/types/teacher/dashboard";
 import { apiSlice } from "./apiSlice";
 import { BookedSessionResponse } from "@/types/teacher/bookings";
+import { TrainerRevenueResponse } from "@/types/teacher/revenue";
 export type CreateSessionRequest = {
   id?: string;
   training_type: string;
@@ -87,7 +88,7 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       query: () => "/teacher/d/dashboard/",
     }),
 
-    // Booking and join session
+    // Booking and join session ---------------------------
 
     getGeneratedToken: builder.query<AgoraTokenResponse, string>({
       query: (id) => `/teacher/d/generate-token/${id}`,
@@ -97,7 +98,13 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       query: ()=> "/teacher/d/booked-session/"
     }),
 
-    //session management API
+    // Revenye API ---------------------------
+
+    getTrainerRenenue: builder.query<TrainerRevenueResponse, string>({
+      query: (month)=> `/teacher/d/revenue-report?month=${month}`
+    }),
+
+    //session management API ---------------------------
     createSession: builder.mutation<
       CreateSessionResponse,
       CreateSessionRequest
@@ -147,6 +154,8 @@ export const {
   // booking and session join
   useLazyGetGeneratedTokenQuery,
   useGetTrainerBookingsQuery,
+  // revenue api
+  useGetTrainerRenenueQuery,
   // session management
   useCreateSessionMutation,
   useGetSessionQuery,
