@@ -1,14 +1,21 @@
 from rest_framework import serializers
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 
 from controlpanel.models import (
     Withdraw
 )
+
+from teacher.session.models import (
+    BookedSession
+)
+
 from .models import (
     Dashboard,
     VisitCount,
     Bank,
-    PayPal
+    PayPal,
 )
 
 import random, uuid, string
@@ -23,6 +30,27 @@ class DashboardSerializer(serializers.ModelSerializer):
             'total_reservation',
             'occupied_sits'
         ]
+
+class BookedSessionSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.full_name')
+    session_type = serializers.CharField(source='session.training_type')
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BookedSession
+        fields = ['id', 'student_name', 'session_time', 'session_type', 'status']
+
+    def get_status(self, obj):
+        now = timezone.now()
+        start_time = obj.session_time
+        end_time = start_time + timedelta(hours=1)
+
+        if start_time - timedelta(seconds=15) <= now <= end_time:
+            return "Ongoing"
+        elif now < start_time - timedelta(seconds=15):
+            return "Upcoming"
+        else:
+            return "Completed"
 
 class BankSerializer(serializers.ModelSerializer):
     account_type = serializers.ListField(

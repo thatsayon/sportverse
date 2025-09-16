@@ -6,11 +6,17 @@ from rest_framework import status, generics
 
 from django.utils.timezone import now
 from django.db.models import Sum
+from django.utils import timezone
+
+from agora_token_builder import RtcTokenBuilder
 from datetime import timedelta, date
 
 from core.permissions import IsTeacher
 from controlpanel.models import Withdraw
 
+from teacher.session.models import (
+    BookedSession
+)
 from .models import (
     Dashboard,
     IncomeHistory,
@@ -21,10 +27,17 @@ from .serializers import (
     DashboardSerializer,
     BankSerializer,
     PayPalSerializer,
-    WithdrawSerializer
+    WithdrawSerializer,
+    BookedSessionSerializer
 )
 
 import calendar
+import os 
+import uuid
+import time
+
+APP_ID = os.getenv("AGORA_APP_ID")
+APP_CERTIFICATE = os.getenv("AGORA_APP_CERTIFICATE")
 
 def get_last_7_days_visits(dashboard):
     today = now().date()
@@ -92,6 +105,7 @@ def get_last_30_days_income(teacher):
         for i in range(30)
     }
 
+
 class TeacherDashboard(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
@@ -106,6 +120,34 @@ class TeacherDashboard(APIView):
 
         serializer = DashboardSerializer(dashboard)
 
+        sessions = BookedSession.objects.filter(
+            teacher=request.user.teacher
+        ).select_related("student", "session")
+
+
+        now = timezone.now()
+
+        ongoing = []
+        upcoming = []
+        completed = []
+
+        for s in sessions:
+            start = s.session_time
+            end = start + timedelta(hours=1)
+
+            if start - timedelta(seconds=15) <= now <= end:
+                ongoing.append(s)
+            elif now < start - timedelta(seconds=15):
+                upcoming.append(s)
+            else:
+                completed.append(s)
+
+        prioritized_sessions = ongoing + upcoming + completed
+
+        prioritized_sessions = prioritized_sessions[:5]
+
+        booked_sessions_data = BookedSessionSerializer(prioritized_sessions, many=True).data
+
         return Response({
             **serializer.data,
             "visit_count": {
@@ -115,9 +157,9 @@ class TeacherDashboard(APIView):
             "income_history": {
                 "last_7_days": get_last_7_days_income(request.user.teacher),
                 "last_30_days": get_last_30_days_income(request.user.teacher),
-            }
+            },
+            "booked_sessions": booked_sessions_data,   
         }, status=status.HTTP_200_OK)
-
 
 class RevenueReportAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -293,3 +335,76 @@ class WithdrawView(APIView):
         serializer.is_valid(raise_exception=True)
         withdraw = serializer.save()
         return Response(WithdrawSerializer(withdraw).data, status=status.HTTP_201_CREATED)
+
+class BookedSessionListView(generics.ListAPIView):
+    serializer_class = BookedSessionSerializer
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get_queryset(self):
+        return (
+            BookedSession.objects.filter(teacher=self.request.user.teacher)
+            .select_related("student", "session")
+            .order_by("-session_time")
+        )
+
+class TeacherGenerateVideoToken(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request, id):
+        try:
+            booked_session = BookedSession.objects.get(teacher=request.user.teacher, id=id)
+        except BookedSession.DoesNotExist:
+            return Response(
+                {"msg": "No booked session found with this id for this teacher."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        now = timezone.now()
+        start_time = booked_session.session_time
+        end_time = start_time + timedelta(minutes=booked_session.duration)
+
+        # Token only available in time window
+        if now < start_time - timedelta(seconds=15):
+            return Response(
+                {"msg": "Token not available yet. Try 15 seconds before session start."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if now > end_time:
+            return Response(
+                {"msg": "Session already completed. Token can’t be generated."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Channel name check
+        if not booked_session.channel_name:
+            return Response(
+                {"msg": "Channel name not set for this session."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        channel_name = booked_session.channel_name
+        uid = str(request.user.id)
+        role = 1  # teacher will act as host
+        expire_time_in_seconds = booked_session.duration * 60
+
+        current_timestamp = int(time.time())
+        privilege_expired_ts = current_timestamp + expire_time_in_seconds
+
+        token = RtcTokenBuilder.buildTokenWithUid(
+            APP_ID,
+            APP_CERTIFICATE,
+            channel_name,
+            int(request.user.id),
+            role,
+            privilege_expired_ts
+        )
+
+        return Response(
+            {
+                "token": token,
+                "appId": APP_ID,
+                "channelName": channel_name,
+                "expireIn": expire_time_in_seconds
+            },
+            status=status.HTTP_200_OK
+        )
