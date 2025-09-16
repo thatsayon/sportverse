@@ -7,14 +7,12 @@ import { VisitData } from '@/types/Trainerdashboard';
 interface AverageVisitsChartProps {
   data: VisitData[];
   period: 'Weekly' | 'Monthly';
-  peakValue: number;
   onPeriodChange: (period: 'Weekly' | 'Monthly') => void;
 }
 
 export const AverageVisitsChart: React.FC<AverageVisitsChartProps> = ({
   data,
   period,
-  peakValue,
   onPeriodChange
 }) => {
   const peakData = data.find(d => d.peak);
@@ -34,6 +32,17 @@ export const AverageVisitsChart: React.FC<AverageVisitsChartProps> = ({
     }
     return null;
   };
+  
+
+  if(data.length === 0 ){
+    return(
+      <Card>
+        <CardContent>
+          <h1>No Booking Found</h1>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="bg-white border border-gray-200">
@@ -86,7 +95,7 @@ export const AverageVisitsChart: React.FC<AverageVisitsChartProps> = ({
               />
               <Area
                 type="monotone"
-                dataKey="visits"
+                dataKey="value"
                 stroke="#FF4909"
                 strokeWidth={2}
                 fillOpacity={1}
@@ -96,7 +105,7 @@ export const AverageVisitsChart: React.FC<AverageVisitsChartProps> = ({
                 <>
                   <ReferenceDot
                     x={peakData.day}
-                    y={peakData.visits}
+                    y={peakData.value}
                     r={4}
                     fill="#FF4909"
                     stroke="#fff"

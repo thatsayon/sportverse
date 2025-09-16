@@ -4,83 +4,57 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+import moment from "moment";
+import { useLazyGetGeneratedTokenQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { setCallConfig } from "@/store/Slices/stateSlices/studentSlice";
 interface TrainerBookingCardProps {
   id: string;
-  trainer_name: string;
+  student_name: string;
   price: number;
   category: string;
-  date: string;
-  start_time: string;
-  end_time: string;
+  session_time: string;
   session_type: "Virtual Session" | "In-person";
-  status: "On Going" | "Up Comming" | "Cancelled";
-  avatar_url: string;
-  actions: {
-    join_url: string;
-  };
-  onJoinSession?: (sessionId: string) => void;
+  status: "Ongoing" | "Upcomming" | "Completed";
+  // avatar_url: string;
 }
 
 const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
   id,
-  trainer_name,
+  student_name,
   price,
   category,
-  date,
-  start_time,
-  end_time,
+  session_time,
   session_type,
   status,
-  avatar_url,
-  actions,
-  onJoinSession,
+  // avatar_url,
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(":");
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
+  const [getToken] = useLazyGetGeneratedTokenQuery();
+  const router = useRouter();
+  const dispatch = useDispatch();
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "On Going":
+      case "Ongoing":
         return "bg-green-100 text-green-800 border-green-200";
-      case "Up Comming":
+      case "Upcoming":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Cancelled":
+      case "Completed":
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase();
-  };
+  const handleJoinSession = async () => {
+    const response = await getToken(id).unwrap();
+    if (response.token) {
+      console.log("Token Resonse",response);
 
-  const handleJoinSession = () => {
-    if (onJoinSession) {
-      onJoinSession(id);
+      dispatch(setCallConfig(response))
+      router.push("/video")
     }
+    console.log("pressed. Now press harder!!!");
   };
 
   return (
@@ -89,17 +63,23 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
         {/* Left Section - Avatar and Info */}
         <div className="flex items-center space-x-3 flex-1">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={avatar_url} alt={trainer_name} />
-            <AvatarFallback className="bg-orange-100 text-orange-600">
-              {getInitials(trainer_name)}
-            </AvatarFallback>
+            {/* <AvatarImage src={avatar_url} alt={student_name} /> */}
+            <AvatarImage
+              src={
+                "https://i.pinimg.com/736x/3d/40/e6/3d40e6df5a167e763a170871e526483b.jpg"
+              }
+              alt={student_name}
+            />
+            {/* <AvatarFallback className="bg-orange-100 text-orange-600">
+              {getInitials(student_name)}
+            </AvatarFallback> */}
           </Avatar>
 
           <div className="flex-1 min-w-0">
             {/* Trainer Name and Price */}
             <div className="flex items-center mb-1">
               <h3 className="text-lg font-semibold text-gray-900 truncate">
-                {trainer_name}
+                {student_name}
               </h3>
             </div>
 
@@ -114,13 +94,19 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
               <div className="flex gap-6">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatDate(date)}</span>
+                  {/* <span>{formatDate(date)}</span> */}
+                  <span>{moment(session_time).format("MMMM Do YYYY")}</span>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1f">
                   <Clock className="h-4 w-4" />
                   <span>
-                    {formatTime(start_time)} - {formatTime(end_time)}
+                    {<span>{moment(session_time).format("LT")}</span>} -{" "}
+                    {
+                      <span>
+                        {moment(session_time).add(1, "hour").format("LT")}
+                      </span>
+                    }
                   </span>
                 </div>
 
@@ -144,7 +130,7 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
               {status}
             </Badge>
 
-            {status === "On Going" ? (
+            {status === "Ongoing" ? (
               <Button
                 onClick={handleJoinSession}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm"
@@ -153,7 +139,6 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
               </Button>
             ) : (
               <Button
-                onClick={handleJoinSession}
                 disabled
                 className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 text-sm"
               >

@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import TrainerBookingCard from "@/components/Element/TrainerBookingCard";
-import { trainerBookingData } from "@/data/trainerBookingData";
 import {
   Select,
   SelectContent,
@@ -11,17 +10,35 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { useGetTrainerBookingsQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 
 function BookingsSection() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 5; // sessions per page
 
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const { data } = useGetTrainerBookingsQuery();
+
+  const trainerBookingData = data?.results ?? [];
+
+  if (trainerBookingData?.length === 0) {
+    return (
+      <>
+        <h1>No data Fount</h1>
+      </>
+    );
+  }
   // Filter logic
   const filteredData =
     statusFilter === "all"
       ? trainerBookingData
-      : trainerBookingData.filter((item) => item.status === statusFilter);
+      : trainerBookingData?.filter((item) => item.status === statusFilter);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / pageSize);
@@ -29,12 +46,6 @@ function BookingsSection() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
 
   return (
     <div>
@@ -52,10 +63,18 @@ function BookingsSection() {
             <SelectValue placeholder="Filter by Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem className="text-[#F15A24]" value="all">All</SelectItem>
-            <SelectItem className="text-[#F15A24]" value="On Going">On Going</SelectItem>
-            <SelectItem className="text-[#F15A24]" value="Up Comming">Up Comming</SelectItem>
-            <SelectItem className="text-[#F15A24]" value="Cancelled">Cancelled</SelectItem>
+            <SelectItem className="text-[#F15A24]" value="all">
+              All
+            </SelectItem>
+            <SelectItem className="text-[#F15A24]" value="Ongoing">
+              On Going
+            </SelectItem>
+            <SelectItem className="text-[#F15A24]" value="Upcomming">
+              Up Comming
+            </SelectItem>
+            <SelectItem className="text-[#F15A24]" value="Completed">
+              Completed
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -75,7 +94,7 @@ function BookingsSection() {
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            <ChevronLeftIcon/>
+            <ChevronLeftIcon />
           </Button>
 
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -93,7 +112,7 @@ function BookingsSection() {
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            <ChevronRightIcon/>
+            <ChevronRightIcon />
           </Button>
         </div>
       )}

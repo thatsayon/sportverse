@@ -1,5 +1,9 @@
-import { TeacherDashboardResponse } from "@/types/teacher/dashboard";
+import {
+  AgoraTokenResponse,
+  TrainerDashboardResponse,
+} from "@/types/teacher/dashboard";
 import { apiSlice } from "./apiSlice";
+import { BookedSessionResponse } from "@/types/teacher/bookings";
 export type CreateSessionRequest = {
   id?: string;
   training_type: string;
@@ -33,16 +37,15 @@ export type CreateSessionResponse = {
 
 export type deleteResponse = {
   success: string;
-}
+};
 export type deleteRequest = {
   id: string;
-}
-
+};
 
 export interface Slot {
   id: string;
   start_time: string; // Format: "HH:MM:SS"
-  end_time: string;   // Format: "HH:MM:SS"
+  end_time: string; // Format: "HH:MM:SS"
 }
 
 export interface Day {
@@ -54,10 +57,10 @@ export interface Day {
 export interface SessionResult {
   id: string;
   training_type: string; // e.g., "mindset"
-  price: string;         // e.g., "1.11"
-  close_before: string;  // Format: "HH:MM:SS"
+  price: string; // e.g., "1.11"
+  close_before: string; // Format: "HH:MM:SS"
   days: Day[];
-  created_at: string;    // ISO timestamp
+  created_at: string; // ISO timestamp
 }
 
 export interface SessionResponse {
@@ -67,12 +70,12 @@ export interface SessionResponse {
   results: SessionResult[];
 }
 
-export interface TimeCheckRequest{
+export interface TimeCheckRequest {
   day: string;
   start_time: string;
   end_time: string;
 }
-export interface TimeCheckResponse{
+export interface TimeCheckResponse {
   available: boolean;
   message: string;
 }
@@ -80,47 +83,74 @@ export interface TimeCheckResponse{
 export const trainerApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     //Dashboard API
-    getTeacherDashboard: builder.query<TeacherDashboardResponse, void>({
-      query: ()=> "/teacher/d/dashboard/"
+    getTeacherDashboard: builder.query<TrainerDashboardResponse, void>({
+      query: () => "/teacher/d/dashboard/",
+    }),
+
+    // Booking and join session
+
+    getGeneratedToken: builder.query<AgoraTokenResponse, string>({
+      query: (id) => `/teacher/d/generate-token/${id}`,
+    }),
+
+    getTrainerBookings: builder.query<BookedSessionResponse, void>({
+      query: ()=> "/teacher/d/booked-session/"
     }),
 
     //session management API
-    createSession: builder.mutation<CreateSessionResponse, CreateSessionRequest>({
+    createSession: builder.mutation<
+      CreateSessionResponse,
+      CreateSessionRequest
+    >({
       query: (body) => ({
         url: "/teacher/session/create-session/",
         method: "POST",
         body: body,
-        credentials: "include"
+        credentials: "include",
       }),
     }),
     getSession: builder.query<SessionResponse, void>({
-      query: ()=> "/teacher/session/get-session/"
+      query: () => "/teacher/session/get-session/",
     }),
-    updateSession: builder.mutation<CreateSessionResponse, CreateSessionRequest>({
-      query:(body)=>({
+    updateSession: builder.mutation<
+      CreateSessionResponse,
+      CreateSessionRequest
+    >({
+      query: (body) => ({
         url: `/teacher/session/${body.id}/update-session/`,
         method: "PETCH",
         body: body,
-        credentials: "include"
-      })
+        credentials: "include",
+      }),
     }),
     deleteSession: builder.mutation<deleteResponse, CreateSessionRequest>({
-      query:(id)=>({
+      query: (id) => ({
         url: `/teacher/session/${id}/update-session/`,
         method: "DELETE",
-        credentials: "include"
-      })
+        credentials: "include",
+      }),
     }),
     timeCheck: builder.query<TimeCheckResponse, TimeCheckRequest>({
-      query: (data)=> ({
+      query: (data) => ({
         url: "/teacher/session/timeslot-availability/",
         method: "GET",
         body: data,
-        credentials: "include"
-      })
-    })
+        credentials: "include",
+      }),
+    }),
   }),
   overrideExisting: true,
 });
 
-export const { useGetTeacherDashboardQuery ,useCreateSessionMutation, useGetSessionQuery, useUpdateSessionMutation, useDeleteSessionMutation, useLazyTimeCheckQuery } = trainerApiSlice;
+export const {
+  useGetTeacherDashboardQuery,
+  // booking and session join
+  useLazyGetGeneratedTokenQuery,
+  useGetTrainerBookingsQuery,
+  // session management
+  useCreateSessionMutation,
+  useGetSessionQuery,
+  useUpdateSessionMutation,
+  useDeleteSessionMutation,
+  useLazyTimeCheckQuery,
+} = trainerApiSlice;

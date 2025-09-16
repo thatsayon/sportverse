@@ -14,6 +14,7 @@ import {
 import { useAppSelector } from "@/store/hooks/hooks";
 import { useDispatch } from "react-redux";
 import { setIsJoined } from "@/store/Slices/stateSlices/stateSlice";
+import { useJwt } from "@/hooks/useJwt";
 
 // Types for Agora SDK
 interface IAgoraRTCClient {
@@ -63,7 +64,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   token,
   appId,
   channelName,
-  uid,
+  uid=0
 }) => {
   // Refs
   const clientRef = useRef<IAgoraRTCClient | null>(null);
@@ -87,6 +88,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
     microphone: false,
     checked: false,
   });
+  const {decoded} = useJwt()
 
   // Event handlers with useCallback to prevent recreation
   const handleUserPublished = useCallback(
@@ -361,6 +363,8 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       // Store tracks in refs
       localAudioTrackRef.current = audioTrack;
       localVideoTrackRef.current = videoTrack;
+
+      // const testToken = "0063a92940d828b4be687ea50c325adfc20IACZt18ECUEv9JiNjeWPmOfOzJKbaj3awG+GHKaqHxiyWLHv79fM2MOtIgCV5T4FZCDLaAQAAQD03MloAgD03MloAwD03MloBAD03Mlo"
 
       // Join channel first
       await clientRef.current.join(appId, channelName, token, uid);

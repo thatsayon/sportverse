@@ -25,7 +25,7 @@ export interface ChartData {
 
 export interface VisitData {
   day: string;
-  visits: number;
+  value: number;
   peak?: number;
 }
 
