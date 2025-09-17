@@ -6,6 +6,7 @@ import { apiSlice } from "./apiSlice";
 import { BookedSessionResponse } from "@/types/teacher/bookings";
 import { TrainerRevenueResponse } from "@/types/teacher/revenue";
 import { CloudinaryUploadResponse } from "@/types/teacher/trainerVideoUpload";
+import { TrainerBankRequest, TrainerBankResponse, TrainerPaypalRequest, TrainerPaypalResponse, TrainerWalletTransactionRequest, TrainerWalletTransactionResponse, TrainerWithdrawResponse } from "@/types/teacher/wallet";
 export type CreateSessionRequest = {
   id?: string;
   training_type: string;
@@ -147,12 +148,84 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    // Wallet Bank API
+
+    //GET
+    getTrainerBank: builder.query<TrainerBankResponse, void>({
+      query: ()=> "/teacher/d/bank/"
+    }),
+
+    //POST
+    createTrainerBank: builder.mutation<TrainerBankResponse, TrainerBankRequest>({
+      query: (body)=>({
+        url: "/teacher/d/bank/",
+        method: "POST",
+        body: body,
+        credentials: "include"
+      })
+    }),
+
+    //PUT
+    updateTrainerBank: builder.mutation<TrainerBankResponse, TrainerBankRequest>({
+      query: (body)=>({
+        url: "/teacher/d/bank/",
+        method: "PUT",
+        body: body,
+        credentials: "include"
+      })
+    }),
+
+    
+
+    //Wallet Paypal API
+
+    //GET
+    getTrainerPaypal: builder.query<TrainerPaypalResponse, void>({
+      query: ()=> "/teacher/d/paypal/"
+    }),
+
+    //POST
+    createTrainerPaypal: builder.mutation<TrainerPaypalResponse, TrainerPaypalRequest>({
+      query: (body)=>({
+        url: "/teacher/d/paypal/",
+        method: "POST",
+        body: body,
+        credentials: "include"
+      })
+    }),
+
+    //PUT
+    updateTrainerPaypal: builder.mutation<TrainerPaypalResponse, TrainerPaypalRequest>({
+      query: (body)=>({
+        url: "/teacher/d/paypal/",
+        method: "PUT",
+        body: body,
+        credentials: "include"
+      })
+    }),
+
+    // withdraw API
+
+    //GET
+    getTainerWithdraw: builder.query<TrainerWithdrawResponse, void>({
+      query: ()=> "/teacher/d/withdraw/"
+    }),
+
+    //POST
+    createTrainerWithdrawRequest: builder.mutation<TrainerWalletTransactionResponse, TrainerWalletTransactionRequest>({
+      query: (body)=>({
+        url: "/teacher/d/withdraw/",
+        method: "POST",
+        body,
+        credentials: "include"
+      })
+    }),
     // Profile API
 
     postTrainerVideo: builder.mutation<CloudinaryUploadResponse, void>({
       query: ()=>({
         url: "/teacher/d/upload-video/",
-        method: "POST",
+        method: "PUT",
         credentials: "include"
       })
     }),
@@ -168,6 +241,17 @@ export const {
   useGetTrainerBookingsQuery,
   // revenue api
   useGetTrainerRenenueQuery,
+  // wallet bank
+  useGetTrainerBankQuery,
+  useCreateTrainerBankMutation,
+  useUpdateTrainerBankMutation,
+  // wallet Paypal
+  useGetTrainerPaypalQuery,
+  useCreateTrainerPaypalMutation,
+  useUpdateTrainerPaypalMutation,
+  // withdraw
+  useGetTainerWithdrawQuery,
+  useCreateTrainerWithdrawRequestMutation,
   // session management
   useCreateSessionMutation,
   useGetSessionQuery,
