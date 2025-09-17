@@ -10,6 +10,7 @@ from controlpanel.models import (
 from teacher.session.models import (
     BookedSession
 )
+from account.models import Document, Teacher
 
 from .models import (
     Dashboard,
@@ -34,11 +35,12 @@ class DashboardSerializer(serializers.ModelSerializer):
 class BookedSessionSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='student.full_name')
     session_type = serializers.CharField(source='session.training_type')
+    price = serializers.CharField(source='session.price')
     status = serializers.SerializerMethodField()
 
     class Meta:
         model = BookedSession
-        fields = ['id', 'student_name', 'session_time', 'session_type', 'status']
+        fields = ['id', 'student_name', 'session_time', 'session_type', 'price', 'status']
 
     def get_status(self, obj):
         now = timezone.now()
@@ -106,3 +108,44 @@ class WithdrawSerializer(serializers.ModelSerializer):
             left_amount=left_amount,
             transaction_id=transaction_id
         )
+
+class UpdatePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+
+class DocumentSerializer(serializers.ModelSerializer):
+    # Read-only URL fields for GET requests
+    picture_url = serializers.SerializerMethodField()
+    id_front_url = serializers.SerializerMethodField()
+    id_back_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Document
+        # Include both writable fields and read-only URL fields
+        fields = [
+            'id', 'picture', 'id_front', 'id_back',
+            'picture_url', 'id_front_url', 'id_back_url',
+            'city', 'zip_code'
+        ]
+
+    # Methods to return URLs for GET
+    def get_picture_url(self, obj):
+        return obj.picture.url if obj.picture else None
+
+    def get_id_front_url(self, obj):
+        return obj.id_front.url if obj.id_front else None
+
+    def get_id_back_url(self, obj):
+        return obj.id_back.url if obj.id_back else None
+
+class AccountDetailSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='user.full_name')
+    username = serializers.CharField(source='user.username')
+    city = serializers.CharField(source='user.teacher.document.city')
+    zip_code = serializers.CharField(source='user.teacher.document.zip_code')
+
+    class Meta:
+        model = Teacher
+        fields = ['id', 'full_name', 'username', 'city', 'zip_code', 'institute_name', 'coach_type', 'description', 'status', 'is_profile_complete']
+

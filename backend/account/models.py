@@ -41,7 +41,11 @@ class Teacher(models.Model):
         related_name='teacher',
         blank=True
     )
-
+    description = models.CharField(
+        max_length=240,
+        blank=True,
+        null=True
+    )
     status = models.CharField(
         max_length=20,
         choices=STATUS,
@@ -61,7 +65,7 @@ class Document(models.Model):
         editable=False,
         unique=True
     )
-    teacher = models.ForeignKey(
+    teacher = models.OneToOneField(
         Teacher,
         on_delete=models.CASCADE,
         related_name='document'

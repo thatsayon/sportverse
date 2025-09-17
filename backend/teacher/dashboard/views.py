@@ -4,15 +4,21 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status, generics
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth.hashers import check_password
 from django.utils.timezone import now
 from django.db.models import Sum
 from django.utils import timezone
+from django.conf import settings
 
 from agora_token_builder import RtcTokenBuilder
 from datetime import timedelta, date
 
 from core.permissions import IsTeacher
 from controlpanel.models import Withdraw
+
+from account.models import Document
 
 from teacher.session.models import (
     BookedSession
@@ -21,16 +27,22 @@ from .models import (
     Dashboard,
     IncomeHistory,
     Bank,
-    PayPal
+    PayPal,
+    AccountVideo
 )
 from .serializers import (
     DashboardSerializer,
     BankSerializer,
     PayPalSerializer,
     WithdrawSerializer,
-    BookedSessionSerializer
+    BookedSessionSerializer,
+    UpdatePasswordSerializer,
+    DocumentSerializer,
+    AccountDetailSerializer
 )
 
+import cloudinary.uploader
+import cloudinary
 import calendar
 import os 
 import uuid
@@ -383,7 +395,8 @@ class TeacherGenerateVideoToken(APIView):
             )
 
         channel_name = booked_session.channel_name
-        uid = str(request.user.id)
+        # uid = str(request.user.id)
+        uid = "0"
         role = 1  # teacher will act as host
         expire_time_in_seconds = booked_session.duration * 60
 
@@ -394,7 +407,8 @@ class TeacherGenerateVideoToken(APIView):
             APP_ID,
             APP_CERTIFICATE,
             channel_name,
-            int(request.user.id),
+            # int(request.user.id),
+            int(uid),
             role,
             privilege_expired_ts
         )
@@ -408,3 +422,168 @@ class TeacherGenerateVideoToken(APIView):
             },
             status=status.HTTP_200_OK
         )
+
+
+class PasswordUpdateView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def post(self, request):
+        serializer = UpdatePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        current_password = serializer.validated_data['current_password']
+        new_password = serializer.validated_data['new_password']
+
+        user = request.user
+
+        if not user.check_password(current_password):
+            return Response(
+                {"detail": "Current password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {"detail": "Password updated successfully."},
+            status=status.HTTP_200_OK
+        )
+
+class DocumentView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request):
+        try:
+            document = Document.objects.get(teacher=request.user.teacher)
+        except Document.DoesNotExist:
+            return Response({"detail": "No document found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = DocumentSerializer(document)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        try:
+            document = Document.objects.get(teacher=request.user.teacher)
+        except Document.DoesNotExist:
+            return Response({"detail": "No document found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = DocumentSerializer(document, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class AccountUploadView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def post(self, request):
+        upload, created = AccountVideo.objects.get_or_create(
+            teacher=request.user.teacher,
+            defaults={"public_id": ""}  # first-time creation
+        )
+
+        if not created:
+            upload.public_id = ""
+            upload.save()
+
+        timestamp = int(time.time())
+
+        params_to_sign = {
+            "timestamp": timestamp,
+            "folder": "teacher_accounts",
+            "public_id": str(upload.id),
+        }
+
+        signature = cloudinary.utils.api_sign_request(
+            params_to_sign,
+            settings.CLOUDINARY_STORAGE["API_SECRET"]
+        )
+
+        return Response({
+            "api_key": settings.CLOUDINARY_STORAGE["API_KEY"],
+            "cloud_name": settings.CLOUDINARY_STORAGE["CLOUD_NAME"],
+            "timestamp": timestamp,
+            "signature": signature,
+            "upload_id": str(upload.id),
+            "folder": "teacher_accounts",
+            "public_id": str(upload.id),
+        }, status=200)
+
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AccountUploadWebhookView(APIView):
+    """
+    Receives Cloudinary upload callbacks and updates the single AccountVideo record per teacher.
+    """
+    def post(self, request):
+        try:
+            payload = json.loads(request.body)
+            public_id = payload.get("public_id")
+            secure_url = payload.get("secure_url")
+            event = payload.get("event")  # e.g., 'upload'
+
+            if event != "upload" or not public_id or not secure_url:
+                return Response({"error": "Invalid payload"}, status=400)
+
+            # Update the existing AccountVideo entry
+            try:
+                upload = AccountVideo.objects.get(id=public_id)
+                upload.file_url = secure_url
+                upload.public_id = public_id  # store public_id if needed
+                upload.save()
+            except AccountVideo.DoesNotExist:
+                return Response({"error": "Upload record not found"}, status=404)
+
+            return Response({"status": "success"}, status=200)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class AccountDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request):
+        teacher = request.user.teacher  # each user has one teacher profile
+        serializer = AccountDetailSerializer(teacher)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        teacher = request.user.teacher
+        document = getattr(teacher, "document", None)
+        user = teacher.user
+
+        # Allowed Teacher fields
+        teacher_fields = ['institute_name', 'coach_type', 'description', 'status', 'is_profile_complete']
+        teacher_data = {field: request.data.get(field) for field in teacher_fields if field in request.data}
+
+        # Allowed Document fields
+        document_fields = ['city', 'zip_code']
+        document_data = {field: request.data.get(field) for field in document_fields if field in request.data}
+
+        # Allowed User fields
+        user_fields = ['full_name', 'username']
+        user_data = {field: request.data.get(field) for field in user_fields if field in request.data}
+
+        # Update Teacher
+        for field, value in teacher_data.items():
+            setattr(teacher, field, value)
+        teacher.save()
+
+        # Update Document (create if doesn’t exist)
+        if document_data:
+            if document:
+                for field, value in document_data.items():
+                    setattr(document, field, value)
+                document.save()
+            else:
+                document = Document.objects.create(teacher=teacher, **document_data)
+
+        # Update User
+        for field, value in user_data.items():
+            setattr(user, field, value)
+        user.save()
+
+        serializer = AccountDetailSerializer(teacher)
+        return Response(serializer.data, status=status.HTTP_200_OK)

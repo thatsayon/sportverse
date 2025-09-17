@@ -7,6 +7,11 @@ from .views import (
     WithdrawView,
     BookedSessionListView,
     TeacherGenerateVideoToken,
+    PasswordUpdateView,
+    DocumentView,
+    AccountUploadView,
+    AccountUploadWebhookView,
+    AccountDetailView,
 )
 
 urlpatterns = [
@@ -17,4 +22,9 @@ urlpatterns = [
     path('bank/', BankView.as_view(), name='Bank'),
     path('paypal/', PayPalView.as_view(), name='PayPal'),
     path('withdraw/', WithdrawView.as_view(), name='Withdraw'),
+    path('update-password/', PasswordUpdateView.as_view(), name='Update Password'),
+    path('document/', DocumentView.as_view(), name='Document'),
+    path('upload-video/', AccountUploadView.as_view(), name='Account Video'),
+    path('webhook/account-upload/', AccountUploadWebhookView.as_view(), name='Upload Webhook'),
+    path('account/', AccountDetailView.as_view(), name='Account Detail')
 ]

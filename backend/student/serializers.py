@@ -80,7 +80,7 @@ class SessionDetailsSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='teacher.user.username')
     institute_name = serializers.CharField(source='teacher.institute_name')
     coach_type = serializers.CharField(source='teacher.coach_type')
-    available_days = AvailableDaySerializer(  # ✅ no source needed
+    available_days = AvailableDaySerializer(  
         many=True,
         read_only=True
     )
@@ -116,7 +116,6 @@ class BookedSessionSerializer(serializers.ModelSerializer):
         start_time = obj.session_time
         end_time = start_time + timedelta(hours=1)
 
-        # Session becomes "Ongoing" 15s before start
         if start_time - timedelta(seconds=15) <= now <= end_time:
             return "Ongoing"
         elif now < start_time - timedelta(seconds=15):
