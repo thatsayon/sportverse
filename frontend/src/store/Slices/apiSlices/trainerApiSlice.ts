@@ -5,6 +5,7 @@ import {
 import { apiSlice } from "./apiSlice";
 import { BookedSessionResponse } from "@/types/teacher/bookings";
 import { TrainerRevenueResponse } from "@/types/teacher/revenue";
+import { CloudinaryUploadResponse } from "@/types/teacher/trainerVideoUpload";
 export type CreateSessionRequest = {
   id?: string;
   training_type: string;
@@ -145,6 +146,17 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         credentials: "include",
       }),
     }),
+
+    // Profile API
+
+    postTrainerVideo: builder.mutation<CloudinaryUploadResponse, void>({
+      query: ()=>({
+        url: "/teacher/d/upload-video/",
+        method: "POST",
+        credentials: "include"
+      })
+    }),
+
   }),
   overrideExisting: true,
 });
@@ -162,4 +174,7 @@ export const {
   useUpdateSessionMutation,
   useDeleteSessionMutation,
   useLazyTimeCheckQuery,
+  // profile
+
+  usePostTrainerVideoMutation
 } = trainerApiSlice;
