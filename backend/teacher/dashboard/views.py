@@ -587,3 +587,18 @@ class AccountDetailView(APIView):
 
         serializer = AccountDetailSerializer(teacher)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AddedWalletListView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request):
+        teacher = request.user.teacher  
+        wallets = []
+
+        if hasattr(teacher, "bank_account"):
+            wallets.append("bank")
+
+        if hasattr(teacher, "paypal_accounts"):
+            wallets.append("paypal")
+
+        return Response(wallets)

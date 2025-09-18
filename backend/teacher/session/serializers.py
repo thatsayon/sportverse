@@ -127,9 +127,48 @@ class SessionOptionSerializer(serializers.ModelSerializer):
                     day.delete()
 
         return instance
+#
+# class TimeslotAvailabilitySerializer(serializers.Serializer):
+#     day = serializers.ChoiceField(choices=[d[0] for d in AvailableDay._meta.get_field('day').choices])
+#     start_time = serializers.TimeField()
+#     end_time = serializers.TimeField()
+#
+#     def validate(self, data):
+#         teacher = self.context['request'].user.teacher
+#         day = data['day']
+#         start_time = data['start_time']
+#         end_time = data['end_time']
+#
+#         gap = timedelta(hours=1, minutes=30)
+#
+#         # Convert to datetime for comparison
+#         start_dt = datetime.combine(date.today(), start_time)
+#         end_dt = datetime.combine(date.today(), end_time)
+#
+#         sessions = SessionOption.objects.filter(teacher=teacher)
+#
+#         for session in sessions:
+#             try:
+#                 available_day = session.available_days.get(day=day)
+#             except AvailableDay.DoesNotExist:
+#                 continue
+#
+#             for slot in available_day.availabledays.all():
+#                 slot_start_dt = datetime.combine(date.today(), slot.start_time)
+#                 slot_end_dt = datetime.combine(date.today(), slot.end_time)
+#
+#                 # Check overlap or less than 1.5h gap
+#                 if not (end_dt + gap <= slot_start_dt or start_dt >= slot_end_dt + gap):
+#                     raise serializers.ValidationError(
+#                         "Timeslot overlaps with an existing session or is too close (minimum 1h30 gap required)."
+#                     )
+#
+#         return data
 
 class TimeslotAvailabilitySerializer(serializers.Serializer):
-    day = serializers.ChoiceField(choices=[d[0] for d in AvailableDay._meta.get_field('day').choices])
+    day = serializers.ChoiceField(
+        choices=[d[0] for d in AvailableDay._meta.get_field('day').choices]
+    )
     start_time = serializers.TimeField()
     end_time = serializers.TimeField()
 
@@ -139,28 +178,33 @@ class TimeslotAvailabilitySerializer(serializers.Serializer):
         start_time = data['start_time']
         end_time = data['end_time']
 
+        if end_time <= start_time:
+            raise serializers.ValidationError("End time must be after start time.")
+
         gap = timedelta(hours=1, minutes=30)
 
         # Convert to datetime for comparison
         start_dt = datetime.combine(date.today(), start_time)
         end_dt = datetime.combine(date.today(), end_time)
 
+        # Get all teacher sessions
         sessions = SessionOption.objects.filter(teacher=teacher)
 
         for session in sessions:
-            try:
-                available_day = session.availabledays.get(day=day)
-            except AvailableDay.DoesNotExist:
-                continue
+            available_days = session.available_days.filter(day=day)
+            for available_day in available_days:
+                for slot in available_day.time_slots.all():  
+                    slot_start_dt = datetime.combine(date.today(), slot.start_time)
+                    slot_end_dt = datetime.combine(date.today(), slot.end_time)
 
-            for slot in available_day.availabledays.all():
-                slot_start_dt = datetime.combine(date.today(), slot.start_time)
-                slot_end_dt = datetime.combine(date.today(), slot.end_time)
-
-                # Check overlap or less than 1.5h gap
-                if not (end_dt + gap <= slot_start_dt or start_dt >= slot_end_dt + gap):
-                    raise serializers.ValidationError(
-                        "Timeslot overlaps with an existing session or is too close (minimum 1h30 gap required)."
-                    )
+                    # Check overlap or insufficient gap
+                    if not (
+                        end_dt + gap <= slot_start_dt or
+                        start_dt >= slot_end_dt + gap
+                    ):
+                        raise serializers.ValidationError(
+                            f"Timeslot conflicts with {slot_start_dt.time()} - {slot_end_dt.time()} "
+                            f"on {day}. Minimum 1h30 gap required."
+                        )
 
         return data

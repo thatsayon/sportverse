@@ -72,7 +72,7 @@ class DeleteTimeSlotView(generics.DestroyAPIView):
 class IsTimeslotAvailable(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
+    def post(self, request):
         serializer = TimeslotAvailabilitySerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             return Response({"available": True, "message": "Timeslot is available"}, status=status.HTTP_200_OK)

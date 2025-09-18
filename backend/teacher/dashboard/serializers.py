@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 
 from controlpanel.models import (
     Withdraw

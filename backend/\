@@ -5,10 +5,8 @@ from account.models import (
     Teacher,
     Student
 )
-from django.utils import timezone
-from datetime import timedelta
 from teacher.session.models import BookedSession
-from .models import Sport, Withdraw
+from .models import Sport
     
 
 class SportSerializer(serializers.ModelSerializer):
@@ -72,45 +70,11 @@ class StudentListSerializer(serializers.ModelSerializer):
 
 class BookingSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.user.full_name')
-    student_name = serializers.CharField(source='student.full_name')
-    session_price = serializers.CharField(source="session.price")
-    training_type = serializers.CharField(source="session.training_type")
-    state_name = serializers.CharField(source="teacher.document.city")
-    status = serializers.SerializerMethodField()
-
+    student_name = serializers.CharField(source='student.user.full_name')
     class Meta:
         model = BookedSession
         fields = [
             "id",
             "teacher_name",
-            "student_name",
-            "session_time",
-            "session_price",
-            "training_type",
-            "state_name",
-            "status"
-        ]
-
-    def get_status(self, obj):
-        now = timezone.now()
-        start_time = obj.session_time
-        end_time = start_time + timedelta(minutes=obj.duration)
-
-        if start_time <= now <= end_time:
-            return "ongoing"
-        elif now < start_time:
-            return "upcoming"
-        else:
-            return "complete"
-
-class WithdrawRequestSerializer(serializers.ModelSerializer):
-    teacher_name = serializers.CharField(source="teacher.user.full_name")
-    location = serializers.CharField(source="teacher.document.city")
-    class Meta:
-        model = Withdraw
-        fields = [
-            "id",
-            "teacher_name",
-            "transaction_id",
-            "location"
+            "student_name"
         ]

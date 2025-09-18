@@ -85,7 +85,6 @@ class IncomeHistory(models.Model):
         return f"{self.teacher.user.username}: {self.after_deduction}"
 
 
-
 class Bank(models.Model):
     id = models.UUIDField(
         primary_key=True,
