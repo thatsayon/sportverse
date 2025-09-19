@@ -8,6 +8,7 @@ import { TrainerRevenueResponse } from "@/types/teacher/revenue";
 import { CloudinaryUploadResponse } from "@/types/teacher/trainerVideoUpload";
 import { TrainerBankRequest, TrainerBankResponse, TrainerPaypalRequest, TrainerPaypalResponse, TrainerWalletTransactionRequest, TrainerWalletTransactionResponse, TrainerWithdrawResponse } from "@/types/teacher/wallet";
 import { CreateSessionRequest, CreateSessionResponse, deleteResponse, DeleteTimeSlotRequest, DeleteTimeSlotResponse, SessionResponse, TimeCheckRequest, TimeCheckResponse } from "@/types/teacher/session";
+import { TrainerPasswardResponse, TrainerPasswardResquest, TrainerProfileResponse, TrainerProfileUpdateRequset, TrainerProfileUpdateResponse } from "@/types/teacher/profile";
 
 
 export const trainerApiSlice = apiSlice.injectEndpoints({
@@ -15,22 +16,26 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
     //Dashboard API
     getTeacherDashboard: builder.query<TrainerDashboardResponse, void>({
       query: () => "/teacher/d/dashboard/",
+      providesTags: ["TrainerDashboard"],
     }),
 
     // Booking and join session ---------------------------
 
     getGeneratedToken: builder.query<AgoraTokenResponse, string>({
       query: (id) => `/teacher/d/generate-token/${id}`,
+      providesTags: ["AgoraToken"],
     }),
 
     getTrainerBookings: builder.query<BookedSessionResponse, void>({
-      query: ()=> "/teacher/d/booked-session/"
+      query: ()=> "/teacher/d/booked-session/",
+      providesTags: ["TrainerBookings"],
     }),
 
     // Revenye API ---------------------------
 
     getTrainerRenenue: builder.query<TrainerRevenueResponse, string>({
-      query: (month)=> `/teacher/d/revenue-report?month=${month}`
+      query: (month)=> `/teacher/d/revenue-report?month=${month}`,
+      providesTags: ["TrainerRevenue"],
     }),
 
     //session management API ---------------------------
@@ -44,10 +49,12 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         body: body,
         credentials: "include",
       }),
+      invalidatesTags: ["TrainerSessions", "TimeSlotAvailability"],
     }),
     
     getSession: builder.query<SessionResponse, void>({
       query: () => "/teacher/session/get-session/",
+      providesTags: ["TrainerSessions"],
     }),
     
     updateSession: builder.mutation<
@@ -60,6 +67,7 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         body: body,
         credentials: "include",
       }),
+      invalidatesTags: ["TrainerSessions", "TimeSlotAvailability"],
     }),
     
     deleteSession: builder.mutation<deleteResponse, string>({
@@ -68,6 +76,7 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         method: "DELETE",
         credentials: "include",
       }),
+      invalidatesTags: ["TrainerSessions", "TimeSlotAvailability"],
     }),
     
     // New endpoint for deleting individual time slots
@@ -77,6 +86,7 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         method: "DELETE",
         credentials: "include",
       }),
+      invalidatesTags: ["TimeSlotAvailability", "TrainerSessions"],
     }),
     
     timeCheck: builder.mutation<TimeCheckResponse, TimeCheckRequest>({
@@ -86,13 +96,15 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         body: data,
         credentials: "include",
       }),
+      invalidatesTags: ["TimeSlotAvailability"],
     }),
 
     // Wallet Bank API
 
     //GET
     getTrainerBank: builder.query<TrainerBankResponse, void>({
-      query: ()=> "/teacher/d/bank/"
+      query: ()=> "/teacher/d/bank/",
+      providesTags: ["TrainerBank"],
     }),
 
     //POST
@@ -102,7 +114,8 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: body,
         credentials: "include"
-      })
+      }),
+      invalidatesTags: ["TrainerBank"],
     }),
 
     //PUT
@@ -112,16 +125,16 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         method: "PUT",
         body: body,
         credentials: "include"
-      })
+      }),
+      invalidatesTags: ["TrainerBank"],
     }),
-
-    
 
     //Wallet Paypal API
 
     //GET
     getTrainerPaypal: builder.query<TrainerPaypalResponse, void>({
-      query: ()=> "/teacher/d/paypal/"
+      query: ()=> "/teacher/d/paypal/",
+      providesTags: ["TrainerPaypal"],
     }),
 
     //POST
@@ -131,7 +144,8 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: body,
         credentials: "include"
-      })
+      }),
+      invalidatesTags: ["TrainerPaypal"],
     }),
 
     //PUT
@@ -141,14 +155,16 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         method: "PUT",
         body: body,
         credentials: "include"
-      })
+      }),
+      invalidatesTags: ["TrainerPaypal"],
     }),
 
     // withdraw API
 
     //GET
     getTainerWithdraw: builder.query<TrainerWithdrawResponse, void>({
-      query: ()=> "/teacher/d/withdraw/"
+      query: ()=> "/teacher/d/withdraw/",
+      providesTags: ["TrainerWithdraw"],
     }),
 
     //POST
@@ -158,14 +174,40 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body,
         credentials: "include"
-      })
+      }),
+      invalidatesTags: ["TrainerWithdraw"],
     }),
+
     // Profile API
+
+    getTrainerProfile: builder.query<TrainerProfileResponse, void>({
+      query: ()=> "/teacher/d/account/",
+      providesTags: ["TrainerProfile"],
+    }),
+
+    updateTrainerProfile: builder.mutation<TrainerProfileUpdateResponse, TrainerProfileUpdateRequset>({
+      query: (body)=>({
+        url: "/teacher/d/account/",
+        method: "PATCH",
+        body,
+        credentials: "include"
+      }),
+      invalidatesTags: ["TrainerProfile"],
+    }),
 
     postTrainerVideo: builder.mutation<CloudinaryUploadResponse, void>({
       query: ()=>({
         url: "/teacher/d/upload-video/",
         method: "PUT",
+        credentials: "include"
+      }),
+      invalidatesTags: ["TrainerProfile"],
+    }),
+    updateTrainerPassword: builder.mutation<TrainerPasswardResponse, TrainerPasswardResquest>({
+      query: (body)=>({
+        url: "/teacher/d/update-password/",
+        method: "POST",
+        body,
         credentials: "include"
       })
     }),
@@ -200,6 +242,8 @@ export const {
   useDeleteTimeSlotMutation, // New export
   useTimeCheckMutation,
   // profile
-
-  usePostTrainerVideoMutation
+  useGetTrainerProfileQuery,
+  useUpdateTrainerProfileMutation,
+  usePostTrainerVideoMutation,
+  useUpdateTrainerPasswordMutation
 } = trainerApiSlice;

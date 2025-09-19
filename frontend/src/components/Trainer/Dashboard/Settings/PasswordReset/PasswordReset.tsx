@@ -9,21 +9,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
+import { useUpdateTrainerPasswordMutation } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { toast } from "sonner";
 
 // Zod validation schema
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number"),
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const passwordSchema = z
+  .object({
+    current_password: z.string().min(1, "Current password is required"),
+    new_password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.new_password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
@@ -31,52 +35,63 @@ const PasswordReset = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const [updatePassword] = useUpdateTrainerPasswordMutation();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setValue,
   } = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPassword: "",
-      newPassword: "",
+      current_password: "",
+      new_password: "",
       confirmPassword: "",
     },
   });
 
   const handlePasswordUpdate = async (data: PasswordFormData) => {
     try {
-      console.log("Password update data:", {
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
-      });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Reset form after successful update
-      reset();
-      
-      // You can add success notification here
-      alert("Password updated successfully!");
-      
+      const response = await updatePassword(data).unwrap();
+
+      if (response?.detail) {
+        toast.success(response.detail);
+        
+        // Clear all form fields explicitly
+        setValue("current_password", "");
+        setValue("new_password", "");
+        setValue("confirmPassword", "");
+        
+        // Also reset the form state
+        reset({
+          current_password: "",
+          new_password: "",
+          confirmPassword: "",
+        });
+        
+        // Reset password visibility states
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
+      } else {
+        toast.error("Unexpected response from server");
+      }
     } catch (error) {
-      console.error("Password update failed:", error);
-      // You can add error notification here
+      const err = error as Error;
+      toast.error(err?.message || "Error while updating password");
     }
   };
 
-  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
+  const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
     switch (field) {
-      case 'current':
+      case "current":
         setShowCurrentPassword(!showCurrentPassword);
         break;
-      case 'new':
+      case "new":
         setShowNewPassword(!showNewPassword);
         break;
-      case 'confirm':
+      case "confirm":
         setShowConfirmPassword(!showConfirmPassword);
         break;
     }
@@ -93,7 +108,7 @@ const PasswordReset = () => {
             </h2>
           </div>
 
-          <div onSubmit={handleSubmit(handlePasswordUpdate)}>
+          <form onSubmit={handleSubmit(handlePasswordUpdate)}>
             {/* Current Password */}
             <div className="space-y-2">
               <Label htmlFor="currentPassword" className="text-gray-700">
@@ -104,12 +119,12 @@ const PasswordReset = () => {
                   id="currentPassword"
                   type={showCurrentPassword ? "text" : "password"}
                   placeholder="Enter current password"
-                  {...register("currentPassword")}
+                  {...register("current_password")}
                   className="pr-10 h-11"
                 />
                 <button
                   type="button"
-                  onClick={() => togglePasswordVisibility('current')}
+                  onClick={() => togglePasswordVisibility("current")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showCurrentPassword ? (
@@ -120,9 +135,9 @@ const PasswordReset = () => {
                 </button>
               </div>
               <div className="h-5">
-                {errors.currentPassword && (
+                {errors.current_password && (
                   <p className="text-sm text-red-500">
-                    {errors.currentPassword.message}
+                    {errors.current_password.message}
                   </p>
                 )}
               </div>
@@ -138,12 +153,12 @@ const PasswordReset = () => {
                   id="newPassword"
                   type={showNewPassword ? "text" : "password"}
                   placeholder="Enter new password"
-                  {...register("newPassword")}
+                  {...register("new_password")}
                   className="pr-10 h-11"
                 />
                 <button
                   type="button"
-                  onClick={() => togglePasswordVisibility('new')}
+                  onClick={() => togglePasswordVisibility("new")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showNewPassword ? (
@@ -154,9 +169,9 @@ const PasswordReset = () => {
                 </button>
               </div>
               <div className="h-5">
-                {errors.newPassword && (
+                {errors.new_password && (
                   <p className="text-sm text-red-500">
-                    {errors.newPassword.message}
+                    {errors.new_password.message}
                   </p>
                 )}
               </div>
@@ -177,7 +192,7 @@ const PasswordReset = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => togglePasswordVisibility('confirm')}
+                  onClick={() => togglePasswordVisibility("confirm")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? (
@@ -194,19 +209,18 @@ const PasswordReset = () => {
                   </p>
                 )}
               </div>
-            </div>            
+            </div>
             {/* Update Button */}
             <div className="pt-4">
               <Button
                 type="submit"
-                onClick={handleSubmit(handlePasswordUpdate)}
                 disabled={isSubmitting}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Updating..." : "Update"}
               </Button>
             </div>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>

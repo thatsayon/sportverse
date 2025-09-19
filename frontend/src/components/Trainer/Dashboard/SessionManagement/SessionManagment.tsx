@@ -243,8 +243,9 @@ const SessionManagement: React.FC = () => {
       } else {
         toast.error(response.message || "This time slot is not available");
       }
-    } catch (error: any) {
-      const errorMessage = error?.data?.message || error?.message || "Error checking time availability";
+    } catch (error) {
+      const err = error as Error
+      const errorMessage = err?.message || "Error checking time availability";
       toast.error(`${errorMessage}. Please try again.`);
       
       if (typeof window !== 'undefined' && window.console) {
@@ -285,8 +286,9 @@ const SessionManagement: React.FC = () => {
         
         // Refetch sessions to update the UI with latest data
         refetch();
-      } catch (error: any) {
-        const errorMessage = error?.data?.message || error?.message || "Error deleting time slot";
+      } catch (error) {
+        const err = error as Error
+        const errorMessage = err?.message || "Error deleting time slot";
         toast.error(`${errorMessage}. Please try again.`);
         
         if (typeof window !== 'undefined' && window.console) {
@@ -347,8 +349,9 @@ const SessionManagement: React.FC = () => {
       if (existingSlots.length > 0) {
         refetch();
       }
-    } catch (error: any) {
-      const errorMessage = error?.data?.message || error?.message || "Error clearing time slots";
+    } catch (error) {
+      const err = error as Error
+      const errorMessage = err?.message || "Error clearing time slots";
       toast.error(`${errorMessage}. Please try again.`);
       
       if (typeof window !== 'undefined' && window.console) {
@@ -409,8 +412,9 @@ const SessionManagement: React.FC = () => {
 
       setEditingSession(null); // Clear editing mode but keep form data
       refetch();
-    } catch (error: any) {
-      const errorMessage = error?.data?.message || error?.message || "Error saving session";
+    } catch (error) {
+      const err = error as Error
+      const errorMessage = err?.message || "Error saving session";
       toast.error(`${errorMessage}. Please try again.`);
       
       if (typeof window !== 'undefined' && window.console) {

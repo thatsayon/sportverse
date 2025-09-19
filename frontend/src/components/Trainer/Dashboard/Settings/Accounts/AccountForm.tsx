@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,19 +11,27 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Pencil, Upload, X, Video } from "lucide-react";
-import { usePostTrainerVideoMutation } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge"; // optional, if you have it
+
+import {
+  useGetTrainerProfileQuery,
+  usePostTrainerVideoMutation,
+  useUpdateTrainerProfileMutation,
+} from "@/store/Slices/apiSlices/trainerApiSlice";
 import { useGetSignatureMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { toast } from "sonner";
 
-// Zod validation schema
+// Updated Zod schema - coach_type is now an array of strings (IDs)
 const accountSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  surname: z.string().min(2, "Surname must be at least 2 characters"),
+  full_name: z.string().min(2, "Name must be at least 2 characters"),
+  username: z.string().min(2, "Surname must be at least 2 characters"),
   city: z.string().min(2, "City must be at least 2 characters"),
   zipCode: z.string().min(3, "Zip code must be at least 3 characters"),
   institutionName: z
     .string()
     .min(2, "Institution name must be at least 2 characters"),
+  coach_type: z.array(z.string()).default([]), // Now array of string IDs
   description: z.string().optional(),
 });
 
@@ -50,23 +58,64 @@ const AccountForm = () => {
 
   const [postVideo] = usePostTrainerVideoMutation();
   const [getSignature] = useGetSignatureMutation();
-
+  const { data: trainerProfile } = useGetTrainerProfileQuery();
+  const [updateTrainerProfile] = useUpdateTrainerProfileMutation();
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
-      name: "Bradley",
-      surname: "Lawlor",
+      full_name: "",
+      username: "",
       city: "",
       zipCode: "",
       institutionName: "",
+      coach_type: [], // Array of string IDs
       description: "",
     },
   });
+
+  useEffect(() => {
+    if (trainerProfile) {
+      reset({
+        full_name: trainerProfile.full_name || "",
+        username: trainerProfile.username || "",
+        city: trainerProfile.city || "",
+        zipCode: trainerProfile.zip_code || "",
+        institutionName: trainerProfile.institute_name || "",
+        // Convert coach_type to array of string IDs
+        coach_type: Array.isArray(trainerProfile.coach_type) 
+          ? trainerProfile.coach_type.map(String) // Ensure all values are strings
+          : [],
+        description: trainerProfile.description || "",
+      });
+    }
+  }, [trainerProfile, reset]);
+
+  const selectedCoachTypes = Array.isArray(watch("coach_type"))
+    ? (watch("coach_type") as string[])
+    : [];
+
+  const toggleCoach = (
+    sportId: string,
+    checked: boolean | "indeterminate"
+  ) => {
+    const current = new Set(selectedCoachTypes);
+    if (checked) {
+      current.add(sportId);
+    } else {
+      current.delete(sportId);
+    }
+    setValue("coach_type", Array.from(current), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -80,12 +129,39 @@ const AccountForm = () => {
     setUploadProgress(0);
   };
 
-  const handleSave = (data: AccountFormData) => {
-    console.log("Form data:", data);
-    console.log("Uploaded file:", uploadedFile);
-    console.log("Uploaded video URL:", uploadedVideoUrl);
-    setIsEditing(false);
-    // Handle form submission here with the uploaded video URL
+  const handleSave = async (data: AccountFormData) => {
+    try {
+      // Transform form data to match API
+      const payload = {
+        full_name: data.full_name,
+        username: data.username,
+        city: data.city,
+        zip_code: data.zipCode,
+        institute_name: data.institutionName,
+        coach_type: data.coach_type, // Send array of string IDs
+        description: data.description,
+      };
+
+      const response = await updateTrainerProfile(payload).unwrap();
+
+      toast.success("Profile updated successfully.");
+      reset({
+        full_name: response.full_name,
+        username: response.username,
+        city: response.city,
+        zipCode: response.zip_code,
+        institutionName: response.institute_name,
+        // Ensure coach_type is converted to string array
+        coach_type: Array.isArray(response.coach_type) 
+          ? response.coach_type.map(String)
+          : [],
+        description: response.description,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err?.message || "Failed to update profile.");
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,22 +176,25 @@ const AccountForm = () => {
   };
 
   // Cloudinary upload function
-  const uploadToCloudinary = async (file: File, signatureData: SignatureResponse) => {
+  const uploadToCloudinary = async (
+    file: File,
+    signatureData: SignatureResponse
+  ) => {
     const formData = new FormData();
-    
+
     // Add required Cloudinary parameters
-    formData.append('file', file);
-    formData.append('api_key', signatureData.api_key);
-    formData.append('timestamp', signatureData.timestamp.toString());
-    formData.append('signature', signatureData.signature);
-    formData.append('folder', signatureData.folder);
-    formData.append('public_id', signatureData.public_id);
+    formData.append("file", file);
+    formData.append("api_key", signatureData.api_key);
+    formData.append("timestamp", signatureData.timestamp.toString());
+    formData.append("signature", signatureData.signature);
+    formData.append("folder", signatureData.folder);
+    formData.append("public_id", signatureData.public_id);
 
     try {
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${signatureData.cloud_name}/video/upload`,
         {
-          method: 'POST',
+          method: "POST",
           body: formData,
         }
       );
@@ -127,14 +206,16 @@ const AccountForm = () => {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('Cloudinary upload error:', error);
+      console.error("Cloudinary upload error:", error);
       throw error;
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    
+
     if (!file) return;
 
     // Validate file type
@@ -179,8 +260,11 @@ const AccountForm = () => {
       }, 200);
 
       // Upload video to Cloudinary
-      const cloudinaryResponse = await uploadToCloudinary(file, signatureResponse);
-      
+      const cloudinaryResponse = await uploadToCloudinary(
+        file,
+        signatureResponse
+      );
+
       // Clear progress interval and set to 100%
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -188,11 +272,12 @@ const AccountForm = () => {
       console.log("Cloudinary upload response:", cloudinaryResponse);
 
       // Store the uploaded video URL
-      setUploadedVideoUrl(cloudinaryResponse.secure_url || cloudinaryResponse.url);
+      setUploadedVideoUrl(
+        cloudinaryResponse.secure_url || cloudinaryResponse.url
+      );
 
       // Show success toast
       toast.success("Video has been uploaded successfully.");
-
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error("Failed to upload video. Please try again.");
@@ -224,9 +309,9 @@ const AccountForm = () => {
       const file = files[0];
       // Create a synthetic event to reuse the handleFileUpload logic
       const syntheticEvent = {
-        target: { files: [file] }
+        target: { files: [file] },
       } as React.ChangeEvent<HTMLInputElement>;
-      
+
       handleFileUpload(syntheticEvent);
     }
   };
@@ -239,7 +324,9 @@ const AccountForm = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-center mb-4">Account Details</h1>
+      <h1 className="text-2xl font-semibold text-center mb-4">
+        Account Details
+      </h1>
       <Card className="border-none shadow-none">
         <CardContent className="p-6">
           <div className="space-y-8" onSubmit={handleSubmit(handleSave)}>
@@ -252,15 +339,14 @@ const AccountForm = () => {
                   <Avatar className="w-32 h-32">
                     <AvatarImage src={profileImage} alt="Profile" />
                     <AvatarFallback className="bg-orange-100 text-orange-600 text-lg font-semibold">
-                      BL
+                      {trainerProfile?.full_name
+                        ? trainerProfile.full_name.slice(0, 2).toUpperCase()
+                        : "NA"}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
                     <div className="absolute -bottom-2 -right-2">
-                      <label
-                        htmlFor="image-upload"
-                        className="cursor-pointer"
-                      >
+                      <label htmlFor="image-upload" className="cursor-pointer">
                         <div className="bg-orange-500 text-white p-2 rounded-full hover:bg-orange-600 transition-colors">
                           <Pencil className="w-3 h-3" />
                         </div>
@@ -278,7 +364,7 @@ const AccountForm = () => {
 
                 <div className="text-center">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Bradley Lawlor
+                    {trainerProfile?.full_name || "No name"}
                   </h2>
                 </div>
 
@@ -286,17 +372,17 @@ const AccountForm = () => {
                 <div className="w-full">
                   <div className="space-y-4">
                     <Label>Upload Video</Label>
-                    <div 
+                    <div
                       className={`border-2 border-dashed rounded-lg transition-all duration-200 ${
                         dragActive && isEditing
                           ? "border-orange-500 bg-orange-50"
                           : uploadedFile
                           ? "border-green-500 bg-green-50"
-                          : isEditing 
-                          ? "border-gray-300 bg-white hover:border-orange-400" 
+                          : isEditing
+                          ? "border-gray-300 bg-white hover:border-orange-400"
                           : "border-gray-200 bg-gray-50"
                       }`}
-                      style={{ minHeight: '140px' }}
+                      style={{ minHeight: "140px" }}
                       onDragEnter={isEditing ? handleDrag : undefined}
                       onDragLeave={isEditing ? handleDrag : undefined}
                       onDragOver={isEditing ? handleDrag : undefined}
@@ -318,13 +404,17 @@ const AccountForm = () => {
                               </p>
                             </div>
                           )}
-                          
+
                           {/* File Info */}
                           <div className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
                             <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded ${
-                                uploadedVideoUrl ? "bg-green-100" : "bg-blue-100"
-                              }`}>
+                              <div
+                                className={`p-2 rounded ${
+                                  uploadedVideoUrl
+                                    ? "bg-green-100"
+                                    : "bg-blue-100"
+                                }`}
+                              >
                                 {uploadedVideoUrl ? (
                                   <Video className="w-4 h-4 text-green-600" />
                                 ) : (
@@ -336,9 +426,12 @@ const AccountForm = () => {
                                   {uploadedFile.name}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                                  {(uploadedFile.size / 1024 / 1024).toFixed(2)}{" "}
+                                  MB
                                   {uploadedVideoUrl && (
-                                    <span className="text-green-600 ml-2">✓ Uploaded</span>
+                                    <span className="text-green-600 ml-2">
+                                      ✓ Uploaded
+                                    </span>
                                   )}
                                 </p>
                               </div>
@@ -361,11 +454,17 @@ const AccountForm = () => {
                             <div className="text-center">
                               <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                               <div className="mb-2">
-                                <label htmlFor="file-upload" className="cursor-pointer">
+                                <label
+                                  htmlFor="file-upload"
+                                  className="cursor-pointer"
+                                >
                                   <span className="text-blue-600 hover:text-blue-500 font-medium">
                                     Click to upload
                                   </span>
-                                  <span className="text-gray-500"> or drag and drop</span>
+                                  <span className="text-gray-500">
+                                    {" "}
+                                    or drag and drop
+                                  </span>
                                 </label>
                               </div>
                               <p className="text-xs text-gray-500">
@@ -383,7 +482,9 @@ const AccountForm = () => {
                           ) : (
                             <div className="text-center">
                               <Upload className="mx-auto h-8 w-8 text-gray-300 mb-2" />
-                              <p className="text-sm text-gray-400">No video uploaded</p>
+                              <p className="text-sm text-gray-400">
+                                No video uploaded
+                              </p>
                             </div>
                           )}
                         </div>
@@ -403,7 +504,7 @@ const AccountForm = () => {
                     <div className="relative">
                       <Input
                         id="name"
-                        {...register("name")}
+                        {...register("full_name")}
                         disabled={!isEditing}
                         className={`pr-10 transition-colors ${
                           !isEditing ? "bg-gray-50 text-gray-700" : ""
@@ -416,9 +517,9 @@ const AccountForm = () => {
                       </div>
                     </div>
                     <div className="h-5">
-                      {errors.name && (
+                      {errors.full_name && (
                         <p className="text-sm text-red-500">
-                          {errors.name.message}
+                          {errors.full_name.message}
                         </p>
                       )}
                     </div>
@@ -430,7 +531,7 @@ const AccountForm = () => {
                     <div className="relative">
                       <Input
                         id="surname"
-                        {...register("surname")}
+                        {...register("username")}
                         disabled={!isEditing}
                         className={`pr-10 transition-colors ${
                           !isEditing ? "bg-gray-50 text-gray-700" : ""
@@ -443,9 +544,9 @@ const AccountForm = () => {
                       </div>
                     </div>
                     <div className="h-5">
-                      {errors.surname && (
+                      {errors.username && (
                         <p className="text-sm text-red-500">
-                          {errors.surname.message}
+                          {errors.username.message}
                         </p>
                       )}
                     </div>
@@ -506,31 +607,82 @@ const AccountForm = () => {
                   </div>
                 </div>
 
-                {/* Institution Name - Full Width */}
-                <div className="space-y-2">
-                  <Label htmlFor="institutionName">Institution name</Label>
-                  <div className="relative">
-                    <Input
-                      id="institutionName"
-                      placeholder="Select coach type"
-                      {...register("institutionName")}
-                      disabled={!isEditing}
-                      className={`transition-colors ${
-                        !isEditing ? "bg-gray-50 text-gray-700 pr-10" : ""
-                      }`}
-                    />
-                    {isEditing && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <Pencil className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center justify-between">
+                  {/* Institution Name - Full Width */}
+                  <div className="space-y-2">
+                    <Label htmlFor="institutionName">Institution name</Label>
+                    <div className="relative">
+                      <Input
+                        id="institutionName"
+                        placeholder="Enter institution name"
+                        {...register("institutionName")}
+                        disabled={!isEditing}
+                        className={`transition-colors ${
+                          !isEditing ? "bg-gray-50 text-gray-700 pr-10" : ""
+                        }`}
+                      />
+                      {isEditing && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <Pencil className="w-4 h-4 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="h-5">
+                      {errors.institutionName && (
+                        <p className="text-sm text-red-500">
+                          {errors.institutionName.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Coach Type (multi-select from API) */}
+                  <div className="space-y-2">
+                    <Label>Coach type</Label>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {trainerProfile?.available_sports?.map((sport) => (
+                        <label
+                          key={sport.id}
+                          className="flex items-center gap-2"
+                        >
+                          <Checkbox
+                            checked={selectedCoachTypes.includes(String(sport.id))}
+                            onCheckedChange={(checked) => 
+                              toggleCoach(String(sport.id), checked)
+                            }
+                            disabled={!isEditing}
+                          />
+                          <span className={!isEditing ? "text-gray-700" : ""}>
+                            {sport.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* Optional: show selections as badges */}
+                    {selectedCoachTypes.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {selectedCoachTypes.map((id) => {
+                          const sport = trainerProfile?.available_sports?.find(
+                            (s) => String(s.id) === id
+                          );
+                          return (
+                            <Badge key={id} variant="secondary">
+                              {sport?.name || id}
+                            </Badge>
+                          );
+                        })}
                       </div>
                     )}
-                  </div>
-                  <div className="h-5">
-                    {errors.institutionName && (
-                      <p className="text-sm text-red-500">
-                        {errors.institutionName.message}
-                      </p>
-                    )}
+
+                    <div className="h-5">
+                      {errors.coach_type && (
+                        <p className="text-sm text-red-500">
+                          {errors.coach_type.message as string}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
