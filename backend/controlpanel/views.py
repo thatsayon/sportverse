@@ -1,16 +1,19 @@
 from rest_framework import generics, status, permissions
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 
 from .serializers import (
     SportSerializer,
     TrainersSerializer,
     StudentListSerializer,
-    BookingSerializer
+    BookingSerializer,
+    WithdrawRequestSerializer
 )
 
 from account.models import Teacher, Student
 from teacher.session.models import BookedSession
-from .models import Sport
+from .models import Sport, Withdraw
 
 class GetorAddSportView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -48,4 +51,38 @@ class WithdrawRequest(APIView):
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
     def get(self, request):
-        pass
+        withdrawals = Withdraw.objects.all().select_related("teacher__user", "teacher__document")
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  
+        result_page = paginator.paginate_queryset(withdrawals, request)
+
+        serializer = WithdrawRequestSerializer(result_page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request, id):
+        new_status = request.data.get("status")
+
+        if not new_status:
+            return Response(
+                {"error": "status field is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            withdraw = Withdraw.objects.get(id=id)
+        except Withdraw.DoesNotExist:
+            return Response(
+                {"error": "No withdraw found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        withdraw.status = new_status
+        withdraw.save()
+
+        return Response(
+            {"msg": "Status updated successfully"},
+            status=status.HTTP_200_OK
+        )
+

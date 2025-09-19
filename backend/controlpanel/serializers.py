@@ -112,5 +112,8 @@ class WithdrawRequestSerializer(serializers.ModelSerializer):
             "id",
             "teacher_name",
             "transaction_id",
-            "location"
+            "location",
+            "date",
+            "amount",
+            "status"
         ]

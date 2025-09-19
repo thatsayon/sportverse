@@ -10,6 +10,12 @@ import uuid
 import random
 import string
 
+WITHDRAW_STATUS = [
+    ('Pending', 'pending'),
+    ('Accept', 'accept'),
+    ('Reject', 'reject')
+]
+
 class Sport(models.Model):
     id = models.UUIDField(
         primary_key=True,
@@ -269,6 +275,11 @@ class Withdraw(models.Model):
         max_digits=12,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))]
+    )
+    status = models.CharField(
+        max_length=8,
+        choices=WITHDRAW_STATUS,
+        default="pending"
     )
 
     def __str__(self):
