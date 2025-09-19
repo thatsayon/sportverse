@@ -70,14 +70,14 @@ const addOneHour = (time: string): string => {
 };
 
 const SessionManagement: React.FC = () => {
-  const [trainingType, setTrainingType] = useState<"virtual" | "in-person">("virtual");
-  const [sessionType, setSessionType] = useState<"virtual" | "mindset" | "in-person">("virtual");
+  const [trainingType, setTrainingType] = useState<"virtual" | "in_person">("virtual");
+  const [sessionType, setSessionType] = useState<"virtual" | "mindset" | "in_person">("virtual");
   const [timeSlots, setTimeSlots] = useState<Record<string, TimeSlot[]>>({});
   const [editingSession, setEditingSession] = useState<SessionResult | null>(null);
   const [serviceEnabled, setServiceEnabled] = useState<Record<string, boolean>>({
     virtual: true,
     mindset: true,
-    "in-person": true,
+    "in_person": true,
   });
   const [newTimeSlot, setNewTimeSlot] = useState<string>("");
   const [activeDay, setActiveDay] = useState<string>("");
@@ -161,12 +161,12 @@ const SessionManagement: React.FC = () => {
     }
   }, [sessionType, existingSession, editingSession, setValue, sessionsData]);
 
-  const handleTrainingTypeChange = (type: "virtual" | "in-person") => {
+  const handleTrainingTypeChange = (type: "virtual" | "in_person") => {
     setTrainingType(type);
     if (type === "virtual") {
       setSessionType("virtual");
     } else {
-      setSessionType("in-person");
+      setSessionType("in_person");
     }
     resetForm();
   };
@@ -441,8 +441,8 @@ const SessionManagement: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Button
-                variant={trainingType === "in-person" ? "default" : "outline"}
-                onClick={() => handleTrainingTypeChange("in-person")}
+                variant={trainingType === "in_person" ? "default" : "outline"}
+                onClick={() => handleTrainingTypeChange("in_person")}
                 className="flex-1 sm:flex-none"
               >
                 In-person Training
@@ -450,7 +450,7 @@ const SessionManagement: React.FC = () => {
             </div>
           </div>
 
-          <Tabs value={trainingType} onValueChange={(value) => setTrainingType(value as "virtual" | "in-person")}>
+          <Tabs value={trainingType} onValueChange={(value) => setTrainingType(value as "virtual" | "in_person")}>
             {/* Virtual Training Content */}
             <TabsContent value="virtual" className="space-y-6">
               <Tabs value={sessionType} onValueChange={(value) => setSessionType(value as "virtual" | "mindset")}>
@@ -508,15 +508,15 @@ const SessionManagement: React.FC = () => {
             </TabsContent>
 
             {/* In-Person Training Content */}
-            <TabsContent value="in-person" className="space-y-6">
-              <Tabs value="in-person" onValueChange={() => setSessionType("in-person")}>
+            <TabsContent value="in_person" className="space-y-6">
+              <Tabs value="in_person" onValueChange={() => setSessionType("in_person")}>
                 <TabsList className="grid w-full grid-cols-1 max-w-[222px]">
-                  <TabsTrigger value="in-person">In-person</TabsTrigger>
+                  <TabsTrigger value="in_person">In-person</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="in-person" className="space-y-4">
+                <TabsContent value="in_person" className="space-y-4">
                   <SessionForm
-                    sessionType="in-person"
+                    sessionType="in_person"
                     register={register}
                     errors={errors}
                     daysWithTimeSlots={daysWithTimeSlots}
@@ -529,8 +529,8 @@ const SessionManagement: React.FC = () => {
                     watchedCloseBeforeTime={watchedCloseBeforeTime}
                     editingSession={editingSession}
                     onCancelEdit={resetForm}
-                    serviceEnabled={serviceEnabled["in-person"]}
-                    onServiceToggle={(enabled) => handleServiceToggle("in-person", enabled)}
+                    serviceEnabled={serviceEnabled["in_person"]}
+                    onServiceToggle={(enabled) => handleServiceToggle("in_person", enabled)}
                     newTimeSlot={newTimeSlot}
                     setNewTimeSlot={setNewTimeSlot}
                     activeDay={activeDay}
