@@ -6,6 +6,7 @@ export type CreateSessionRequest = {
   price: string;
   close_before: string;
   available_days: {
+    id?: string; // Optional day ID for existing days
     day: string;
     time_slots: {
       id?: string; // Optional ID for existing slots
@@ -72,7 +73,7 @@ export interface Slot {
 export interface Day {
   id: string;
   day: string; // e.g., "monday", "wednesday"
-  slots: Slot[];
+  time_slots: Slot[]; // Changed from 'slots' to 'time_slots' to match API response
 }
 
 export interface SessionResult {

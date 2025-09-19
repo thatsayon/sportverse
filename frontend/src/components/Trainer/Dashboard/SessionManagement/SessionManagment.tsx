@@ -119,6 +119,10 @@ const SessionManagement: React.FC = () => {
 
   // Load existing session data into form when sessionType changes
   useEffect(() => {
+    console.log("SessionsData:", sessionsData); // Debug log
+    console.log("Current session type:", sessionType);
+    console.log("Existing session:", existingSession);
+    
     if (existingSession && !editingSession) {
       // Set form values
       setValue("price", existingSession.price);
@@ -126,22 +130,36 @@ const SessionManagement: React.FC = () => {
       
       // Convert existing session days to timeSlots format with proper TimeSlot structure
       const newTimeSlots: Record<string, TimeSlot[]> = {};
-      existingSession.available_days?.forEach(day => {
+      
+      // Handle both possible response structures: 'days' or 'available_days'
+      const sessionDays = existingSession.available_days || existingSession.days || [];
+      
+      sessionDays.forEach(day => {
         const dayKey = day.day.toLowerCase();
-        newTimeSlots[dayKey] = day.slots?.map(slot => ({
-          id: slot.id,
-          start_time: slot.start_time.slice(0, 5), // Convert "HH:MM:SS" to "HH:MM"
-          end_time: slot.end_time.slice(0, 5), // Convert "HH:MM:SS" to "HH:MM"
-          isExisting: true, // Mark as existing slot
-        })) || [];
+        console.log(`Processing day: ${dayKey}`, day); // Debug log
+        
+        // The API response uses 'time_slots', not 'slots'
+        const daySlots = day.time_slots || [];
+        
+        newTimeSlots[dayKey] = daySlots.map(slot => {
+          console.log(`Processing slot:`, slot); // Debug log
+          return {
+            id: slot.id,
+            start_time: slot.start_time.slice(0, 5), // Convert "HH:MM:SS" to "HH:MM"
+            end_time: slot.end_time.slice(0, 5), // Convert "HH:MM:SS" to "HH:MM"
+            isExisting: true, // Mark as existing slot
+          };
+        });
       });
       
+      console.log("Converted time slots:", newTimeSlots); // Debug log
       setTimeSlots(newTimeSlots);
     } else if (!existingSession && !editingSession) {
       // Clear form when no existing session
+      console.log("No existing session found, resetting form");
       resetForm();
     }
-  }, [sessionType, existingSession, editingSession, setValue]);
+  }, [sessionType, existingSession, editingSession, setValue, sessionsData]);
 
   const handleTrainingTypeChange = (type: "virtual" | "in-person") => {
     setTrainingType(type);
@@ -351,14 +369,22 @@ const SessionManagement: React.FC = () => {
     if (!serviceEnabled[sessionType]) return;
     
     try {
-      const availableDays = daysWithTimeSlots.map(day => ({
-        day,
-        time_slots: (timeSlots[day] || []).map(slot => ({
-          id: slot.id, // Include ID if it exists (for existing slots)
-          start_time: `${slot.start_time}:00`,
-          end_time: `${slot.end_time}:00`,
-        })),
-      }));
+      const availableDays = daysWithTimeSlots.map(day => {
+        // Find the existing day data to get the day ID
+        const existingDay = existingSession?.available_days?.find(
+          existingDay => existingDay.day.toLowerCase() === day.toLowerCase()
+        );
+        
+        return {
+          id: existingDay?.id, // Include day ID if it exists
+          day,
+          time_slots: (timeSlots[day] || []).map(slot => ({
+            id: slot.id, // Include slot ID if it exists (for existing slots)
+            start_time: `${slot.start_time}:00`,
+            end_time: `${slot.end_time}:00`,
+          })),
+        };
+      });
 
       const sessionData: CreateSessionRequest = {
         training_type: sessionType,

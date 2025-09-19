@@ -73,9 +73,8 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
     // New endpoint for deleting individual time slots
     deleteTimeSlot: builder.mutation<DeleteTimeSlotResponse, DeleteTimeSlotRequest>({
       query: (body) => ({
-        url: `/teacher/session/delete-timeslot/`,
+        url: `/teacher/session/${body.slot_id}/delete-timeslot/`,
         method: "DELETE",
-        body: body,
         credentials: "include",
       }),
     }),
