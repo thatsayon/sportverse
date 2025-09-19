@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from cloudinary.models import CloudinaryField
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.conf import settings
@@ -44,7 +45,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     username = models.CharField(_("username"), max_length=30, unique=True)
     full_name = models.CharField(_("full name"), max_length=50)
-    profile_pic = models.URLField(_("profile picture"), blank=True, null=True)
+    profile_pic = CloudinaryField('profile_pic')
     gender = models.CharField(max_length=1, choices=[
         ('m', 'Male'),
         ('f', 'Female'),

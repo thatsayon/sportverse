@@ -6,10 +6,12 @@ from account.models import (
     Student
 )
 from django.utils import timezone
+from django.contrib.auth import get_user_model, password_validation
 from datetime import timedelta
 from teacher.session.models import BookedSession
 from .models import Sport, Withdraw
     
+User = get_user_model()
 
 class SportSerializer(serializers.ModelSerializer):
     class Meta:
@@ -117,3 +119,43 @@ class WithdrawRequestSerializer(serializers.ModelSerializer):
             "amount",
             "status"
         ]
+
+class ProfileSettingSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "full_name", "profile_pic"]
+
+    def get_profile_pic(self, obj):
+        if obj.profile_pic:
+            return obj.profile_pic.url
+        return None
+
+class PasswordUpdateSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        user = self.context['request'].user
+
+        # Check old password
+        if not user.check_password(data['old_password']):
+            raise serializers.ValidationError({"old_password": "Old password is incorrect"})
+
+        # Check new passwords match
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
+
+        # Run Django’s built-in password validators
+        password_validation.validate_password(data['new_password'], user)
+
+        return data
+
+    def save(self, **kwargs):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user
+

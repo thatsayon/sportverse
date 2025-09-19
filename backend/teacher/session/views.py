@@ -51,23 +51,21 @@ class DeleteTimeSlotView(generics.DestroyAPIView):
 
     def get_object(self):
         obj = super().get_object()
-        if obj.availabledays.session.teacher.user != self.request.user:
+        if obj.available_day.session.teacher.user != self.request.user:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You do not have permission to delete this timeslot")
         return obj
 
     def destroy(self, request, *args, **kwargs):
         timeslot = self.get_object()
-        available_day = timeslot.availabledays
+        available_day = timeslot.available_day  
 
         self.perform_destroy(timeslot)
 
-        if not available_day.availabledays.exists():  
+        if not available_day.time_slots.exists():  
             available_day.delete()
 
         return Response({"success": "Time slot deleted"}, status=status.HTTP_200_OK)
-
-
 
 class IsTimeslotAvailable(APIView):
     permission_classes = [permissions.IsAuthenticated]

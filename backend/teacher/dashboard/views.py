@@ -23,6 +23,8 @@ from account.models import Document
 from teacher.session.models import (
     BookedSession
 )
+from controlpanel.models import Sport
+from authentication.models import UserAccount
 from .models import (
     Dashboard,
     IncomeHistory,
@@ -547,15 +549,23 @@ class AccountDetailView(APIView):
     def get(self, request):
         teacher = request.user.teacher  # each user has one teacher profile
         serializer = AccountDetailSerializer(teacher)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Include available sports
+        sports_qs = Sport.objects.all()
+        sports_data = [{"id": str(s.id), "name": s.name} for s in sports_qs]
+
+        response_data = serializer.data
+        response_data["available_sports"] = sports_data
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     def patch(self, request):
         teacher = request.user.teacher
         document = getattr(teacher, "document", None)
         user = teacher.user
 
-        # Allowed Teacher fields
-        teacher_fields = ['institute_name', 'coach_type', 'description', 'status', 'is_profile_complete']
+        # Allowed Teacher fields (excluding coach_type)
+        teacher_fields = ['institute_name', 'description', 'status', 'is_profile_complete']
         teacher_data = {field: request.data.get(field) for field in teacher_fields if field in request.data}
 
         # Allowed Document fields
@@ -566,12 +576,21 @@ class AccountDetailView(APIView):
         user_fields = ['full_name', 'username']
         user_data = {field: request.data.get(field) for field in user_fields if field in request.data}
 
-        # Update Teacher
+        # Update Teacher fields
         for field, value in teacher_data.items():
             setattr(teacher, field, value)
         teacher.save()
 
-        # Update Document (create if doesn’t exist)
+        # Update ManyToManyField coach_type using sport IDs
+        if 'coach_type' in request.data:
+            sport_ids = request.data.get('coach_type', [])
+            # Convert strings to UUID objects if needed
+            from uuid import UUID
+            sport_ids = [UUID(s) if isinstance(s, str) else s for s in sport_ids]
+            sports = Sport.objects.filter(id__in=sport_ids)
+            teacher.coach_type.set(sports)
+
+        # Update Document (create if it doesn’t exist)
         if document_data:
             if document:
                 for field, value in document_data.items():
@@ -580,10 +599,13 @@ class AccountDetailView(APIView):
             else:
                 document = Document.objects.create(teacher=teacher, **document_data)
 
-        # Update User
         for field, value in user_data.items():
+            if field == "username":
+                # Check if the new username already exists for another user
+                if UserAccount.objects.filter(username=value).exclude(id=user.id).exists():
+                    return Response({"error": "Username already taken"}, status=400)
             setattr(user, field, value)
-        user.save()
+        user.save() 
 
         serializer = AccountDetailSerializer(teacher)
         return Response(serializer.data, status=status.HTTP_200_OK)
