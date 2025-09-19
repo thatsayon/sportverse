@@ -6,19 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Toggle } from "@/components/ui/toggle";
 import { X, Plus, Clock, Calendar } from "lucide-react";
-import {
-  SessionResult,
-} from "@/store/Slices/apiSlices/trainerApiSlice";
 import { CLOSE_BEFORE_OPTIONS, DAYS_OF_WEEK, formatTime } from "./SessionManagment";
+import { SessionResult, TimeSlot } from "@/types/teacher/session";
+
 interface SessionFormProps {
   sessionType: string;
   register: any;
   errors: any;
   daysWithTimeSlots: string[];
-  timeSlots: Record<string, string[]>;
+  timeSlots: Record<string, TimeSlot[]>; // Updated to use TimeSlot type
   onDayClick: (day: string) => void;
   onAddTimeSlot: (time: string) => void;
-  onRemoveTimeSlot: (day: string, timeSlot: string) => void;
+  onRemoveTimeSlot: (day: string, slotIndex: number) => void; // Updated to use index
   onClearAllTimeSlotsForDay: (day: string) => void;
   onSubmit: () => void;
   watchedCloseBeforeTime: string;
@@ -110,8 +109,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
                   disabled={!newTimeSlot || !serviceEnabled || !activeDay}
                   className="bg-[#FFD7BC] text-[#F15A24] hover:text-white transition-colors duration-300"
                 >
-                  Add to {activeDay ? activeDay.charAt(0).toUpperCase() + activeDay.slice(1) : 'Day'}
-                  <Plus/>
+                  Add
+                  <Plus className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -145,34 +144,33 @@ const SessionForm: React.FC<SessionFormProps> = ({
                           className="text-orange-500 hover:text-orange-600 h-auto p-1 text-xs ml-auto"
                           disabled={!serviceEnabled}
                         >
-                          Clear all
+                          Cancel all
                         </Button>
                       </h4>
                       
                       <div className="flex flex-wrap gap-2 ml-6">
-                        {(timeSlots[day] || []).map((slot, index) => {
-                          const [start, end] = slot.split("-");
-                          return (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="flex items-center gap-2 px-3 py-1"
+                        {(timeSlots[day] || []).map((slot, index) => (
+                          <Badge
+                            key={`${day}-${index}-${slot.id || 'new'}`}
+                            variant="secondary"
+                            className={`flex items-center gap-2 px-3 py-1 ${
+                              slot.isExisting ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            <Clock className="h-3 w-3" />
+                            {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => onRemoveTimeSlot(day, index)}
+                              className="h-4 w-4 p-0 hover:bg-red-100"
+                              disabled={!serviceEnabled}
                             >
-                              <Clock className="h-3 w-3" />
-                              {formatTime(start)} - {formatTime(end)}
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => onRemoveTimeSlot(day, slot)}
-                                className="h-4 w-4 p-0 hover:bg-red-100"
-                                disabled={!serviceEnabled}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </Badge>
-                          );
-                        })}
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   ))}

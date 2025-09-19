@@ -1,26 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Toggle } from "@/components/ui/toggle";
-import { X, Plus, Clock, Calendar } from "lucide-react";
-import {
-  useCreateSessionMutation,
-  useGetSessionQuery,
-  useUpdateSessionMutation,
-  useDeleteSessionMutation,
-  CreateSessionRequest,
-  SessionResult,
-} from "@/store/Slices/apiSlices/trainerApiSlice";
+
 import SessionForm from "./SessionForm";
+import { CreateSessionRequest, SessionResult, TimeCheckRequest, TimeSlot } from "@/types/teacher/session";
+import { toast } from "sonner";
+import { 
+  useCreateSessionMutation, 
+  useDeleteTimeSlotMutation, 
+  useGetSessionQuery, 
+  useTimeCheckMutation, 
+  useUpdateSessionMutation 
+} from "@/store/Slices/apiSlices/trainerApiSlice";
 
 const sessionSchema = z.object({
   price: z.string().min(1, "Price is required"),
@@ -75,7 +72,7 @@ const addOneHour = (time: string): string => {
 const SessionManagement: React.FC = () => {
   const [trainingType, setTrainingType] = useState<"virtual" | "in-person">("virtual");
   const [sessionType, setSessionType] = useState<"virtual" | "mindset" | "in-person">("virtual");
-  const [timeSlots, setTimeSlots] = useState<Record<string, string[]>>({});
+  const [timeSlots, setTimeSlots] = useState<Record<string, TimeSlot[]>>({});
   const [editingSession, setEditingSession] = useState<SessionResult | null>(null);
   const [serviceEnabled, setServiceEnabled] = useState<Record<string, boolean>>({
     virtual: true,
@@ -83,18 +80,20 @@ const SessionManagement: React.FC = () => {
     "in-person": true,
   });
   const [newTimeSlot, setNewTimeSlot] = useState<string>("");
-  const [activeDay, setActiveDay] = useState<string>(""); // Track which day is active for adding time
+  const [activeDay, setActiveDay] = useState<string>("");
 
-  const { data: sessionsData } = useGetSessionQuery();
+  const { data: sessionsData, isLoading, refetch } = useGetSessionQuery();
   const [createSession] = useCreateSessionMutation();
   const [updateSession] = useUpdateSessionMutation();
-  const [deleteSession] = useDeleteSessionMutation();
+  const [deleteTimeSlot] = useDeleteTimeSlotMutation();
+  const [timeCheck] = useTimeCheckMutation();
 
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<SessionFormData>({
     resolver: zodResolver(sessionSchema),
@@ -107,8 +106,42 @@ const SessionManagement: React.FC = () => {
 
   const watchedCloseBeforeTime = watch("close_before");
 
+  // Get current sessions based on session type
+  const currentSessions = sessionsData?.results?.filter(
+    session => session.training_type === sessionType
+  ) || [];
+
+  // Get the existing session for current type (assuming only one session per type)
+  const existingSession = currentSessions[0] || null;
+
   // Get days that actually have time slots (for display in time slots box)
   const daysWithTimeSlots = Object.keys(timeSlots).filter(day => timeSlots[day].length > 0);
+
+  // Load existing session data into form when sessionType changes
+  useEffect(() => {
+    if (existingSession && !editingSession) {
+      // Set form values
+      setValue("price", existingSession.price);
+      setValue("close_before", existingSession.close_before);
+      
+      // Convert existing session days to timeSlots format with proper TimeSlot structure
+      const newTimeSlots: Record<string, TimeSlot[]> = {};
+      existingSession.available_days?.forEach(day => {
+        const dayKey = day.day.toLowerCase();
+        newTimeSlots[dayKey] = day.slots?.map(slot => ({
+          id: slot.id,
+          start_time: slot.start_time.slice(0, 5), // Convert "HH:MM:SS" to "HH:MM"
+          end_time: slot.end_time.slice(0, 5), // Convert "HH:MM:SS" to "HH:MM"
+          isExisting: true, // Mark as existing slot
+        })) || [];
+      });
+      
+      setTimeSlots(newTimeSlots);
+    } else if (!existingSession && !editingSession) {
+      // Clear form when no existing session
+      resetForm();
+    }
+  }, [sessionType, existingSession, editingSession, setValue]);
 
   const handleTrainingTypeChange = (type: "virtual" | "in-person") => {
     setTrainingType(type);
@@ -134,14 +167,12 @@ const SessionManagement: React.FC = () => {
     }
   };
 
-  // Modified to only set active day, not add to time slots
   const handleDayClick = (day: string) => {
     if (!serviceEnabled[sessionType]) return;
     
     const dayLower = day.toLowerCase();
     setActiveDay(dayLower);
     
-    // Initialize empty array for this day if it doesn't exist
     if (!timeSlots[dayLower]) {
       setTimeSlots(prev => ({
         ...prev,
@@ -150,52 +181,162 @@ const SessionManagement: React.FC = () => {
     }
   };
 
-  // Modified to add time slot to active day and ensure day appears in time slots box
-  const addTimeSlot = (time: string) => {
+  const addTimeSlot = async (time: string) => {
     if (!time || !serviceEnabled[sessionType] || !activeDay) return;
     
     const endTime = addOneHour(time);
-    const timeSlot = `${time}-${endTime}`;
     
-    // Add to active day
-    setTimeSlots(prev => ({
-      ...prev,
-      [activeDay]: [...(prev[activeDay] || []), timeSlot],
-    }));
+    // Check if this time slot already exists for this day
+    const existingSlots = timeSlots[activeDay] || [];
+    const isDuplicate = existingSlots.some(slot => 
+      slot.start_time === time && slot.end_time === endTime
+    );
     
-    // Clear the input
+    if (isDuplicate) {
+      toast.error("This time slot already exists for the selected day");
+      setNewTimeSlot("");
+      return;
+    }
+    
+    try {
+      // Check time availability
+      const timeCheckData: TimeCheckRequest = {
+        day: activeDay,
+        start_time: `${time}:00`,
+        end_time: `${endTime}:00`,
+        session_id: existingSession?.id, // Include session ID if updating existing session
+      };
+      
+      const response = await timeCheck(timeCheckData).unwrap();
+      
+      if (response.available) {
+        // Add new time slot without ID (backend will assign ID)
+        const newSlot: TimeSlot = {
+          start_time: time,
+          end_time: endTime,
+          isExisting: false, // Mark as new slot
+        };
+        
+        setTimeSlots(prev => ({
+          ...prev,
+          [activeDay]: [...(prev[activeDay] || []), newSlot],
+        }));
+        toast.success("Time slot added successfully");
+      } else {
+        toast.error(response.message || "This time slot is not available");
+      }
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || error?.message || "Error checking time availability";
+      toast.error(`${errorMessage}. Please try again.`);
+      
+      if (typeof window !== 'undefined' && window.console) {
+        window.console.log("Time check error:", errorMessage);
+      }
+    }
+    
     setNewTimeSlot("");
   };
 
-  const removeTimeSlot = (day: string, timeSlot: string) => {
+  const removeTimeSlot = async (day: string, slotIndex: number) => {
     if (!serviceEnabled[sessionType]) return;
     
     const dayLower = day.toLowerCase();
-    setTimeSlots(prev => {
-      const newSlots = {
-        ...prev,
-        [dayLower]: prev[dayLower]?.filter(slot => slot !== timeSlot) || [],
-      };
-      
-      // If day has no more time slots, remove it from the object
-      if (newSlots[dayLower].length === 0) {
-        delete newSlots[dayLower];
+    const slot = timeSlots[dayLower]?.[slotIndex];
+    
+    if (!slot) return;
+    
+    // If slot has an ID, it exists in the database and needs to be deleted via API
+    if (slot.id) {
+      try {
+        await deleteTimeSlot({ slot_id: slot.id }).unwrap();
+        toast.success("Time slot deleted successfully");
+        
+        // Remove from local state after successful API call
+        setTimeSlots(prev => {
+          const newSlots = {
+            ...prev,
+            [dayLower]: prev[dayLower]?.filter((_, index) => index !== slotIndex) || [],
+          };
+          
+          if (newSlots[dayLower].length === 0) {
+            delete newSlots[dayLower];
+          }
+          
+          return newSlots;
+        });
+        
+        // Refetch sessions to update the UI with latest data
+        refetch();
+      } catch (error: any) {
+        const errorMessage = error?.data?.message || error?.message || "Error deleting time slot";
+        toast.error(`${errorMessage}. Please try again.`);
+        
+        if (typeof window !== 'undefined' && window.console) {
+          window.console.log("Delete time slot error:", errorMessage);
+        }
       }
-      
-      return newSlots;
-    });
+    } else {
+      // If no ID, it's a new slot that only exists locally
+      setTimeSlots(prev => {
+        const newSlots = {
+          ...prev,
+          [dayLower]: prev[dayLower]?.filter((_, index) => index !== slotIndex) || [],
+        };
+        
+        if (newSlots[dayLower].length === 0) {
+          delete newSlots[dayLower];
+        }
+        
+        return newSlots;
+      });
+      toast.success("Time slot removed");
+    }
   };
 
-  // Clear all time slots for a day (removes day from time slots box)
-  const clearAllTimeSlotsForDay = (day: string) => {
+  const clearAllTimeSlotsForDay = async (day: string) => {
     if (!serviceEnabled[sessionType]) return;
     
     const dayLower = day.toLowerCase();
-    setTimeSlots(prev => {
-      const newSlots = { ...prev };
-      delete newSlots[dayLower];
-      return newSlots;
-    });
+    const slotsForDay = timeSlots[dayLower] || [];
+    
+    // Separate existing slots (with IDs) and new slots (without IDs)
+    const existingSlots = slotsForDay.filter(slot => slot.id);
+    const newSlots = slotsForDay.filter(slot => !slot.id);
+    
+    try {
+      // Delete existing slots via API
+      if (existingSlots.length > 0) {
+        await Promise.all(
+          existingSlots.map(slot => 
+            deleteTimeSlot({ slot_id: slot.id! }).unwrap()
+          )
+        );
+        toast.success(`${existingSlots.length} existing time slot(s) deleted from database`);
+      }
+      
+      // Remove all slots from local state
+      setTimeSlots(prev => {
+        const newSlots = { ...prev };
+        delete newSlots[dayLower];
+        return newSlots;
+      });
+      
+      if (newSlots.length > 0) {
+        toast.success(`${newSlots.length} pending time slot(s) removed locally`);
+      }
+      
+      // Refetch sessions to update the UI
+      if (existingSlots.length > 0) {
+        refetch();
+      }
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || error?.message || "Error clearing time slots";
+      toast.error(`${errorMessage}. Please try again.`);
+      
+      if (typeof window !== 'undefined' && window.console) {
+        window.console.log("Clear time slots error:", errorMessage);
+      }
+    }
   };
 
   const resetForm = () => {
@@ -212,13 +353,11 @@ const SessionManagement: React.FC = () => {
     try {
       const availableDays = daysWithTimeSlots.map(day => ({
         day,
-        time_slots: (timeSlots[day] || []).map(slot => {
-          const [start, end] = slot.split("-");
-          return {
-            start_time: `${start}:00`,
-            end_time: `${end}:00`,
-          };
-        }),
+        time_slots: (timeSlots[day] || []).map(slot => ({
+          id: slot.id, // Include ID if it exists (for existing slots)
+          start_time: `${slot.start_time}:00`,
+          end_time: `${slot.end_time}:00`,
+        })),
       }));
 
       const sessionData: CreateSessionRequest = {
@@ -228,16 +367,29 @@ const SessionManagement: React.FC = () => {
         available_days: availableDays,
       };
 
-      if (editingSession) {
-        sessionData.id = editingSession.id;
-        await updateSession(sessionData).unwrap();
+      // If editing or if session exists for this type, use update
+      if (editingSession || existingSession) {
+        const sessionId = editingSession?.id || existingSession?.id;
+        if (sessionId) {
+          sessionData.id = sessionId;
+          await updateSession(sessionData).unwrap();
+          toast.success("Session updated successfully");
+        }
       } else {
+        // Create new session
         await createSession(sessionData).unwrap();
+        toast.success("Session created successfully");
       }
 
-      resetForm();
-    } catch (error) {
-      console.error("Error saving session:", error);
+      setEditingSession(null); // Clear editing mode but keep form data
+      refetch();
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || error?.message || "Error saving session";
+      toast.error(`${errorMessage}. Please try again.`);
+      
+      if (typeof window !== 'undefined' && window.console) {
+        window.console.log("Save session error:", errorMessage);
+      }
     }
   };
 

@@ -7,81 +7,8 @@ import { BookedSessionResponse } from "@/types/teacher/bookings";
 import { TrainerRevenueResponse } from "@/types/teacher/revenue";
 import { CloudinaryUploadResponse } from "@/types/teacher/trainerVideoUpload";
 import { TrainerBankRequest, TrainerBankResponse, TrainerPaypalRequest, TrainerPaypalResponse, TrainerWalletTransactionRequest, TrainerWalletTransactionResponse, TrainerWithdrawResponse } from "@/types/teacher/wallet";
-export type CreateSessionRequest = {
-  id?: string;
-  training_type: string;
-  price: string;
-  close_before: string;
-  available_days: {
-    day: string;
-    time_slots: {
-      start_time: string;
-      end_time: string;
-    }[];
-  }[];
-};
+import { CreateSessionRequest, CreateSessionResponse, deleteResponse, DeleteTimeSlotRequest, DeleteTimeSlotResponse, SessionResponse, TimeCheckRequest, TimeCheckResponse } from "@/types/teacher/session";
 
-export type CreateSessionResponse = {
-  id: string;
-  training_type: string;
-  price: string;
-  close_before: string;
-  days: {
-    id: string;
-    day: string;
-    slots: {
-      id: string;
-      start_time: string;
-      end_time: string;
-    }[];
-  }[];
-  created_at: string;
-};
-
-export type deleteResponse = {
-  success: string;
-};
-export type deleteRequest = {
-  id: string;
-};
-
-export interface Slot {
-  id: string;
-  start_time: string; // Format: "HH:MM:SS"
-  end_time: string; // Format: "HH:MM:SS"
-}
-
-export interface Day {
-  id: string;
-  day: string; // e.g., "monday", "wednesday"
-  slots: Slot[];
-}
-
-export interface SessionResult {
-  id: string;
-  training_type: string; // e.g., "mindset"
-  price: string; // e.g., "1.11"
-  close_before: string; // Format: "HH:MM:SS"
-  days: Day[];
-  created_at: string; // ISO timestamp
-}
-
-export interface SessionResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: SessionResult[];
-}
-
-export interface TimeCheckRequest {
-  day: string;
-  start_time: string;
-  end_time: string;
-}
-export interface TimeCheckResponse {
-  available: boolean;
-  message: string;
-}
 
 export const trainerApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -118,31 +45,45 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
         credentials: "include",
       }),
     }),
+    
     getSession: builder.query<SessionResponse, void>({
       query: () => "/teacher/session/get-session/",
     }),
+    
     updateSession: builder.mutation<
       CreateSessionResponse,
       CreateSessionRequest
     >({
       query: (body) => ({
         url: `/teacher/session/${body.id}/update-session/`,
-        method: "PETCH",
+        method: "PATCH", // Fixed from "PETCH"
         body: body,
         credentials: "include",
       }),
     }),
-    deleteSession: builder.mutation<deleteResponse, CreateSessionRequest>({
-      query: (id) => ({
-        url: `/teacher/session/${id}/update-session/`,
+    
+    deleteSession: builder.mutation<deleteResponse, string>({
+      query: (sessionId) => ({
+        url: `/teacher/session/${sessionId}/delete-session/`, // Fixed endpoint
         method: "DELETE",
         credentials: "include",
       }),
     }),
-    timeCheck: builder.query<TimeCheckResponse, TimeCheckRequest>({
+    
+    // New endpoint for deleting individual time slots
+    deleteTimeSlot: builder.mutation<DeleteTimeSlotResponse, DeleteTimeSlotRequest>({
+      query: (body) => ({
+        url: `/teacher/session/delete-timeslot/`,
+        method: "DELETE",
+        body: body,
+        credentials: "include",
+      }),
+    }),
+    
+    timeCheck: builder.mutation<TimeCheckResponse, TimeCheckRequest>({
       query: (data) => ({
         url: "/teacher/session/timeslot-availability/",
-        method: "GET",
+        method: "POST",
         body: data,
         credentials: "include",
       }),
@@ -257,7 +198,8 @@ export const {
   useGetSessionQuery,
   useUpdateSessionMutation,
   useDeleteSessionMutation,
-  useLazyTimeCheckQuery,
+  useDeleteTimeSlotMutation, // New export
+  useTimeCheckMutation,
   // profile
 
   usePostTrainerVideoMutation

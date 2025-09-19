@@ -113,6 +113,7 @@ export interface getSignatureRequest {
 // Create the API slice
 export const apiSlice = createApi({
   reducerPath: "api",
+  
   baseQuery: fetchBaseQuery({
     baseUrl: "https://stingray-intimate-sincerely.ngrok-free.app/", // Your actual API base URL
     prepareHeaders: (headers) => {
@@ -140,7 +141,24 @@ export const apiSlice = createApi({
       return response.status < 500; // Don't treat 4xx as errors
     },
   }),
-  tagTypes: ["User", "Plan", "Chat", "Class", "login"], // Define cache tags for invalidation
+  tagTypes: [
+    // Existing tags
+    "User", 
+    "Plan", 
+    "Chat", 
+    "Class", 
+    "login",
+    // New trainer-related tags
+    "TrainerDashboard",
+    "TrainerBookings", 
+    "TrainerRevenue",
+    "TrainerSessions",
+    "TrainerBank",
+    "TrainerPaypal",
+    "TrainerWithdraw",
+    "AgoraToken",
+    "TimeSlotAvailability",
+  ], // Define cache tags for invalidation
   endpoints: (builder) => ({
     // Auth endpoints
 

@@ -27,16 +27,16 @@ import {
   Plus,
 } from "lucide-react";
 import WithdrawRequest from "./WithdrawRequest";
+import { useGetTainerWithdrawQuery, useGetTeacherDashboardQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 
 export interface InvoiceType {
-  transaction_Id: string;      // updated typo from transition_Id
+  transaction_Id: string; // updated typo from transition_Id
   walletType: "Card" | "Paypal";
   date: string;
   amount: string;
   leftAmount: string;
   status: string;
 }
-
 
 export const invoices: InvoiceType[] = [
   {
@@ -81,12 +81,16 @@ export const invoices: InvoiceType[] = [
   },
 ];
 
-
 const ITEMS_PER_PAGE = 10;
 
 const WithdrawTable = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const { data } = useGetTainerWithdrawQuery();
+  const { data:currentBal } = useGetTeacherDashboardQuery();
+
+  const invoices = data?.results || [];
 
   // Filter data based on status
   const filteredData = useMemo(() => {
@@ -94,16 +98,17 @@ const WithdrawTable = () => {
       return invoices;
     }
     return invoices.filter(
-      (invoice) => invoice.status.toLowerCase() === statusFilter.toLowerCase()
+      (invoice) =>
+        invoice.wallet_type.toLowerCase() === statusFilter.toLowerCase()
     );
-  }, [statusFilter]);
+  }, [statusFilter, data]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentData = filteredData.slice(startIndex, endIndex);
-  const [open, setOpen] = useState<boolean>(false)
+  const [open, setOpen] = useState<boolean>(false);
 
   // Reset to first page when filter changes
   React.useEffect(() => {
@@ -145,7 +150,7 @@ const WithdrawTable = () => {
 
   return (
     <div className="-mt-10">
-        <WithdrawRequest open={open} setOpen={setOpen}/>
+      <WithdrawRequest open={open} setOpen={setOpen} currentBalance={Number(currentBal?.total_revenue)}/>
       <Card className="bg-white shadow-none border-none">
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -165,17 +170,16 @@ const WithdrawTable = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="bank">Bank</SelectItem>
+                    <SelectItem value="paypal">Paypal</SelectItem>
+                    {/* <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="accepted">Accepted</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-              
-              onClick={()=> setOpen(true)}
-              >
-                <Plus/> Add Request 
+              <Button onClick={() => setOpen(true)}>
+                <Plus /> Add Request
               </Button>
             </div>
           </div>
@@ -187,7 +191,7 @@ const WithdrawTable = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead className="font-semibold py-2 text-gray-900 py-4 w-16">
+                  <TableHead className="font-semibold text-gray-900 py-4 w-16">
                     No.
                   </TableHead>
                   <TableHead className="font-semibold py-2 text-gray-900">
@@ -205,26 +209,29 @@ const WithdrawTable = () => {
                   <TableHead className="font-semibold py-2 text-gray-900">
                     Left Amount
                   </TableHead>
-                  <TableHead className="font-semibold py-2 text-gray-900">
+
+                  {/* will add later in response */}
+
+                  {/* <TableHead className="font-semibold py-2 text-gray-900">
                     Status
-                  </TableHead>
+                  </TableHead> */}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentData.length > 0 ? (
                   currentData.map((invoice, index) => (
                     <TableRow
-                      key={invoice.transaction_Id}
+                      key={invoice.transaction_id}
                       className="hover:bg-gray-50"
                     >
                       <TableCell className="font-medium text-gray-600 py-4">
                         {startIndex + index + 1}
                       </TableCell>
                       <TableCell className="font-medium text-gray-900">
-                        {invoice.walletType}
+                        {invoice.wallet_type}
                       </TableCell>
                       <TableCell className="text-gray-600">
-                        {invoice.transaction_Id}
+                        {invoice.transaction_id}
                       </TableCell>
                       <TableCell className="text-gray-600">
                         {formatDate(invoice.date)}
@@ -233,9 +240,12 @@ const WithdrawTable = () => {
                         {invoice.amount}
                       </TableCell>
                       <TableCell className="font-semibold text-gray-900">
-                        {invoice.leftAmount}
+                        {invoice.left_amount}
                       </TableCell>
-                      <TableCell>
+
+                      {/* will add later in response */}
+
+                      {/* <TableCell>
                         <Badge
                           variant="outline"
                           className={`${getStatusColor(
@@ -244,7 +254,7 @@ const WithdrawTable = () => {
                         >
                           {invoice.status}
                         </Badge>
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   ))
                 ) : (
