@@ -137,7 +137,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 <DropdownMenuLabel>Messages</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {messageList?.results.map((item, index) => (
-                  <DropdownMenuItem key={index}>
+                  <DropdownMenuItem key={index} onClick={()=>setChatOpen(true)}>
                     <div className="flex items-start w-full space-x-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src="/avatars/01.png" />
