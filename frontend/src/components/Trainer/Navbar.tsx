@@ -29,6 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Logo from "../Element/Logo";
 import { removeCookie } from "@/hooks/cookie";
 import ChatConversation from "../Element/ChatConversation";
+import { useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 
 interface NavProps {
   className?: string;
@@ -37,23 +38,24 @@ interface NavProps {
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
   const pathname = usePathname();
+  const { data: messageList } = useGetTrainerChatListQuery();
 
-  console.log("conversation state:", chatOpen)
+  console.log("conversation state:", chatOpen);
 
-   useEffect(() => {
+  useEffect(() => {
     if (chatOpen) {
       // Disable body scroll
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
       // Re-enable body scroll
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     }
 
     // Cleanup to reset overflow when component is unmounted or chat is closed
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, [chatOpen]);
 
@@ -71,17 +73,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
   // Function to check if a link is active
   const isActive = (href: string) => {
-    if (href === '/trainer') {
+    if (href === "/trainer") {
       return pathname === href;
     }
     return pathname.startsWith(href);
   };
 
-  
-  const handleLogout = ()=>{
-    removeCookie("access_token")
-    router.push("/login")
-  }
+  const handleLogout = () => {
+    removeCookie("access_token");
+    router.push("/login");
+  };
 
   return (
     <nav
@@ -90,9 +91,8 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       <div className=" px-4 sm:px-6 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className=""> 
-            <Logo href="/trainer"/>
-
+          <div className="">
+            <Logo href="/trainer" />
           </div>
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
@@ -136,21 +136,28 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               <DropdownMenuContent align="end" className="w-72 sm:w-80">
                 <DropdownMenuLabel>Messages</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={()=>setChatOpen(true)}>
-                  <div className="flex items-start space-x-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/avatars/01.png" />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">John Doe</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        Hey, can we schedule a training session?
-                      </p>
+                {messageList?.results.map((item, index) => (
+                  <DropdownMenuItem key={index}>
+                    <div className="flex items-start w-full space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="/avatars/01.png" />
+                        <AvatarFallback>ST</AvatarFallback>
+                      </Avatar>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{item.other_user}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {item.last_message}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="mb-2">{item.unread_count > 0 && item.unread_count}</span>
+                        <p className="text-xs text-gray-400">2m</p>
+                      </div>
+                      </div>
                     </div>
-                    <span className="text-xs text-gray-400">2m</span>
-                  </div>
-                </DropdownMenuItem>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -204,16 +211,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <Link href={"/dashboard/trainer-settings"}>
-                <DropdownMenuItem>
-                  <User className="size-6 mr-2" />
-                  Profile
-                </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <User className="size-6 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
                 </Link>
                 <Link href={"/dashboard"}>
-                <DropdownMenuItem>
-                  <BarChart3 className="size-6 mr-2" />
-                  Dashboard
-                </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <BarChart3 className="size-6 mr-2" />
+                    Dashboard
+                  </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
@@ -288,21 +295,25 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     <DropdownMenuContent align="end" className="w-72 sm:w-80">
                       <DropdownMenuLabel>Messages</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <div className="flex items-start space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src="/avatars/01.png" />
-                            <AvatarFallback>JD</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">John Doe</p>
-                            <p className="text-xs text-gray-500 truncate">
-                              Hey, can we schedule a training session?
-                            </p>
+                      {messageList?.results.map((item, index) => (
+                        <DropdownMenuItem key={index}>
+                          <div className="flex items-start space-x-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src="/avatars/01.png" />
+                              <AvatarFallback>ST</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">
+                                {item.other_user}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">
+                                {item.last_message}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-400">2m</span>
                           </div>
-                          <span className="text-xs text-gray-400">2m</span>
-                        </div>
-                      </DropdownMenuItem>
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
 
@@ -352,7 +363,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button
-                  onClick={handleLogout}
+                    onClick={handleLogout}
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start"

@@ -9,6 +9,8 @@ import { CloudinaryUploadResponse } from "@/types/teacher/trainerVideoUpload";
 import { TrainerBankRequest, TrainerBankResponse, TrainerPaypalRequest, TrainerPaypalResponse, TrainerWalletTransactionRequest, TrainerWalletTransactionResponse, TrainerWithdrawResponse } from "@/types/teacher/wallet";
 import { CreateSessionRequest, CreateSessionResponse, deleteResponse, DeleteTimeSlotRequest, DeleteTimeSlotResponse, SessionResponse, TimeCheckRequest, TimeCheckResponse } from "@/types/teacher/session";
 import { TrainerPasswardResponse, TrainerPasswardResquest, TrainerProfileResponse, TrainerProfileUpdateRequset, TrainerProfileUpdateResponse } from "@/types/teacher/profile";
+import build from "next/dist/build";
+import { TeacherMessageListResponse } from "@/types/teacher/messaging";
 
 
 export const trainerApiSlice = apiSlice.injectEndpoints({
@@ -212,6 +214,12 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       })
     }),
 
+    // Messaging APIs
+
+    getTrainerChatList: builder.query<TeacherMessageListResponse, void>({
+      query: ()=>"/communication/msg/list/"
+    }),
+
   }),
   overrideExisting: true,
 });
@@ -245,5 +253,7 @@ export const {
   useGetTrainerProfileQuery,
   useUpdateTrainerProfileMutation,
   usePostTrainerVideoMutation,
-  useUpdateTrainerPasswordMutation
+  useUpdateTrainerPasswordMutation,
+  //Messaging
+  useGetTrainerChatListQuery
 } = trainerApiSlice;
