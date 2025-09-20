@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,58 +10,41 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit2, Trash2 } from "lucide-react";
-import { useAppSelector } from "@/store/hooks/hooks";
-import { RootState } from "@/store/store";
-import { Manager, managersData } from "@/data/BookingData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useGetBookingsQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import { AdminBooking } from "@/types/admin/bookings";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
+import moment from "moment";
 
 // Helper function to get status badge variant and styles
-const getStatusStyles = (status: Manager["status"]) => {
+const getStatusStyles = (status: AdminBooking["status"]) => {
   switch (status) {
-    case "Complete":
+    case "complete":
       return "bg-green-100 text-green-700 hover:bg-green-100 border-green-200";
-    case "On Going":
+    case "ongoing":
       return "bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200";
-    case "Up Comming":
+    case "upcoming":
       return "bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-yellow-200";
     default:
       return "bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200";
   }
 };
 
-// Helper function to generate initials from name
-const getInitials = (name: string): string => {
-  return name
-    .split(" ")
-    .map((word) => word.charAt(0))
-    .join("")
-    .toUpperCase();
-};
-
 const BookingTable: React.FC = () => {
   const [filterSports, setFilterSports] = useState<string>("All");
-  const [filterSubscriptionType, setFilterSubscriptionType] =
-      useState<string>("All");
-  const handleEdit = (id: string) => {
-    console.log(`Edit manager with ID: ${id}`);
-    // Implement edit functionality
-  };
+  const {data, isLoading, isError} = useGetBookingsQuery()
+
+  const managersData = data?.results || []
+  if(isLoading) return <Loading/>
+  if(isError) return <ErrorLoadingPage/>
 
   const filteredData = managersData.filter((trainee) => {
       const matchesSports =
-        filterSports === "All" || trainee.sport === filterSports;
+        filterSports === "All" || trainee.status === filterSports;
      
       return matchesSports
-    });
-
-  const handleDelete = (id: string) => {
-    console.log(`Delete manager with ID: ${id}`);
-    // Implement delete functionality
-  };
-
-  const {value} = useAppSelector((state: RootState)=> state.state )
-  console.log("The value:",value)
+    });;
 
   return (
     <div className="w-full">
@@ -75,9 +57,10 @@ const BookingTable: React.FC = () => {
               <SelectValue placeholder="Filter by Sport" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">All Sports</SelectItem>
-              <SelectItem value="Football">Football</SelectItem>
-              <SelectItem value="Basketball">Basketball</SelectItem>
+              <SelectItem value="All">Status</SelectItem>
+              <SelectItem value="complete">Complete</SelectItem>
+              <SelectItem value="upcoming">Up Coming</SelectItem>
+              <SelectItem value="ongoing">On Going</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -86,44 +69,44 @@ const BookingTable: React.FC = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="font-medium text-gray-500">
-                Coach name
+                No.
+              </TableHead>
+              <TableHead className="font-medium text-gray-500">
+                Trainer name
               </TableHead>
               <TableHead className="font-medium text-gray-500">
                 Student name
               </TableHead>
-              <TableHead className="font-medium text-gray-500">Date</TableHead>
-              <TableHead className="font-medium text-gray-500">ID No</TableHead>
+              <TableHead className="font-medium text-gray-500">Price</TableHead>
+              <TableHead className="font-medium text-gray-500">Date & Time</TableHead>
               <TableHead className="font-medium text-gray-500">
-                Sports
-              </TableHead>
-              <TableHead className="font-medium text-gray-500">
-                State name
+                Location
               </TableHead>
               <TableHead className="font-medium text-gray-500">
                 Status
               </TableHead>
-              <TableHead className="font-medium text-gray-500">
-                Action
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.map((manager) => (
+            {filteredData.map((manager, index) => (
               <TableRow key={manager.id}>
+                <TableCell>
+                {index+1}
+                </TableCell>
                 <TableCell className="font-medium">
                   <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
+                    {/* <Avatar className="h-8 w-8">
                       <AvatarImage src={manager.avatar} alt={manager.name} />
                       <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
                         {getInitials(manager.name)}
                       </AvatarFallback>
-                    </Avatar>
-                    <span className="text-gray-900">{manager.name}</span>
+                    </Avatar> */}
+                    <span className="text-gray-900">{manager.teacher_name}</span>
                   </div>
                 </TableCell>
                 <TableCell className="font-medium">
                   <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
+                    {/* <Avatar className="h-8 w-8">
                       <AvatarImage
                         src={manager.studentPhoto}
                         alt={manager.studentName}
@@ -131,14 +114,13 @@ const BookingTable: React.FC = () => {
                       <AvatarFallback className="bg-gray-200 text-gray-600 text-xs">
                         {getInitials(manager.studentName)}
                       </AvatarFallback>
-                    </Avatar>
-                    <span className="text-gray-900">{manager.studentName}</span>
+                    </Avatar> */}
+                    <span className="text-gray-900">{manager.student_name}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-gray-600">{manager.idNo}</TableCell>
-                <TableCell className="text-gray-600">{manager.idNo}</TableCell>
-                <TableCell className="text-gray-600">{manager.sport}</TableCell>
-                <TableCell className="text-gray-600">{manager.state}</TableCell>
+                <TableCell className="text-gray-600">${manager.session_price}</TableCell>
+                <TableCell className="text-gray-600">{moment(manager.session_time).format("MMM Do YY, h:mm a")}</TableCell>
+                <TableCell className="text-gray-600">{manager.state_name}</TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
@@ -148,29 +130,6 @@ const BookingTable: React.FC = () => {
                   >
                     {manager.status}
                   </Badge>
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(manager.id)}
-                      className="h-8 w-8 p-0 hover:bg-gray-100"
-                    >
-                      <Edit2 className="h-4 w-4 text-gray-500" />
-                      <span className="sr-only">Edit manager</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(manager.id)}
-                      className="h-8 w-8 p-0 hover:bg-gray-100"
-                    >
-                      <Trash2 className="h-4 w-4 text-gray-500" />
-                      <span className="sr-only">Delete manager</span>
-                    </Button>
-                  </div>
                 </TableCell>
               </TableRow>
             ))}

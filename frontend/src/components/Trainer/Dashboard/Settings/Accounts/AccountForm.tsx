@@ -500,10 +500,10 @@ const AccountForm = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Name */}
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="full_name">Full Name</Label>
                     <div className="relative">
                       <Input
-                        id="name"
+                        id="full_name"
                         {...register("full_name")}
                         disabled={!isEditing}
                         className={`pr-10 transition-colors ${
@@ -527,10 +527,10 @@ const AccountForm = () => {
 
                   {/* Surname */}
                   <div className="space-y-2">
-                    <Label htmlFor="surname">Surname</Label>
+                    <Label htmlFor="username">User Name</Label>
                     <div className="relative">
                       <Input
-                        id="surname"
+                        id="username"
                         {...register("username")}
                         disabled={!isEditing}
                         className={`pr-10 transition-colors ${
