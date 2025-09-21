@@ -2,90 +2,29 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Wallet, TrendingDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  DollarSign,
+  TrendingUp,
+  Wallet,
+  TrendingDown,
+} from "lucide-react";
+import { Financials } from "@/types/admin/dashboard";
+import DashboardCard from "../Element/DashboardCard";
+;
 
-interface StatCard {
-  title: string;
-  value: string | number;
-  change: string;
-  changeType: "positive" | "negative";
-  icon: React.ElementType;
-  bgColor: string;
-  iconColor: string;
+interface StatsCardProps {
+  financials: Financials;
+  user_count: number;
 }
 
-const statsData: StatCard[] = [
-  {
-    title: "Current Month Income",
-    value: "$29,569,000",
-    change: "+3.67%",
-    changeType: "positive",
-    icon: Wallet,
-    bgColor: "bg-green-100",
-    iconColor: "text-green-600",
-  },
-  {
-    title: "Current Month Expence",
-    value: "$21,869,000",
-    change: "+3.67%",
-    changeType: "positive",
-    icon: DollarSign,
-    bgColor: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-  },
-  {
-    title: "Current Month Profit",
-    value: "7,700,000",
-    change: "+3.67%",
-    changeType: "positive",
-    icon: TrendingUp,
-    bgColor: "bg-blue-100",
-    iconColor: "text-blue-600",
-  },
-  {
-    title: "Current Month New User",
-    value: "212",
-    change: "-2.40%",
-    changeType: "negative",
-    icon: TrendingDown,
-    bgColor: "bg-red-100",
-    iconColor: "text-red-600",
-  },
-];
-
-const StatsCards: React.FC = () => {
+const StatsCards: React.FC<StatsCardProps> = ({ financials, user_count }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
-      {statsData.map((stat, index) => (
-        <Card key={index} className="border-0 shadow-sm">
-          {/* <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-
-          </CardHeader> */}
-          <CardContent>
-            <div className="mb-3">
-              <div className={cn("p-2 rounded-full w-fit  mb-2", stat.bgColor)}>
-                <stat.icon className={cn("h-4 w-4", stat.iconColor)} />
-              </div>
-              <h3 className="font-semibold text-[#949AA6]">{stat.title}</h3>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div
-                className={cn(
-                  "text-sm font-medium",
-                  stat.changeType === "positive"
-                    ? "text-green-600"
-                    : "text-red-600"
-                )}
-              >
-                {stat.change}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      <DashboardCard bgColor="bg-green-100" iconColor="text-green-600" total={financials.income.total} icon={Wallet} rate={financials.income.rate} title="Current Month Income"/>
+      <DashboardCard bgColor="bg-yellow-100" iconColor="text-yellow-600" total={financials.expense.total} icon={DollarSign} rate={financials.expense.rate} title="Current Month Expence"/>
+      <DashboardCard bgColor="bg-blue-100" iconColor="text-blue-600" total={financials.profit.total} icon={TrendingUp} rate={financials.profit.rate} title="Current Month Profit"/>
+      <DashboardCard bgColor="bg-red-100" iconColor="text-red-600" total={user_count} icon={TrendingDown} title="Current Month New User"/>
+      
     </div>
   );
 };

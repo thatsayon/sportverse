@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Edit } from "lucide-react";
 import Link from "next/link";
+import { Teacher } from "@/types/admin/dashboard";
 
 interface Trainer {
   id: string;
@@ -33,7 +34,7 @@ const trainersData: Trainer[] = [
     state: "California",
     status: "Verified",
     avatar: "/avatars/iva.jpg",
-    sports: "Football"
+    sports: "Football",
   },
   {
     id: "2",
@@ -41,7 +42,7 @@ const trainersData: Trainer[] = [
     state: "Washington",
     status: "Unverified",
     avatar: "/avatars/lorri.jpg",
-    sports: "Basketball"
+    sports: "Basketball",
   },
   {
     id: "3",
@@ -49,22 +50,26 @@ const trainersData: Trainer[] = [
     state: "Texas",
     status: "Verified",
     avatar: "/avatars/james.jpg",
-    sports: "Football"
+    sports: "Football",
   },
 ];
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Verified":
-      return "bg-green-100 text-green-800 hover:bg-green-100";
-    case "Unverified":
-      return "bg-red-100 text-red-800 hover:bg-red-100";
-    default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-100";
-  }
-};
+// const getStatusColor = (status: string) => {
+//   switch (status) {
+//     case "Verified":
+//       return "bg-green-100 text-green-800 hover:bg-green-100";
+//     case "Unverified":
+//       return "bg-red-100 text-red-800 hover:bg-red-100";
+//     default:
+//       return "bg-gray-100 text-gray-800 hover:bg-gray-100";
+//   }
+// };
 
-const TrainersTable: React.FC = () => {
+interface TrainersTableProps {
+  data: Teacher[];
+}
+
+const TrainersTable: React.FC<TrainersTableProps> = ({ data = [] }) => {
   return (
     <Card className="border-0 shadow-sm">
       <CardContent className="p-0">
@@ -72,13 +77,13 @@ const TrainersTable: React.FC = () => {
           <div className="flex items-center justify-between mb-4 px-4">
             <h3 className="text-xl font-semibold">Total trainers</h3>
             <Link href={"/dashboard/trainers"}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-[#808080] hover:text-[#F15A24]"
-            >
-              View all
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-[#808080] hover:text-[#F15A24]"
+              >
+                View all
+              </Button>
             </Link>
           </div>
           <Table>
@@ -99,20 +104,20 @@ const TrainersTable: React.FC = () => {
                     size="sm"
                     className="text-[#808080] hover:text-[#F15A24]"
                   >
-                    Sport
+                    Net Income
                   </Button>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {trainersData.map((trainer) => (
+              {data.map((trainer) => (
                 <TableRow
                   key={trainer.id}
                   className="border-b border-gray-100 hover:bg-gray-50"
                 >
                   <TableCell className="px-6">
                     <div className="flex items-center space-x-3">
-                      <Avatar className="h-10 w-10">
+                      {/* <Avatar className="h-10 w-10">
                         <AvatarImage src={trainer.avatar} alt={trainer.name} />
                         <AvatarFallback className="bg-[#F15A24] text-white">
                           {trainer.name
@@ -120,25 +125,30 @@ const TrainersTable: React.FC = () => {
                             .map((n) => n[0])
                             .join("")}
                         </AvatarFallback>
-                      </Avatar>
+                      </Avatar> */}
                       <span className="font-medium text-gray-900">
-                        {trainer.name}
+                        {trainer.full_name}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4 text-[#808080]">
-                    {trainer.state}
+                    {trainer.location ? trainer.location : "Location not found"}
                   </TableCell>
                   <TableCell className="px-6 py-4">
-                    <Badge
-                      variant="secondary"
-                      className={getStatusColor(trainer.status)}
-                    >
-                      {trainer.status}
-                    </Badge>
+                    {trainer.coach_type.length > 0 ? (
+                      <>
+                        {trainer.coach_type.map((item, index) => (
+                          <Badge key={index} variant="secondary">
+                            {item}
+                          </Badge>
+                        ))}
+                      </>
+                    ) : (
+                      <span>No Sports Selected</span>
+                    )}
                   </TableCell>
-                  <TableCell className="px-6 py-4 text-right">
-                   {trainer.sports}
+                  <TableCell className="px-6 py-4 text-center">
+                    {trainer.net_income}
                   </TableCell>
                 </TableRow>
               ))}

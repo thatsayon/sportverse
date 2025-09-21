@@ -13,69 +13,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Edit } from 'lucide-react'
 import Link from 'next/link'
-
-interface Trainee {
-  id: string
-  name: string
-  lastTrainer: string
-  sports: "Football"|"Basketball";
-  status: 'Pro' | 'Basic';
-  avatar?: string
-}
-
-const traineesData: Trainee[] = [
-  {
-    id: '1',
-    name: 'Iva Ryan',
-    lastTrainer: 'Sophia Martinez',
-    sports: 'Basketball',
-    status: 'Pro',
-    avatar: '/avatars/iva.jpg',
-  },
-  {
-    id: '2',
-    name: 'Lorri Warf',
-    lastTrainer: 'Michael Anderson',
-    sports: 'Basketball',
-    status: 'Pro',
-    avatar: '/avatars/lorri.jpg',
-  },
-  {
-    id: '3',
-    name: 'James Hall',
-    lastTrainer: 'Jessica Williams',
-    sports: 'Basketball',
-    status: 'Basic',
-    avatar: '/avatars/james.jpg',
-  },
-  {
-    id: '4',
-    name: 'Joshua Jones',
-    lastTrainer: 'David Johnson',
-    sports: 'Basketball',
-    status: 'Pro',
-    avatar: '/avatars/joshua.jpg',
-  },
-  {
-    id: '5',
-    name: 'Lorri Warf',
-    lastTrainer: 'Emily Brown',
-    sports: 'Basketball',
-    status: 'Pro',
-    avatar: '/avatars/lorri2.jpg',
-  },
-  {
-    id: '6',
-    name: 'James Hall',
-    lastTrainer: 'Christopher Miller',
-    sports: 'Football',
-    status: 'Pro',
-    avatar: '/avatars/james2.jpg',
-  },
-]
+import { Student } from '@/types/admin/dashboard'
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -90,7 +29,11 @@ const getStatusColor = (status: string) => {
   }
 }
 
-const TraineesTable: React.FC = () => {
+interface TraineesTableProps {
+  data: Student[]
+}
+
+const TraineesTable: React.FC<TraineesTableProps> = ({data}) => {
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader>
@@ -116,7 +59,7 @@ const TraineesTable: React.FC = () => {
                   Name
                 </TableHead>
                 <TableHead className="px-6 py-4 text-left text-[#808080] font-medium">
-                Last Trainer
+                Username
                 </TableHead>
                 <TableHead className="px-6 py-4 text-left text-[#808080] font-medium">
                   Sport
@@ -127,33 +70,39 @@ const TraineesTable: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {traineesData.map((trainee) => (
+              {data.map((trainee) => (
                 <TableRow key={trainee.id} className="border-b">
                   {/* Name with avatar */}
                   <TableCell className="px-6 py-4 flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
+                    {/* <Avatar className="h-8 w-8">
                       <AvatarImage src={trainee.avatar} alt={trainee.name} />
                       <AvatarFallback>
                         {trainee.name.charAt(0)}
                       </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{trainee.name}</span>
+                    </Avatar> */}
+                    <span className="font-medium">{trainee.full_name}</span>
                   </TableCell>
 
                   {/* Last Trainer */}
                   <TableCell className="px-6 py-4 text-[#333]">
-                    {trainee.lastTrainer}
+                    {trainee.username}
                   </TableCell>
 
                   {/* Sports */}
                   <TableCell className="px-6 py-4">
-                    <Badge variant="outline">{trainee.sports}</Badge>
+                    {
+                      trainee.favorite_sports.length > 0 ? (
+                        <Badge variant="outline">{trainee.favorite_sports[0]}</Badge>
+                      ):(
+                        <span>No Sports Selected</span>
+                      )
+                    }
                   </TableCell>
 
                   {/* Status */}
                   <TableCell className="px-6 py-4">
-                    <Badge className={getStatusColor(trainee.status)}>
-                      {trainee.status}
+                    <Badge className={getStatusColor(trainee.account_type)}>
+                      {trainee.account_type}
                     </Badge>
                   </TableCell>
                 </TableRow>
