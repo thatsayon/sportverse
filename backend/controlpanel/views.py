@@ -19,7 +19,8 @@ from .serializers import (
     ProfileSettingSerializer,
     PasswordUpdateSerializer,
     ChatLogSerializer,
-    ChatlogDetailSerializer
+    ChatlogDetailSerializer,
+    WithdrawDetailSerializer
 )
 
 from account.models import Teacher, Student
@@ -257,11 +258,12 @@ class ChatLogDetailView(generics.RetrieveAPIView):
     queryset = Conversation.objects.all()
 
 
-class WithdrawPaymentDetailView(APIView):
+class WithdrawPaymentDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = WithdrawDetailSerializer
+    queryset = Withdraw.objects.all()
+    lookup_field = "id"
     
-    def get(self, request, id):
-        pass
 
 
 

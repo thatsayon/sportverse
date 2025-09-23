@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 
 from datetime import timedelta
 from teacher.session.models import BookedSession
+from teacher.dashboard.models import Bank, PayPal
 from communication.messaging.models import Conversation, Message
 from .models import Sport, Withdraw
     
@@ -275,3 +276,44 @@ class ChatlogDetailSerializer(serializers.ModelSerializer):
             "previous": prev_url,
             "results": serializer.data,
         }
+
+class BankSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bank
+        fields = ["full_name", "bank_name", "bank_acc_num", "bank_routing_num", "account_type"]
+
+
+class PayPalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PayPal
+        fields = ["full_name", "email", "country"]
+
+class WithdrawDetailSerializer(serializers.ModelSerializer):
+    teacher_name = serializers.CharField(source="teacher.user.full_name", read_only=True)
+    wallet_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Withdraw
+        fields = [
+            "id",
+            "teacher_name",
+            "wallet_type",
+            "transaction_id",
+            "amount",
+            "left_amount",
+            "status",
+            "date",
+            "wallet_info",
+        ]
+
+    def get_wallet_info(self, obj):
+        """Return related Bank or PayPal info based on wallet_type"""
+        if obj.wallet_type == "bank":
+            bank = getattr(obj.teacher, "bank_account", None)
+            if bank:
+                return BankSerializer(bank).data
+        elif obj.wallet_type == "paypal":
+            paypal = getattr(obj.teacher, "paypal_accounts", None)
+            if paypal:
+                return PayPalSerializer(paypal).data
+        return None

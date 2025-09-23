@@ -13,6 +13,7 @@ from .views import (
     AnalyticsView,
     ChatLogView,
     ChatLogDetailView,
+    WithdrawPaymentDetailView
 )
 
 urlpatterns = [
@@ -28,5 +29,6 @@ urlpatterns = [
     path('password-update/', PasswordUpdateView.as_view()),
     path('analytics/', AnalyticsView.as_view()),
     path('chatlog/', ChatLogView.as_view()),
-    path('chatlog/<uuid:id>/', ChatLogDetailView.as_view())
+    path('chatlog/<uuid:id>/', ChatLogDetailView.as_view()),
+    path('withdraw-detail/<uuid:id>/', WithdrawPaymentDetailView.as_view())
 ]
