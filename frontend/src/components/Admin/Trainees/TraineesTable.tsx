@@ -23,26 +23,41 @@ import {
 import { traineeData } from "@/data/TraineesData";
 import { traineeDataType } from "@/data/TraineesData";
 import { Badge } from "@/components/ui/badge";
+import { useGetStudentsQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
+import { Student } from "@/types/admin/dashboard";
 
 const TraineesTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterSports, setFilterSports] = useState<string>("All");
   const [filterSubscriptionType, setFilterSubscriptionType] =
     useState<string>("All");
-
+  const {data, isLoading, isError} = useGetStudentsQuery()
   const itemsPerPage = 10;
 
+  if(isLoading) return <Loading/>
+  if(isError) return <ErrorLoadingPage/>
+
+  const traineeData = data?.results || []
   // Filter data based on sports and subscription_type
+  
+  // ✅ Correct filtering
   const filteredData = traineeData.filter((trainee) => {
     const matchesSports =
-      filterSports === "All" || trainee.sports === filterSports;
+      filterSports === "All" ||
+      trainee.favorite_sports.some(
+        (sport) => sport.toLowerCase() === filterSports.toLowerCase()
+      );
+
     const matchesSubscriptionType =
       filterSubscriptionType === "All" ||
-      trainee.subscription_type === filterSubscriptionType;
+      trainee.account_type === filterSubscriptionType;
+
     return matchesSports && matchesSubscriptionType;
   });
 
-  // Pagination logic
+  // ✅ Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredData.slice(
@@ -58,16 +73,16 @@ const TraineesTable: React.FC = () => {
 
   return (
     <div className="w-full">
+      {/* Header + Filters */}
       <div className="mb-4 md:mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
-            All Trainee Data
-          </h1>
-        </div>
+        <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
+          All Trainee Data
+        </h1>
+
         <div className="flex gap-4">
           {/* Filter by Sport */}
           <Select value={filterSports} onValueChange={setFilterSports}>
-            <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[130px]">
+            <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[150px]">
               <SelectValue placeholder="Filter by Sport" />
             </SelectTrigger>
             <SelectContent>
@@ -82,7 +97,7 @@ const TraineesTable: React.FC = () => {
             value={filterSubscriptionType}
             onValueChange={setFilterSubscriptionType}
           >
-            <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[130px]">
+            <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[150px]">
               <SelectValue placeholder="Filter by Subscription" />
             </SelectTrigger>
             <SelectContent>
@@ -94,6 +109,7 @@ const TraineesTable: React.FC = () => {
         </div>
       </div>
 
+      {/* Table */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -108,14 +124,24 @@ const TraineesTable: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedData.map((trainee: traineeDataType, index: number) => (
+            {paginatedData.map((trainee: Student, index: number) => (
               <TableRow key={trainee.id}>
-                <TableCell className="px-6 py-4">{index + 1}</TableCell>
-                <TableCell className="px-6 py-4">{trainee.name}</TableCell>
-                <TableCell className="px-6 py-4">{trainee.username}</TableCell>
-                <TableCell className="px-6 py-4">{trainee.sports}</TableCell>
                 <TableCell className="px-6 py-4">
-                  {trainee.total_sessions}
+                  {startIndex + index + 1}
+                </TableCell>
+                <TableCell className="px-6 py-4">
+                  {trainee.full_name}
+                </TableCell>
+                <TableCell className="px-6 py-4">
+                  {trainee.username}
+                </TableCell>
+                <TableCell className="px-6 py-4">
+                  {trainee.favorite_sports.length > 0
+                    ? trainee.favorite_sports.join(", ")
+                    : "—"}
+                </TableCell>
+                <TableCell className="px-6 py-4">
+                  {trainee.total_session}
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   ${trainee.total_spent}
@@ -123,13 +149,14 @@ const TraineesTable: React.FC = () => {
                 <TableCell className="px-6 py-4">
                   <Badge
                     variant="outline"
-                    className={
-                      trainee.subscription_type === "pro"
+                    className={cn(
+                      "capitalize",
+                      trainee.account_type === "pro"
                         ? "bg-[#F15A24] text-white"
                         : "bg-gray-100 text-gray-700"
-                    }
+                    )}
                   >
-                    {trainee.subscription_type}
+                    {trainee.account_type}
                   </Badge>
                 </TableCell>
               </TableRow>

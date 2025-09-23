@@ -16,28 +16,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-// import { sportsTableData } from "@/data/SportsTableData";
 import Image from "next/image";
 import UpdateSportsPopUp from "./UpdateSportsPopUp";
+import EditSportsPopUp from "./EditSportsPopUp";
 import { useGetAllSportsQuery } from "@/store/Slices/apiSlices/apiSlice";
 
 const SportsCategory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [open, setOpen] = useState<boolean>(false);
+  const [addOpen, setAddOpen] = useState<boolean>(false);
+  const [editOpen, setEditOpen] = useState<boolean>(false);
+  const [selectedSportId, setSelectedSportId] = useState<string>("");
   const itemsPerPage = 10;
   const { data, isLoading, refetch } = useGetAllSportsQuery();
 
-if (isLoading) return <div>Loading...</div>;
-// if (error) return <div>Error: {error}</div>;
+  if (isLoading) return <div>Loading...</div>;
 
-const sportsTableData = data?.results || []; // Safely access results
+  const sportsTableData = data?.results || [];
 
-  console.log("open state:", open);
+  console.log("add open state:", addOpen);
+  console.log("edit open state:", editOpen);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // 🚀 Trigger fetch, router push, or data reload here
     }
   };
 
@@ -49,25 +50,42 @@ const sportsTableData = data?.results || []; // Safely access results
     startIndex + itemsPerPage
   );
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+  const handleEditClick = (sportId: string) => {
+    setSelectedSportId(sportId);
+    setEditOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setEditOpen(false);
+    setSelectedSportId("");
   };
 
   return (
     <div className="w-full">
-      <UpdateSportsPopUp open={open} setOpen={setOpen} refetch={refetch} />
+      {/* Add Sports Popup */}
+      <UpdateSportsPopUp open={addOpen} setOpen={setAddOpen} refetch={refetch} />
+      
+      {/* Edit Sports Popup */}
+      {selectedSportId && (
+        <EditSportsPopUp 
+          open={editOpen} 
+          setOpen={handleEditClose} 
+          refetch={refetch}
+          id={selectedSportId}
+        />
+      )}
+
       <div className="mb-4 md:mb-8 flex items-center w-full justify-between">
         <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
           All Available Sports
         </h1>
         <div>
-          <Button onClick={() => setOpen(true)}>
+          <Button onClick={() => setAddOpen(true)}>
             <Plus /> Add Sports
           </Button>
         </div>
       </div>
+      
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -83,15 +101,17 @@ const sportsTableData = data?.results || []; // Safely access results
           <TableBody>
             {paginatedData.map((item, index) => (
               <TableRow key={item.id}>
-                <TableCell className="px-6 py-4">{index + 1}</TableCell>
-                <TableCell className=" py-4">
+                <TableCell className="px-6 py-4">
+                  {startIndex + index + 1}
+                </TableCell>
+                <TableCell className="py-4">
                   <div className="flex items-center gap-2">
                     <Image
                       src={item.image}
                       alt="sports image"
                       width={40}
                       height={40}
-                      className="object-center rounded-full"
+                      className="object-cover rounded-full"
                       onError={(e) => {
                         e.currentTarget.src = "/default-image.png";
                       }}
@@ -109,7 +129,11 @@ const sportsTableData = data?.results || []; // Safely access results
                 <TableCell className="px-6 py-4">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant={"ghost"} className="hover:bg-gray-300">
+                      <Button 
+                        variant={"ghost"} 
+                        className="hover:bg-gray-300"
+                        onClick={() => handleEditClick(item.id)}
+                      >
                         <Pencil />
                       </Button>
                     </TooltipTrigger>

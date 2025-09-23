@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,46 +9,59 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, CirclePlus, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { CirclePlus, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useGetAdminProfileQuery, useUpdatePasswordMutation } from '@/store/Slices/apiSlices/adminApiSlice';
+import { getCookie } from '@/hooks/cookie';
+
+// Admin response interface
+export interface AdminResponse {
+  id: string;
+  full_name: string;
+  profile_pic: string | null;
+}
 
 // Validation schemas
 const profileSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  full_name: z.string().min(1, 'Full name is required'),
   profileImage: z.any().optional(),
 });
 
 const passwordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
+  old_password: z.string().min(1, 'Current password is required'),
+  new_password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirm_password: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.new_password === data.confirm_password, {
   message: "Passwords don't match",
-  path: ['confirmPassword'],
+  path: ['confirm_password'],
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-const BASE_URL = 'http://127.0.0.1:8000';
+const BASE_URL = 'https://stingray-intimate-sincerely.ngrok-free.app';
 
 export default function SettingForm() {
   const [profileImage, setProfileImage] = useState<string>('/api/placeholder/150/150');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [originalProfileImage, setOriginalProfileImage] = useState<string>('/api/placeholder/150/150');
+  const [showold_password, setShowold_password] = useState(false);
+  const [shownew_password, setShownew_password] = useState(false);
+  const [showconfirm_password, setShowconfirm_password] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-
+  const [hasProfileChanges, setHasProfileChanges] = useState(false);
+  const [originalFullName, setOriginalFullName] = useState('');
+  const [hasImageChanged, setHasImageChanged] = useState(false);
+  
+  const { data } = useGetAdminProfileQuery();
+  const [updatePassword] = useUpdatePasswordMutation()
   // Profile form
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: 'Bradley',
-      lastName: 'Lawlor',
+      full_name: '',
     },
   });
 
@@ -56,11 +69,34 @@ export default function SettingForm() {
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
+      old_password: '',
+      new_password: '',
+      confirm_password: '',
     },
   });
+
+  // Watch form values to detect changes
+  const watchedFullName = profileForm.watch('full_name');
+
+  // Load admin data when available
+  useEffect(() => {
+    if (data) {
+      const fullName = data.full_name || '';
+      const profilePic = data.profile_pic || '/api/placeholder/150/150';
+      
+      profileForm.setValue('full_name', fullName);
+      setOriginalFullName(fullName);
+      setProfileImage(profilePic);
+      setOriginalProfileImage(profilePic);
+    }
+  }, [data, profileForm]);
+
+  // Check for changes in form data
+  useEffect(() => {
+    const hasNameChanged = watchedFullName !== originalFullName;
+    const hasChanges = hasNameChanged || hasImageChanged;
+    setHasProfileChanges(hasChanges);
+  }, [watchedFullName, originalFullName, hasImageChanged]);
 
   // Handle image upload and compression
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,6 +117,7 @@ export default function SettingForm() {
       // Create preview URL
       const previewUrl = URL.createObjectURL(compressedFile);
       setProfileImage(previewUrl);
+      setHasImageChanged(true);
       
       // Set the compressed file to form
       profileForm.setValue('profileImage', compressedFile);
@@ -97,19 +134,29 @@ export default function SettingForm() {
 
     try {
       const formData = new FormData();
-      formData.append('full_name', `${data.firstName} ${data.lastName}`);
+      formData.append('full_name', data.full_name);
       
-      if (data.profileImage) {
+      if (data.profileImage && hasImageChanged) {
         formData.append('image', data.profileImage);
       }
 
-      const response = await fetch(`${BASE_URL}/update-profile`, {
-        method: 'POST',
+      const token = getCookie("access_token")
+
+      const response = await fetch(`${BASE_URL}/control/profile/`, {
+        method: 'PATCH',
+        headers: {
+    Authorization: `Bearer ${token}`, // ✅ add your token here
+  },
         body: formData,
       });
 
       if (response.ok) {
         setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+        // Update original values to reflect the new saved state
+        setOriginalFullName(data.full_name);
+        setOriginalProfileImage(profileImage);
+        setHasImageChanged(false);
+        setHasProfileChanges(false);
       } else {
         throw new Error('Failed to update profile');
       }
@@ -126,18 +173,20 @@ export default function SettingForm() {
     setPasswordMessage(null);
 
     try {
-      const response = await fetch(`${BASE_URL}/update-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          old_password: data.currentPassword,
-          new_password: data.newPassword,
-        }),
-      });
+      // const response = await fetch(`${BASE_URL}/update-password`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     old_password: data.old_password,
+      //     new_password: data.new_password,
+      //   }),
+      // });
 
-      if (response.ok) {
+      const response = await updatePassword(data).unwrap()
+
+      if (response) {
         setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
         passwordForm.reset();
       } else {
@@ -148,6 +197,16 @@ export default function SettingForm() {
     } finally {
       setPasswordLoading(false);
     }
+  };
+
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || 'AD';
   };
 
   return (
@@ -164,7 +223,9 @@ export default function SettingForm() {
               <div className="relative group">
                 <Avatar className="w-24 h-24 sm:w-32 sm:h-32">
                   <AvatarImage src={profileImage} alt="Profile" />
-                  <AvatarFallback className="text-lg sm:text-xl">BL</AvatarFallback>
+                  <AvatarFallback className="text-lg sm:text-xl">
+                    {getInitials(data?.full_name || '')}
+                  </AvatarFallback>
                 </Avatar>
                 <button
                   type="button"
@@ -187,15 +248,15 @@ export default function SettingForm() {
             <div className="space-y-4 text-center">
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">Name</Label>
+                  <Label htmlFor="full_name">Full Name</Label>
                   <Input
-                    id="firstName"
-                    {...profileForm.register('firstName')}
-                    placeholder="First name"
-                    className={profileForm.formState.errors.firstName ? 'border-red-500 h-12' : ' h-12'}
+                    id="full_name"
+                    {...profileForm.register('full_name')}
+                    placeholder="Enter your full name"
+                    className={profileForm.formState.errors.full_name ? 'border-red-500 h-12' : ' h-12'}
                   />
-                  {profileForm.formState.errors.firstName && (
-                    <p className="text-sm text-red-500">{profileForm.formState.errors.firstName.message}</p>
+                  {profileForm.formState.errors.full_name && (
+                    <p className="text-sm text-red-500">{profileForm.formState.errors.full_name.message}</p>
                   )}
                 </div>
               </div>
@@ -211,7 +272,7 @@ export default function SettingForm() {
               <Button 
                 onClick={profileForm.handleSubmit(onProfileSubmit)}
                 className=""
-                disabled={profileLoading}
+                disabled={profileLoading || !hasProfileChanges}
               >
                 {profileLoading ? (
                   <>
@@ -235,73 +296,73 @@ export default function SettingForm() {
             <div className="space-y-4 text-center">
               {/* Current Password */}
               <div className="space-y-2 text-center">
-                <Label htmlFor="currentPassword">Current password</Label>
+                <Label htmlFor="old_password">Current password</Label>
                 <div className="relative">
                   <Input
-                    id="currentPassword"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    {...passwordForm.register('currentPassword')}
+                    id="old_password"
+                    type={showold_password ? 'text' : 'password'}
+                    {...passwordForm.register('old_password')}
                     placeholder="john123#$8"
-                    className={passwordForm.formState.errors.currentPassword ? 'border-red-500 h-10' : 'h-10'}
+                    className={passwordForm.formState.errors.old_password ? 'border-red-500 h-10' : 'h-10'}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    onClick={() => setShowold_password(!showold_password)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showold_password ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.currentPassword && (
-                  <p className="text-sm text-red-500">{passwordForm.formState.errors.currentPassword.message}</p>
+                {passwordForm.formState.errors.old_password && (
+                  <p className="text-sm text-red-500">{passwordForm.formState.errors.old_password.message}</p>
                 )}
               </div>
 
               {/* New Password */}
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New password</Label>
+                <Label htmlFor="new_password">New password</Label>
                 <div className="relative">
                   <Input
-                    id="newPassword"
-                    type={showNewPassword ? 'text' : 'password'}
-                    {...passwordForm.register('newPassword')}
+                    id="new_password"
+                    type={shownew_password ? 'text' : 'password'}
+                    {...passwordForm.register('new_password')}
                     placeholder="john123#$8"
-                    className={passwordForm.formState.errors.newPassword ? 'border-red-500 h-10' : 'h-10'}
+                    className={passwordForm.formState.errors.new_password ? 'border-red-500 h-10' : 'h-10'}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    onClick={() => setShownew_password(!shownew_password)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {shownew_password ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.newPassword && (
-                  <p className="text-sm text-red-500">{passwordForm.formState.errors.newPassword.message}</p>
+                {passwordForm.formState.errors.new_password && (
+                  <p className="text-sm text-red-500">{passwordForm.formState.errors.new_password.message}</p>
                 )}
               </div>
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <Label htmlFor="confirm_password">Confirm password</Label>
                 <div className="relative">
                   <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    {...passwordForm.register('confirmPassword')}
+                    id="confirm_password"
+                    type={showconfirm_password ? 'text' : 'password'}
+                    {...passwordForm.register('confirm_password')}
                     placeholder="john123#$8"
-                    className={passwordForm.formState.errors.confirmPassword ? 'border-red-500 h-10' : 'h-10'}
+                    className={passwordForm.formState.errors.confirm_password ? 'border-red-500 h-10' : 'h-10'}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    onClick={() => setShowconfirm_password(!showconfirm_password)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showconfirm_password ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.confirmPassword && (
-                  <p className="text-sm text-red-500">{passwordForm.formState.errors.confirmPassword.message}</p>
+                {passwordForm.formState.errors.confirm_password && (
+                  <p className="text-sm text-red-500">{passwordForm.formState.errors.confirm_password.message}</p>
                 )}
               </div>
 

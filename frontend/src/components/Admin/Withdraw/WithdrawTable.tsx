@@ -28,7 +28,14 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import {
+  useGetWithdrawQuery,
+  useUpdateWithdrawMutation,
+} from "@/store/Slices/apiSlices/adminApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
+import { toast } from "sonner";
 
 // Badge colors for status
 const getStatusStyles = (status: string) => {
@@ -47,20 +54,33 @@ const getStatusStyles = (status: string) => {
 const WithdrawTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState<string>("All");
-  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
-  const [newStatus, setNewStatus] = useState<string>("");
-
+  const [selectedInvoice, setSelectedInvoice] = useState<string>("");
+  const [newStatus, setNewStatus] = useState<"approve" | "pending" | "reject">(
+    "approve"
+  );
+  const { data, isLoading, isError } = useGetWithdrawQuery();
+  const [updateWitdraw, { isLoading: LoadingUpdate }] =
+    useUpdateWithdrawMutation();
   const itemsPerPage = 10;
 
+  if (isLoading) return <Loading />;
+  if (isError) return <ErrorLoadingPage />;
+
+  const invoices = data?.results || [];
+
   // Filter data based on status
-  const filteredData = filterStatus === "All"
-    ? invoices
-    : invoices.filter((invoice) => invoice.status === filterStatus);
+  const filteredData =
+    filterStatus === "All"
+      ? invoices
+      : invoices.filter((invoice) => invoice.status === filterStatus);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedData = filteredData.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -68,28 +88,36 @@ const WithdrawTable: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (transition_Id: string, newStatus: string) => {
+  const handleStatusChange = (
+    id: string,
+    newStatus: "approve" | "pending" | "reject"
+  ) => {
     // Set the selected invoice and new status, and show the confirmation dialog
-    setSelectedInvoice(transition_Id);
+    setSelectedInvoice(id);
     setNewStatus(newStatus);
   };
 
-  const confirmStatusChange = () => {
-    const updatedInvoices = invoices.map((invoice) =>
-      invoice.transition_Id === selectedInvoice
-        ? { ...invoice, status: newStatus }
-        : invoice
-    );
-    // Update the invoices state or global state here with updatedInvoices
-    setSelectedInvoice(null); // Reset selected invoice after confirmation
-    setNewStatus(""); // Reset the status
+  const confirmStatusChange = async () => {
+    const response = await updateWitdraw({
+      id: selectedInvoice,
+      status: newStatus,
+    }).unwrap();
+    if (response.msg) {
+      toast.success("Status Upadted");
+      setSelectedInvoice("");
+      setNewStatus("approve");
+    } else {
+      toast.error("Error while updating status");
+    }
   };
 
   return (
     <div className="w-full">
       <div className="mb-4 md:mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-semibold font-montserrat">All Invoice History</h1>
+          <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
+            All Invoice History
+          </h1>
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[130px]">
@@ -97,9 +125,9 @@ const WithdrawTable: React.FC = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All</SelectItem>
-            <SelectItem value="Accepted">Accepted</SelectItem>
-            <SelectItem value="Rejected">Rejected</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="approve">Accepted</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -111,7 +139,7 @@ const WithdrawTable: React.FC = () => {
               <TableHead className="px-6 py-4">No</TableHead>
               <TableHead className="px-6 py-4">Trainer Name</TableHead>
               <TableHead className="px-6 py-4">Invoice ID</TableHead>
-              <TableHead className="px-6 py-4">Withdraw Type</TableHead>
+              {/* <TableHead className="px-6 py-4">Withdraw Type</TableHead> */}
               <TableHead className="px-6 py-4">Location</TableHead>
               <TableHead className="px-6 py-4">Date</TableHead>
               <TableHead className="px-6 py-4">Amount</TableHead>
@@ -121,31 +149,38 @@ const WithdrawTable: React.FC = () => {
           </TableHeader>
           <TableBody>
             {paginatedData.map((item, index) => (
-              <TableRow key={item.transition_Id}>
-                <TableCell className="px-6 py-4">{index+1}</TableCell>
-                <TableCell className="px-6 py-4">{item.trainer_name}</TableCell>
-                <TableCell className="px-6 py-4">{item.transition_Id}</TableCell>
-                <TableCell className="px-6 py-4">{item.withdrawType}</TableCell>
+              <TableRow key={index}>
+                <TableCell className="px-6 py-4">{index + 1}</TableCell>
+                <TableCell className="px-6 py-4">{item.teacher_name}</TableCell>
+                <TableCell className="px-6 py-4">
+                  {item.transaction_id}
+                </TableCell>
+                {/* <TableCell className="px-6 py-4">{item.location}</TableCell> */}
                 <TableCell className="px-6 py-4">{item.location}</TableCell>
                 <TableCell className="px-6 py-4">{item.date}</TableCell>
                 <TableCell className="px-6 py-4">{item.amount}</TableCell>
                 <TableCell className="px-6 py-4">
-                  <Badge variant="outline" className={`${getStatusStyles(item.status)} border`}>
+                  <Badge
+                    variant="outline"
+                    className={`${getStatusStyles(item.status)} border`}
+                  >
                     {item.status}
                   </Badge>
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <Select
                     value={item.status}
-                    onValueChange={(newStatus) => handleStatusChange(item.transition_Id, newStatus)}
+                    onValueChange={(
+                      newStatus: "approve" | "pending" | "reject"
+                    ) => handleStatusChange(item.id, newStatus)}
                   >
                     <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[130px]">
                       <SelectValue placeholder="Change Status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Accepted">Accepted</SelectItem>
-                      <SelectItem value="Rejected">Rejected</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="accepted">Accepted</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>
@@ -198,7 +233,10 @@ const WithdrawTable: React.FC = () => {
       </div>
 
       {/* Confirmation Alert Dialog */}
-      <AlertDialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
+      <AlertDialog
+        open={!!selectedInvoice}
+        onOpenChange={(open) => !open && setSelectedInvoice("")}
+      >
         <AlertDialogTrigger />
         <AlertDialogContent>
           <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
@@ -207,8 +245,12 @@ const WithdrawTable: React.FC = () => {
             <span className="font-semibold">{newStatus}</span>?
           </AlertDialogDescription>
           <div className="flex justify-end gap-4 mt-4">
-            <AlertDialogCancel onClick={() => setSelectedInvoice(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmStatusChange}>Confirm</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setSelectedInvoice("")}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStatusChange}>
+              {LoadingUpdate ? "Updating" : "Confirm"}
+            </AlertDialogAction>
           </div>
         </AlertDialogContent>
       </AlertDialog>

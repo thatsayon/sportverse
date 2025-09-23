@@ -7,6 +7,8 @@ import imageCompression from "browser-image-compression";
 import { toast } from "sonner";
 import { getCookie } from "@/hooks/cookie";
 
+const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app"
+
 // Define types for form data and errors
 interface FormData {
   image: File | null;
@@ -178,7 +180,7 @@ function UpdateSportsPopUp({ open, setOpen, refetch }: UpdateSportsPopUpProps) {
 
       // API call - replace with your actual endpoint
       const accessToken = getCookie("access_token");
-      const response = await fetch("http://127.0.0.1:8000/control/get-or-create-sport/", {
+      const response = await fetch(`${BASE_URL}/control/get-or-create-sport/`, {
         // Leave empty as requested
         method: "POST",
         body: formDataToSend,

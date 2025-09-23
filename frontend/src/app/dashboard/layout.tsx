@@ -44,7 +44,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex flex-col min-h-screen lg:ml-64">
         {/* Fixed Navbar */}
-        <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        <div className="relative z-20">
+          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        </div>
 
         {/* Page Content with top padding to account for fixed navbar */}
         <main className="flex-1 mt-24 p-4 lg:p-6">{children}</main>

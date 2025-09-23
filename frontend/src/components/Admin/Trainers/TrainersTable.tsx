@@ -20,23 +20,38 @@ import {
 } from "@/components/ui/select";
 
 // Dummy trainer data (you can import this from your data source)
-import { trainerData } from "@/data/TrainerData";
+// import { trainerData } from "@/data/TrainerData";
+import { useGetTrainersQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 
 const TrainersTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterSports, setFilterSports] = useState<string>("All");
-
+  const { data, isLoading, isError } = useGetTrainersQuery();
   const itemsPerPage = 10;
 
+  if (isLoading) return <Loading />;
+  if (isError) return <ErrorLoadingPage />;
+
+  const trainerData = data?.results || [];
   // Filter data based on sports
-  const filteredData = filterSports === "All"
-    ? trainerData
-    : trainerData.filter((trainer) => trainer.sports === filterSports);
+  const filteredData =
+    filterSports === "All"
+      ? trainerData
+      : trainerData.filter((trainer) =>
+          trainer.coach_type?.some(
+            (sport) => sport.toLowerCase() === filterSports.toLowerCase()
+          )
+        );
 
   // Pagination logic
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedData = filteredData.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -48,7 +63,9 @@ const TrainersTable: React.FC = () => {
     <div className="w-full">
       <div className="mb-4 md:mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-semibold font-montserrat">All Trainer Data</h1>
+          <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
+            All Trainer Data
+          </h1>
         </div>
         <Select value={filterSports} onValueChange={setFilterSports}>
           <SelectTrigger className="text-[#F15A24] border-[#F15A24] w-[130px]">
@@ -78,11 +95,21 @@ const TrainersTable: React.FC = () => {
             {paginatedData.map((trainer, index) => (
               <TableRow key={trainer.id}>
                 <TableCell className="px-6 py-4">{index + 1}</TableCell>
-                <TableCell className="px-6 py-4">{trainer.name}</TableCell>
+                <TableCell className="px-6 py-4">{trainer.full_name}</TableCell>
                 <TableCell className="px-6 py-4">{trainer.username}</TableCell>
-                <TableCell className="px-6 py-4">{trainer.location}</TableCell>
-                <TableCell className="px-6 py-4">{trainer.sports}</TableCell>
-                <TableCell className="px-6 py-4">${trainer.net_income}</TableCell>
+                <TableCell className="px-6 py-4">
+                  {trainer.location
+                    ? trainer.location
+                    : "Location Not Selected"}
+                </TableCell>
+                <TableCell className="px-6 py-4">
+                  {trainer.coach_type.length > 0
+                    ? trainer.coach_type.join(", ")
+                    : "No Sports Selected"}
+                </TableCell>
+                <TableCell className="px-6 py-4">
+                  ${trainer.net_income}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -129,7 +156,7 @@ const TrainersTable: React.FC = () => {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-      </div>     
+      </div>
     </div>
   );
 };

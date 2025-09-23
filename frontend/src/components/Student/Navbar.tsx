@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,8 +28,12 @@ import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useRouter } from "next/navigation";
 import Logo from "../Element/Logo";
-import { removeCookie } from "@/hooks/cookie";
+import { removeCookie, getCookie } from "@/hooks/cookie";
 import ChatConversation from "../Element/ChatConversation";
+import { useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { getSocket } from "@/lib/socket";
+
+const SOCKET_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
 
 interface NavProps {
   className?: string;
@@ -38,9 +42,68 @@ interface NavProps {
 const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [activeConversation, setActiveConversation] = useState<{
+    id: string;
+    otherUser: string;
+  } | null>(null);
+  const [localMessageList, setLocalMessageList] = useState<any[]>([]);
 
   const router = useRouter();
   const pathname = usePathname();
+  const { data: messageList } = useGetTrainerChatListQuery();
+
+  // Initialize local message list from API data
+  useEffect(() => {
+    if (messageList?.results) setLocalMessageList(messageList.results);
+  }, [messageList]);
+
+  // Handle body scroll when chat is open
+  useEffect(() => {
+    document.body.style.overflow = chatOpen ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [chatOpen]);
+
+  // Socket integration for real-time messaging
+  useEffect(() => {
+    const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
+    console.log("Socket in Student Navbar:", socket);
+    
+    const handleNewMessage = (msg: any) => {
+      setLocalMessageList((prev) => {
+        const index = prev.findIndex(
+          (c) => c.conversation_id === msg.conversation_id
+        );
+
+        if (index !== -1) {
+          const updated = [...prev];
+          updated[index] = {
+            ...updated[index],
+            last_message: msg.content,
+            unread_count: (updated[index].unread_count || 0) + 1,
+          };
+          return updated;
+        } else {
+          return [
+            {
+              conversation_id: msg.conversation_id,
+              other_user: msg.sender_name,
+              last_message: msg.content,
+              unread_count: 1,
+            },
+            ...prev,
+          ];
+        }
+      });
+    };
+
+    socket.on("receive_message", handleNewMessage);
+
+    return () => {
+      socket.off("receive_message", handleNewMessage);
+    };
+  }, []);
 
   const navItems = [
     { name: "Home", href: "/student" },
@@ -70,6 +133,28 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     removeCookie("access_token");
     router.push("/login");
   };
+
+  const handleMessageClick = (item: any) => {
+    setActiveConversation({
+      id: item.conversation_id,
+      otherUser: item.other_user,
+    });
+    setChatOpen(true);
+
+    // Reset unread count for the clicked conversation
+    setLocalMessageList((prev) =>
+      prev.map((c) =>
+        c.conversation_id === item.conversation_id
+          ? { ...c, unread_count: 0 }
+          : c
+      )
+    );
+  };
+
+  const totalUnreadCount = localMessageList.reduce(
+    (acc, c) => acc + (c.unread_count || 0),
+    0
+  );
 
   return (
     <nav
@@ -106,39 +191,64 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
           </div>
 
           {/* Desktop User Menu & Actions */}
-
-          {/* message */}
           <div className="hidden lg:flex items-center space-x-4">
+            {/* Messages */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="relative">
                   <MessageCircle className="size-6" />
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs"
-                  >
-                    3
-                  </Badge>
+                  {totalUnreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs"
+                    >
+                      {totalUnreadCount}
+                    </Badge>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72 sm:w-80">
                 <DropdownMenuLabel>Messages</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={()=>setChatOpen(true)}>
-                  <div className="flex items-start space-x-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/avatars/01.png" />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">John Doe</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        Hey, can we schedule a training session?
-                      </p>
+                {localMessageList.length > 0 ? (
+                  localMessageList.map((item, index) => (
+                    <DropdownMenuItem
+                      key={item.conversation_id || index}
+                      onClick={() => handleMessageClick(item)}
+                    >
+                      <div className="flex items-start space-x-3 w-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src="/avatars/01.png" />
+                          <AvatarFallback>
+                            {item.other_user?.charAt(0)?.toUpperCase() || "T"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{item.other_user}</p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {item.last_message || "No messages yet"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            {item.unread_count > 0 && (
+                              <span className="text-xs text-red-500 font-semibold mb-1 block">
+                                {item.unread_count}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-400">2m</span>
+                          </div>
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem disabled>
+                    <div className="text-center py-4 text-gray-500 w-full">
+                      No messages yet
                     </div>
-                    <span className="text-xs text-gray-400">2m</span>
-                  </div>
-                </DropdownMenuItem>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -180,9 +290,10 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* User Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 cursor-pointer">
                   <Avatar>
                     <AvatarImage src={"/trainer/profileImage.png"} />
                     <AvatarFallback>User</AvatarFallback>
@@ -201,25 +312,22 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
                 <Link href={"/student/profile"}>
                   <DropdownMenuItem>
-                    <User className="size-6 mr-2" />
+                    <User className="size-4 mr-2" />
                     Profile
                   </DropdownMenuItem>
                 </Link>
                 <Link href={"/student/bookings"}>
                   <DropdownMenuItem onClick={handleRedirect}>
-                    <Calendar className="size-6 mr-2" />
+                    <Calendar className="size-4 mr-2" />
                     Bookings
                   </DropdownMenuItem>
                 </Link>
-                {/* <DropdownMenuItem>
-                  <Settings className="size-6 mr-2" />
-                  Settings
-                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
-                onClick={handleLogout}
-                className="text-[#CD5E5E]">
-                  <LogOut stroke="#CD5E5E" className="size-6 mr-2" />
+                  onClick={handleLogout}
+                  className="text-[#CD5E5E]"
+                >
+                  <LogOut stroke="#CD5E5E" className="size-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -274,48 +382,81 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   </motion.div>
                 ))}
 
+                {/* Mobile Actions */}
                 <div className="pt-4 border-t border-gray-200 space-y-2">
+                  {/* Mobile Messages */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="relative">
-                        <Mail className="h-5 w-5" />
-                        <Badge
-                          variant="destructive"
-                          className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs"
-                        >
-                          3
-                        </Badge>
+                      <Button variant="ghost" size="sm" className="relative w-full justify-start">
+                        <Mail className="h-5 w-5 mr-2" />
+                        Messages
+                        {totalUnreadCount > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className="ml-auto h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]"
+                          >
+                            {totalUnreadCount}
+                          </Badge>
+                        )}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-72 sm:w-80">
                       <DropdownMenuLabel>Messages</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <div className="flex items-start space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src="/avatars/01.png" />
-                            <AvatarFallback>JD</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">John Doe</p>
-                            <p className="text-xs text-gray-500 truncate">
-                              Hey, can we schedule a training session?
-                            </p>
+                      {localMessageList.length > 0 ? (
+                        localMessageList.map((item, index) => (
+                          <DropdownMenuItem 
+                            key={item.conversation_id || index}
+                            onClick={() => {
+                              handleMessageClick(item);
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            <div className="flex items-start space-x-3 w-full">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src="/avatars/01.png" />
+                                <AvatarFallback>
+                                  {item.other_user?.charAt(0)?.toUpperCase() || "T"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">
+                                  {item.other_user}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  {item.last_message || "No messages yet"}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                {item.unread_count > 0 && (
+                                  <span className="text-xs text-red-500 font-semibold">
+                                    {item.unread_count}
+                                  </span>
+                                )}
+                                <p className="text-xs text-gray-400">2m</p>
+                              </div>
+                            </div>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <DropdownMenuItem disabled>
+                          <div className="text-center py-4 text-gray-500 w-full">
+                            No messages yet
                           </div>
-                          <span className="text-xs text-gray-400">2m</span>
-                        </div>
-                      </DropdownMenuItem>
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {/* Notifications */}
+                  {/* Mobile Notifications */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="relative">
-                        <Bell className="h-5 w-5" />
+                      <Button variant="ghost" size="sm" className="relative w-full justify-start">
+                        <Bell className="h-5 w-5 mr-2" />
+                        Notifications
                         <Badge
                           variant="destructive"
-                          className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs"
+                          className="ml-auto h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]"
                         >
                           5
                         </Badge>
@@ -353,13 +494,42 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+
+                  {/* Mobile Profile Actions */}
+                  <Link href={"/student/profile"}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Button>
+                  </Link>
+
+                  <Link href={"/student/bookings"}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Bookings
+                    </Button>
+                  </Link>
+
                   <Button
-                    onClick={handleLogout}
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start"
+                    className="w-full justify-start text-[#CD5E5E]"
                   >
-                    <LogOut className="w-4 h-4 mr-2" />
+                    <LogOut stroke="#CD5E5E" className="w-4 h-4 mr-2" />
                     Logout
                   </Button>
                 </div>
@@ -368,12 +538,17 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
           )}
         </AnimatePresence>
       </div>
-      <ChatConversation
-        open={chatOpen}
-        setOpen={setChatOpen}
-        otherUserName="John Trainer"
-        currentUserName="You"
-      />
+
+      {/* Chat Conversation Modal */}
+      {activeConversation && (
+        <ChatConversation
+          open={chatOpen}
+          setOpen={setChatOpen}
+          conversationId={activeConversation.id}
+          otherUserName={activeConversation.otherUser}
+          currentUserName="You"
+        />
+      )}
     </nav>
   );
 };

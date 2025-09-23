@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Calendar,
-  Users,
   Image,
   DollarSign,
   MessageSquare,
@@ -22,7 +21,6 @@ import {
   BanknoteArrowDown,
   CalendarDays,
   CalendarCheck,
-  Video,
   CreditCard,
   Plus,
   WalletMinimal
@@ -68,11 +66,11 @@ const adminNavItems: NavItem[] = [
     href: '/dashboard/media',
     icon: Image,
   },
-  {
-    name: 'Payout history',
-    href: '/dashboard/payout',
-    icon: DollarSign,
-  },
+  // {
+  //   name: 'Payout history',
+  //   href: '/dashboard/payout',
+  //   icon: DollarSign,
+  // },
   {
     name: 'Withdraw',
     href: '/dashboard/withdraw',
