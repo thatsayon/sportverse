@@ -7,11 +7,9 @@ from account.models import (
 )
 from django.utils import timezone
 from django.contrib.auth import get_user_model, password_validation
-from django.core.paginator import Paginator
-
 from datetime import timedelta
 from teacher.session.models import BookedSession
-from communication.messaging.models import Conversation, Message
+from communication.messaging.models import Conversation
 from .models import Sport, Withdraw
     
 User = get_user_model()
@@ -162,116 +160,12 @@ class PasswordUpdateSerializer(serializers.Serializer):
         user.save()
         return user
 
+
 class ChatLogSerializer(serializers.ModelSerializer):
-    teacher_name = serializers.CharField(source="teacher.full_name", read_only=True)
-    student_name = serializers.CharField(source="student.full_name", read_only=True)
-    subject = serializers.SerializerMethodField()
-    message_count = serializers.SerializerMethodField()
-    last_activity = serializers.SerializerMethodField()
+    teacher_name = serializers.CharField(source="teacher.full_name")
+    student_name = serializers.CharField(source="teacher.full_name")
 
     class Meta:
         model = Conversation
-        fields = [
-            "id",
-            "teacher_name",
-            "student_name",
-            "subject",
-            "message_count",
-            "last_activity",
-            "created_at",
-        ]
+        fields = ["id", "teacher_name", "student_name", "created_at"]
 
-    def get_subject(self, obj):
-        teacher_acc = Teacher.objects.filter(user=obj.teacher).first()
-
-        booked_session = (
-            BookedSession.objects
-            .filter(teacher=teacher_acc, student=obj.student)
-            .select_related("session")
-            .order_by("-session_time")
-            .first()
-        )
-
-        if booked_session and booked_session.session:
-            return booked_session.session.training_type  
-        return None
-
-    def get_message_count(self, obj):
-        return obj.messages.count()
-
-    def get_last_activity(self, obj):
-        last_message = obj.messages.first()  
-        return last_message.created_at if last_message else None
-
-class MessageSerializer(serializers.ModelSerializer):
-    sender_name = serializers.CharField(source="sender.full_name", read_only=True)
-    recipient_name = serializers.CharField(source="recipient.full_name", read_only=True)
-
-    class Meta:
-        model = Message
-        fields = [
-            "id",
-            "sender_name",
-            "recipient_name",
-            "content",
-            "created_at",
-            "delivered",
-            "read",
-        ]
-
-
-class ChatlogDetailSerializer(serializers.ModelSerializer):
-    teacher_name = serializers.CharField(source="teacher.full_name", read_only=True)
-    student_name = serializers.CharField(source="student.full_name", read_only=True)
-    subject = serializers.SerializerMethodField()
-    messages = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Conversation
-        fields = ["id", "teacher_name", "student_name", "subject", "created_at", "messages"]
-
-    def get_subject(self, obj):
-        teacher_acc = Teacher.objects.filter(user=obj.teacher).first()
-
-        booked_session = (
-            BookedSession.objects
-            .filter(teacher=teacher_acc, student=obj.student)
-            .select_related("session")
-            .order_by("-session_time")
-            .first()
-        )
-
-        if booked_session and booked_session.session:
-            return booked_session.session.training_type  
-        return None
-
-    def get_messages(self, obj):
-        request = self.context.get("request")
-        page_number = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 30))  # default = 30
-
-        queryset = obj.messages.all()
-        paginator = Paginator(queryset, page_size)
-        page = paginator.get_page(page_number)
-
-        serializer = MessageSerializer(page, many=True, context=self.context)
-
-        # Build next/previous URLs
-        base_url = request.build_absolute_uri(request.path)
-        next_url = None
-        prev_url = None
-
-        if page.has_next():
-            next_url = f"{base_url}?page={page.next_page_number()}&page_size={page_size}"
-        if page.has_previous():
-            prev_url = f"{base_url}?page={page.previous_page_number()}&page_size={page_size}"
-
-        return {
-            "count": paginator.count,
-            "total_pages": paginator.num_pages,
-            "current_page": page.number,
-            "page_size": page_size,
-            "next": next_url,
-            "previous": prev_url,
-            "results": serializer.data,
-        }

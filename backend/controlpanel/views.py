@@ -2,6 +2,7 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
+from rest_framework import filters
 
 from django.db.models import Count, Sum
 from django.utils.timezone import now
@@ -16,12 +17,15 @@ from .serializers import (
     BookingSerializer,
     WithdrawRequestSerializer,
     ProfileSettingSerializer,
-    PasswordUpdateSerializer
+    PasswordUpdateSerializer,
+    ChatLogSerializer,
+    ChatlogDetailSerializer
 )
 
 from account.models import Teacher, Student
 from teacher.session.models import BookedSession, TRAINING_TYPE
 from teacher.dashboard.models import IncomeHistory
+from communication.messaging.models import Conversation, Message
 from .models import Sport, Withdraw, AdminIncome
 
 import calendar
@@ -230,6 +234,36 @@ class WithdrawRequest(APIView):
             {"msg": "Status updated successfully"},
             status=status.HTTP_200_OK
         )
+
+
+class ChatLogView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = ChatLogSerializer
+    queryset = Conversation.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        "teacher__full_name",
+        "teacher__username",
+        "teacher__email",
+        "student__full_name",
+        "student__username",
+        "student__email",
+    ]
+
+class ChatLogDetailView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = ChatlogDetailSerializer
+    lookup_field = "id"
+    queryset = Conversation.objects.all()
+
+
+class WithdrawPaymentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    
+    def get(self, request, id):
+        pass
+
+
 
 class ProfileSettingView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]

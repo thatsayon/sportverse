@@ -10,7 +10,9 @@ from .views import (
     ProfileSettingView,
     PasswordUpdateView,
     AdminDashboard,
-    AnalyticsView
+    AnalyticsView,
+    ChatLogView,
+    ChatLogDetailView,
 )
 
 urlpatterns = [
@@ -24,5 +26,7 @@ urlpatterns = [
     path('withdraw/<uuid:id>/', WithdrawRequest.as_view()),
     path('profile/', ProfileSettingView.as_view()),
     path('password-update/', PasswordUpdateView.as_view()),
-    path('analytics/', AnalyticsView.as_view())
+    path('analytics/', AnalyticsView.as_view()),
+    path('chatlog/', ChatLogView.as_view()),
+    path('chatlog/<uuid:id>/', ChatLogDetailView.as_view())
 ]
