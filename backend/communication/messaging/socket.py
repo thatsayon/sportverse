@@ -182,17 +182,18 @@ async def send_message(sid, data):
                 return message
 
         message = await create_message()
-
+        
         msg_data = {
             "id": str(message.id),
             "conversation_id": str(conversation_id),
-            "sender": str(sender_id),
-            "recipient": str(recipient_id),
-            "text": message.content,
+            "sender_id": str(sender_id),       
+            "recipient_id": str(recipient_id), 
+            "content": message.content,       
             "created_at": message.created_at.isoformat(),
             "delivered": message.delivered,
             "read": message.read,
         }
+
 
         room = f"conversation_{conversation_id}"
         await sio.emit("receive_message", msg_data, room=room)

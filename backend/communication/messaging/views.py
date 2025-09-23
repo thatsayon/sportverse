@@ -55,20 +55,23 @@ class ConversationMessages(APIView):
     def get(self, request, conversation_id):
         user = request.user
 
+        print(conversation_id)
         # Ensure the conversation exists and the user is a participant
         qs = Conversation.objects.filter(id=conversation_id).filter(Q(teacher=user) | Q(student=user))
+        print(qs)
         conversation = get_object_or_404(qs)
 
         # Select related for sender/recipient to reduce queries
         messages = (
             Message.objects.filter(conversation=conversation)
             .select_related("sender", "recipient")
-            .order_by("created_at")  # ascending so oldest messages first (useful for chat UI)
+            .order_by("-created_at")  # ascending so oldest messages first (useful for chat UI)
         )
 
         paginator = PageNumberPagination()
         page = paginator.paginate_queryset(messages, request, view=self)
 
+        page = list(reversed(page))
         result = []
         for msg in page:
             result.append(
