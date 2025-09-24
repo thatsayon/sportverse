@@ -285,3 +285,33 @@ class Withdraw(models.Model):
     def __str__(self):
         return f"{self.teacher} - {self.wallet_type} - {self.amount}"
 
+
+class AdminVideo(models.Model):
+    STATUS = [
+        ("processing", "processing"),
+        ("ready", "ready"),
+        ("failed", "failed"),
+    ]
+    CONSUMER = [
+        ("student", "student"),
+        ("teacher", "teacher")
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    public_id = models.CharField(max_length=255)
+    format = models.CharField(max_length=50, blank=True, null=True)
+    duration = models.FloatField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS, default="processing")
+    consumer = models.CharField(max_length=12, choices=CONSUMER, default="student")
+    thumbnail = models.URLField()
+    sport = models.ForeignKey(
+        "Sport",
+        on_delete=models.CASCADE,
+        related_name="videos"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title

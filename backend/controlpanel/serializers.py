@@ -13,7 +13,7 @@ from datetime import timedelta
 from teacher.session.models import BookedSession
 from teacher.dashboard.models import Bank, PayPal
 from communication.messaging.models import Conversation, Message
-from .models import Sport, Withdraw
+from .models import Sport, Withdraw, AdminVideo
     
 User = get_user_model()
 
@@ -340,3 +340,45 @@ class WithdrawDetailSerializer(serializers.ModelSerializer):
             if paypal:
                 return PayPalSerializer(paypal).data
         return None
+
+class AdminVideoSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.ImageField(required=True, write_only=True)  # upload file
+    
+    sport = serializers.PrimaryKeyRelatedField(
+        queryset=Sport.objects.all(), write_only=True
+    )
+    sport_name = serializers.CharField(source="sport.name", read_only=True)
+
+    consumer = serializers.ChoiceField(choices=AdminVideo.CONSUMER, write_only=True)
+    consumer_name = serializers.CharField(source="get_consumer_display", read_only=True)
+
+    class Meta:
+        model = AdminVideo
+        fields = [
+            "id",
+            "title",
+            "description",
+            "public_id",
+            "format",
+            "duration",
+            "status",
+            "consumer",
+            "consumer_name",
+            "thumbnail",
+            "sport",        
+            "sport_name",  
+            "created_at",
+        ]
+        read_only_fields = ["id", "public_id", "format", "duration", "status", "created_at"]
+
+class VideoListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminVideo
+        fields = [
+            "id",
+            "title",
+            "description",
+            "thumbnail",
+            "consumer",
+            "created_at"
+        ]

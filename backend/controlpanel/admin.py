@@ -6,7 +6,8 @@ from .models import (
     SessionBreakdown, 
     TeacherDeduction,
     AdminIncome,
-    Withdraw
+    Withdraw,
+    AdminVideo
 )
 
 admin.site.register(Sport)
@@ -16,3 +17,4 @@ admin.site.register(SessionBreakdown)
 admin.site.register(TeacherDeduction)
 admin.site.register(AdminIncome)
 admin.site.register(Withdraw)
+admin.site.register(AdminVideo)

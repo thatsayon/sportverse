@@ -13,7 +13,11 @@ from .views import (
     AnalyticsView,
     ChatLogView,
     ChatLogDetailView,
-    WithdrawPaymentDetailView
+    WithdrawPaymentDetailView,
+    VideoUploadSignatureView,
+    CloudinaryWebhookView,
+    VideoListView,
+    GenerateVideoLinkView
 )
 
 urlpatterns = [
@@ -30,5 +34,9 @@ urlpatterns = [
     path('analytics/', AnalyticsView.as_view()),
     path('chatlog/', ChatLogView.as_view()),
     path('chatlog/<uuid:id>/', ChatLogDetailView.as_view()),
-    path('withdraw-detail/<uuid:id>/', WithdrawPaymentDetailView.as_view())
+    path('withdraw-detail/<uuid:id>/', WithdrawPaymentDetailView.as_view()),
+    path('generate-token/', VideoUploadSignatureView.as_view()),
+    path('video-webhook/', CloudinaryWebhookView.as_view()),
+    path('video-list/', VideoListView.as_view()),
+    path('video/<uuid:video_id>/', GenerateVideoLinkView.as_view())
 ]

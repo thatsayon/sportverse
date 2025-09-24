@@ -482,7 +482,7 @@ class AccountUploadView(APIView):
     def post(self, request):
         upload, created = AccountVideo.objects.get_or_create(
             teacher=request.user.teacher,
-            defaults={"public_id": ""}  # first-time creation
+            defaults={"public_id": ""}  
         )
 
         if not created:

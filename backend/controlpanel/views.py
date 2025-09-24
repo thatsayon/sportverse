@@ -7,8 +7,12 @@ from rest_framework import filters
 from django.db.models import Count, Sum
 from django.utils.timezone import now
 from django.contrib.auth import get_user_model
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 
 from datetime import timedelta
+from cloudinary.utils import cloudinary_url
 
 from .serializers import (
     SportSerializer,
@@ -20,16 +24,20 @@ from .serializers import (
     PasswordUpdateSerializer,
     ChatLogSerializer,
     ChatlogDetailSerializer,
-    WithdrawDetailSerializer
+    WithdrawDetailSerializer,
+    AdminVideoSerializer,
+    VideoListSerializer
 )
 
 from account.models import Teacher, Student
 from teacher.session.models import BookedSession, TRAINING_TYPE
 from teacher.dashboard.models import IncomeHistory
 from communication.messaging.models import Conversation, Message
-from .models import Sport, Withdraw, AdminIncome
+from .models import Sport, Withdraw, AdminIncome, AdminVideo
 
 import calendar
+import time
+import cloudinary
 
 User = get_user_model()
 
@@ -370,4 +378,138 @@ class AnalyticsView(APIView):
                 "students": total_student
             },
             "daily_chart": chart_data
+        }, status=status.HTTP_200_OK)
+
+class VideoUploadSignatureView(APIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
+    def post(self, request):
+        serializer = AdminVideoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Extract validated data
+        thumbnail_file = serializer.validated_data.pop("thumbnail")
+        sport = serializer.validated_data.pop("sport")
+        consumer = serializer.validated_data.pop("consumer")
+
+        # Create AdminVideo instance
+        video = AdminVideo.objects.create(
+            **serializer.validated_data,
+            sport=sport,
+            consumer=consumer,
+            public_id=""
+        )
+
+        # Upload thumbnail to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            thumbnail_file,
+            folder="video_thumbnails",
+        )
+        video.thumbnail = upload_result["secure_url"]
+        video.save(update_fields=["thumbnail"])
+
+        # Generate Cloudinary signature for video upload
+        timestamp = int(time.time())
+        params_to_sign = {
+            "timestamp": timestamp,
+            "folder": "secure_videos",
+            "public_id": str(video.id),
+        }
+        signature = cloudinary.utils.api_sign_request(
+            params_to_sign,
+            settings.CLOUDINARY_STORAGE["API_SECRET"]
+        )
+
+        return Response(
+            {
+                "api_key": settings.CLOUDINARY_STORAGE["API_KEY"],
+                "cloud_name": settings.CLOUDINARY_STORAGE["CLOUD_NAME"],
+                "timestamp": timestamp,
+                "signature": signature,
+                "video_id": str(video.id),
+                "folder": "secure_videos",
+                "public_id": str(video.id),
+                "thumbnail": video.thumbnail,
+                "sport_name": video.sport.name,
+                "consumer_name": video.get_consumer_display(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+from uuid import UUID
+class CloudinaryWebhookView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+    
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        public_id = data.get("public_id")  # e.g., "secure_videos/657e7c92-08e4-4f51-9937-5d8c38c8343a"
+        format_ = data.get("format")
+        duration = data.get("duration")
+        status_ = "ready" if data.get("resource_type") == "video" else "failed"
+
+        # Extract UUID from public_id
+        if "/" in public_id:
+            uuid_str = public_id.split("/")[-1]
+        else:
+            uuid_str = public_id
+
+        try:
+            video_id = UUID(uuid_str)  # validate UUID format
+            video = AdminVideo.objects.get(id=video_id)
+            video.public_id = public_id
+            video.format = format_
+            video.duration = duration
+            video.status = status_
+            video.save()
+        except ValueError:
+            return Response(
+                {"error": "Invalid UUID in public_id"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except AdminVideo.DoesNotExist:
+            return Response(
+                {"error": "Video not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+class VideoListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = VideoListSerializer
+    queryset = AdminVideo.objects.all()
+   
+
+class GenerateVideoLinkView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, video_id):
+        try:
+            video = AdminVideo.objects.get(id=video_id)
+        except AdminVideo.DoesNotExist:
+            return Response({"error": "Video not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not video.public_id:
+            return Response({"error": "Video not uploaded yet"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate HLS (.m3u8) URL using Cloudinary
+        hls_url, options = cloudinary_url(
+            video.public_id,
+            resource_type="video",
+            format="mp4"
+        )
+
+        return Response({
+            "video_id": str(video.id),
+            "title": video.title,
+            "description": video.description,
+            "consumer": video.consumer,
+            "status": video.status,
+            "hls_url": hls_url,
         }, status=status.HTTP_200_OK)
