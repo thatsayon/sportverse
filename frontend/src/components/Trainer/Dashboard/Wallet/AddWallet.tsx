@@ -82,8 +82,8 @@ const AddWallet = () => {
   const [isPaypalModified, setIsPaypalModified] = useState(false);
 
   // Check if data exists (not an error response)
-  const bankExists = bankData && !("details" in bankData);
-  const paypalExists = paypalData && !("details" in paypalData);
+  const bankExists = bankData && !("detail" in bankData);
+  const paypalExists = paypalData && !("detail" in paypalData);
 
   // ✅ Bank form
   const bankForm = useForm<BankFormData>({
@@ -112,8 +112,11 @@ const AddWallet = () => {
 
   // ✅ Helper function to find country by name (case-insensitive)
   const findCountryByName = (countryName: string) => {
+    if (!countryName) return undefined;
+    
     return countries.find(
-      (country) => country.label.toLowerCase() === countryName.toLowerCase()
+      (country) => 
+        country?.label?.toLowerCase() === countryName.toLowerCase()
     );
   };
 
@@ -121,13 +124,20 @@ const AddWallet = () => {
   useEffect(() => {
     if (bankExists) {
       const bank = bankData as TrainerBankResponse;
+      
+      // ✅ Handle empty account_type array
+      const accountType = bank.account_type && bank.account_type.length > 0 
+        ? bank.account_type[0] as "checking" | "saving"
+        : undefined;
+      
       const formValues = {
-        fullName: bank.full_name,
-        bankName: bank.bank_name,
-        bankAccNum: Number(bank.bank_acc_num),
-        bankRoutingNum: Number(bank.bank_routing_num),
-        accountType: bank.account_type[0] as "checking" | "saving",
+        fullName: bank.full_name || "",
+        bankName: bank.bank_name || "",
+        bankAccNum: bank.bank_acc_num ? Number(bank.bank_acc_num) : "" as unknown as number,
+        bankRoutingNum: bank.bank_routing_num ? Number(bank.bank_routing_num) : "" as unknown as number,
+        accountType: accountType,
       };
+      
       bankForm.reset(formValues);
       setIsBankModified(false); // Reset modification state
     } else {
@@ -152,9 +162,9 @@ const AddWallet = () => {
       const matchedCountry = findCountryByName(paypal.country);
 
       const formValues = {
-        fullName: paypal.full_name,
-        email: paypal.email,
-        country: matchedCountry ? matchedCountry.label : paypal.country,
+        fullName: paypal.full_name || "",
+        email: paypal.email || "",
+        country: matchedCountry ? matchedCountry.label : paypal.country || "",
       };
       paypalForm.reset(formValues);
       setIsPaypalModified(false); // Reset modification state

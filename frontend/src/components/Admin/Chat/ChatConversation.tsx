@@ -1,41 +1,80 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  Send,
-  MoreVertical,
-  Phone,
-  Video,
-  Paperclip,
-  Smile,
-  Calendar,
-} from "lucide-react";
+import { ArrowLeft, Calendar, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { chatSessionsData } from "@/data/ChatData";
+import { useGetConversationDetailQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 
 interface ChatConversationProps {
   chatId: string;
 }
 
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
+
+// Helper function to format time
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// Helper function to get initials from name
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+// Helper function to get subject display name
+const getSubjectDisplay = (subject: string) => {
+  switch (subject) {
+    case "virtual":
+      return "Virtual Session";
+    case "in_person":
+      return "In-Person Session";
+    default:
+      return subject;
+  }
+};
+
 const ChatConversation: React.FC<ChatConversationProps> = ({ chatId }) => {
   const router = useRouter();
-  const [newMessage, setNewMessage] = useState("");
-  const [messages, setMessages] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Get chat data based on chatId
-  const chatData = chatSessionsData.find(session => session.chat_id === chatId);
+  // RTK Query
+  const { 
+    data: conversationData, 
+    isLoading, 
+    isError, 
+    error,
+    refetch 
+  } = useGetConversationDetailQuery({
+    id: chatId,
+    page: currentPage
+  });
 
-  useEffect(() => {
-    if (chatData) {
-      setMessages(chatData.messages);
-    }
-  }, [chatData]);
+  const messages = conversationData?.messages.results || [];
+  const messagesInfo = conversationData?.messages;
 
   useEffect(() => {
     scrollToBottom();
@@ -45,219 +84,272 @@ const ChatConversation: React.FC<ChatConversationProps> = ({ chatId }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      const newMsg = {
-        id: messages.length + 1,
-        sender: "trainer", // Assuming current user is trainer
-        senderName: chatData?.trainerName || "You",
-        message: newMessage,
-        timestamp: new Date().toISOString(),
-        timeDisplay: new Date().toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        }),
-      };
-      setMessages([...messages, newMsg]);
-      setNewMessage("");
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= (messagesInfo?.total_pages || 1)) {
+      setCurrentPage(page);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  if (!chatData) {
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center">
+      <Loading/>
+    );
+  }
+
+  // Error state
+  if (isError || !conversationData) {
+    return (
+      <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Chat not found</h2>
-          <p className="text-gray-600 mb-4">
-            The requested chat session does not exist.
-          </p>
-          <Button onClick={() => router.back()}>Go Back</Button>
+          <ErrorLoadingPage/>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={() => router.back()}>
+              Go Back
+            </Button>
+            {isError && (
+              <Button onClick={() => refetch()}>
+                Try Again
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen -mt-6">
-      <div className="flex items-center gap-3">
-        <Link href={"/dashboard/chat"}>
-        <Button className="rounded-full"><ArrowLeft/></Button>
-      </Link>
-      <h1 className="font-semibold">Back to Chat Table</h1>
-      </div>
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <div className="flex flex-col h-screen">
+      {/* Fixed Header */}
+      <div className="fixed w-[91%] md:w-[95%] p-2 top-20 border-b-2 bg-white z-10">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="lg:hidden"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <Link href={"/dashboard/chat"}>
+            <Button className="rounded-full">
+              <ArrowLeft />
+            </Button>
+          </Link>
+          <h1 className="font-semibold">Back to Chat Table</h1>
+        </div>
 
+        {/* Chat Header */}
+        <div className="bg-white px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* Trainer Avatar */}
-            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium">
-              {chatData.trainerAvatar}
+            <div className="flex items-center gap-3">
+              {/* Teacher Avatar */}
+              <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-medium">
+                {getInitials(conversationData.teacher_name)}
+              </div>
+              {/* Student Avatar (overlapping) */}
+              <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium -ml-3">
+                {getInitials(conversationData.student_name)}
+              </div>
             </div>
-            {/* Student Avatar (overlapping) */}
-            <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium -ml-3 border-2 border-white">
-              {chatData.studentAvatar}
-            </div>
-          </div>
 
-          <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-lg truncate">
-              {chatData.subject}
-            </h2>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>{chatData.trainerName}</span>
-              <span className="text-xs">•</span>
-              <span>{chatData.studentName}</span>
-              <Badge
-                variant="outline"
-                className="ml-2 text-xs bg-green-50 text-green-700 border-green-200"
-              >
-                {chatData.status}
-              </Badge>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-lg truncate">
+                {getSubjectDisplay(conversationData.subject)}
+              </h2>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>{conversationData.teacher_name}</span>
+                <span className="text-xs">•</span>
+                <span>{conversationData.student_name}</span>
+                <Badge
+                  variant="outline"
+                  className="ml-2 text-xs bg-blue-50 text-blue-700"
+                >
+                  {messagesInfo?.count || 0} messages
+                </Badge>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto md:p-4 space-y-4 mt-[120px] pb-20">
         <div className="text-center py-4">
           <div className="inline-flex items-center gap-2 text-sm text-gray-500 bg-white px-3 py-2 rounded-full shadow-sm">
             <Calendar className="w-4 h-4" />
             <span>
               Session started on{" "}
-              {new Date(chatData.startDate).toLocaleDateString()}
+              {formatDate(conversationData.created_at)}
             </span>
           </div>
         </div>
 
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              "flex gap-3 max-w-[85%] sm:max-w-[70%]",
-              message.sender === "trainer"
-                ? "ml-auto flex-row-reverse"
-                : "mr-auto"
-            )}
-          >
-            <div
-              className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white flex-shrink-0",
-                message.sender === "trainer" ? "bg-[#F15A24]" : "bg-green-500"
-              )}
-            >
-              {message.sender === "trainer"
-                ? chatData.trainerAvatar
-                : chatData.studentAvatar}
-            </div>
-
-            <div
-              className={cn(
-                "flex flex-col gap-1",
-                message.sender === "trainer" ? "items-end" : "items-start"
-              )}
-            >
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span className="font-medium">{message.senderName}</span>
-                <span>{message.timeDisplay}</span>
-              </div>
-
-              <div
-                className={cn(
-                  "rounded-2xl px-4 py-3 max-w-full break-words",
-                  message.sender === "trainer"
-                    ? "bg-[#F15A24] text-white rounded-br-md"
-                    : "bg-white text-gray-900 border border-gray-200 rounded-bl-md shadow-sm"
-                )}
-              >
-                {message.message.includes("```") ? (
-                  <div className="space-y-2">
-                    {message.message.split("\n\n").map((part, index) =>
-                      part.includes("```") ? (
-                        <pre
-                          key={index}
-                          className="bg-gray-800 text-green-400 p-3 rounded-md text-sm overflow-x-auto"
-                        >
-                          <code>
-                            {part
-                              .replace(/```jsx?\n?/g, "")
-                              .replace(/```/g, "")}
-                          </code>
-                        </pre>
-                      ) : (
-                        <p key={index}>{part}</p>
-                      )
-                    )}
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap">{message.message}</p>
-                )}
-              </div>
-            </div>
+        {/* Messages */}
+        {messages.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No messages in this conversation yet.</p>
           </div>
-        ))}
+        ) : (
+          messages.map((message) => {
+            const isTeacher = message.sender_name === conversationData.teacher_name;
+            const isStudent = message.sender_name === conversationData.student_name;
+            
+            return (
+              <div key={message.id} className="w-full px-2 sm:px-4">
+                <div
+                  className={cn(
+                    "flex gap-3 max-w-[85%] sm:max-w-[70%] mb-4",
+                    isStudent ? "ml-auto justify-end" : "mr-auto justify-start" // Student right, Teacher left
+                  )}
+                >
+                  {/* Avatar - positioned based on sender */}
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white flex-shrink-0",
+                      isStudent ? "bg-[#F15A24] order-2" : "bg-blue-500 order-1" // Student orange, Teacher blue
+                    )}
+                  >
+                    {getInitials(message.sender_name)}
+                  </div>
+
+                  <div
+                    className={cn(
+                      "flex flex-col gap-1 flex-1",
+                      isStudent ? "items-end order-1" : "items-start order-2"
+                    )}
+                  >
+                    {/* Message info */}
+                    <div className={cn(
+                      "flex items-center gap-2 text-xs text-gray-500",
+                      isStudent ? "flex-row-reverse" : "flex-row"
+                    )}>
+                      <span className="font-medium">{message.sender_name}</span>
+                      <span>{formatTime(message.created_at)}</span>
+                      <div className="flex items-center gap-1">
+                        {message.delivered && (
+                          <span className="text-green-500">✓</span>
+                        )}
+                        {message.read && (
+                          <span className="text-blue-500">✓</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Message bubble */}
+                    <div
+                      className={cn(
+                        "rounded-2xl px-4 py-3 max-w-full break-words shadow-sm",
+                        isStudent
+                          ? "bg-[#F15A24] text-white rounded-br-md" // Student - Right side - Orange
+                          : "bg-blue-500 text-white rounded-bl-md" // Teacher - Left side - Blue
+                      )}
+                    >
+                      {message.content.includes("```") ? (
+                        <div className="space-y-2">
+                          {message.content.split("\n\n").map((part, partIndex) =>
+                            part.includes("```") ? (
+                              <pre
+                                key={partIndex}
+                                className={cn(
+                                  "p-3 rounded-md text-sm overflow-x-auto",
+                                  isStudent 
+                                    ? "bg-orange-800 text-orange-100" 
+                                    : "bg-blue-800 text-blue-100"
+                                )}
+                              >
+                                <code>
+                                  {part
+                                    .replace(/```jsx?\n?/g, "")
+                                    .replace(/```/g, "")}
+                                </code>
+                              </pre>
+                            ) : (
+                              <p key={partIndex}>{part}</p>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{message.content}</p>
+                      )}
+                    </div>
+
+                    {/* Message role indicator */}
+                    <div className={cn(
+                      "text-xs text-gray-400 mt-1",
+                      isStudent ? "text-right" : "text-left"
+                    )}>
+                      {isTeacher ? "Teacher" : "Student"} • @{message.sender_username}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
-      {/* <div className="bg-white border-t border-gray-200 p-4">
-        <div className="flex items-end gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="relative">
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                className="pr-12 py-3 rounded-full border-gray-300 focus:border-blue-500 resize-none"
-                rows={1}
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 hidden sm:flex"
-                >
-                  <Paperclip className="h-4 w-4 text-gray-400" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 hidden sm:flex"
-                >
-                  <Smile className="h-4 w-4 text-gray-400" />
-                </Button>
-              </div>
+      {/* Pagination Footer */}
+      {messagesInfo && messagesInfo.total_pages > 1 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-10">
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || isLoading}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(messagesInfo.total_pages, 5) }, (_, i) => {
+                const maxPages = 5;
+                let pageNumber;
+                
+                if (messagesInfo.total_pages <= maxPages) {
+                  pageNumber = i + 1;
+                } else if (currentPage <= Math.ceil(maxPages / 2)) {
+                  pageNumber = i + 1;
+                } else if (currentPage >= messagesInfo.total_pages - Math.floor(maxPages / 2)) {
+                  pageNumber = messagesInfo.total_pages - maxPages + 1 + i;
+                } else {
+                  pageNumber = currentPage - Math.floor(maxPages / 2) + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNumber}
+                    variant={currentPage === pageNumber ? "default" : "outline"}
+                    className={cn(
+                      "h-8 w-8 p-0 text-sm",
+                      currentPage === pageNumber
+                        ? "bg-[#F15A24] text-white hover:bg-[#F15A24]/90 border-[#F15A24]"
+                        : "hover:bg-gray-50"
+                    )}
+                    onClick={() => handlePageChange(pageNumber)}
+                    disabled={isLoading}
+                  >
+                    {pageNumber}
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === messagesInfo.total_pages || isLoading}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            <div className="ml-4 text-sm text-gray-600">
+              Page {currentPage} of {messagesInfo.total_pages}
+              <span className="ml-2 text-xs">
+                ({messagesInfo.count} total messages)
+              </span>
             </div>
           </div>
-
-          <Button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-            className="rounded-full w-12 h-12 bg-blue-500 hover:bg-blue-600 flex-shrink-0"
-            size="icon"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
         </div>
-      </div> */}
+      )}
     </div>
   );
 };

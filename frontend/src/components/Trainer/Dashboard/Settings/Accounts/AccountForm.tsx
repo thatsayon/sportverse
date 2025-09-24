@@ -237,10 +237,7 @@ const AccountForm = () => {
       setUploadedFile(file);
 
       // Get signature from backend
-      const signatureResponse = await getSignature({
-        title: "Profile Video", // You can make this dynamic if needed
-        description: "User profile video",
-      }).unwrap();
+      const signatureResponse = await postVideo().unwrap();
 
       if (!signatureResponse) {
         throw new Error("Failed to get upload signature");

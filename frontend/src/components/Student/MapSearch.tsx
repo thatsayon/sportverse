@@ -102,7 +102,7 @@ const MapSearch: React.FC = () => {
       const access_token = getCookie("access_token");
 
       const response = await fetch(
-        `http://127.0.0.1:8000/map/nearest-teacher/?${params.toString()}`,
+        `https://stingray-intimate-sincerely.ngrok-free.app/map/nearest-teacher/?${params.toString()}`,
         {
           method: "GET",
           headers: {

@@ -123,15 +123,27 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     0
   );
 
-  // Split pathname into segments and get the last non-empty segment
-  const segments = pathname.split("/").filter(Boolean);
-  const lastSegment = segments[segments.length - 1] || "Dashboard";
+  // Function to get the page title based on pathname
+  const getPageTitle = () => {
+    // Check if the current path matches the chat conversation pattern
+    const chatConversationPattern = /^\/dashboard\/chat\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+    
+    if (chatConversationPattern.test(pathname)) {
+      return "Chat Conversation";
+    }
 
-  // Convert dashed words into capitalized words
-  const formattedSegment = lastSegment
-    .split("-")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    // Default behavior for other routes
+    const segments = pathname.split("/").filter(Boolean);
+    const lastSegment = segments[segments.length - 1] || "Dashboard";
+
+    // Convert dashed words into capitalized words
+    return lastSegment
+      .split("-")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  const pageTitle = getPageTitle();
 
   return (
     <header className="bg-[#f8f8f8] fixed w-full z-50 px-4 py-2 lg:px-6">
@@ -158,7 +170,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
         {/* Center Title - hide on small screens */}
         <h1 className="hidden sm:block text-lg sm:text-2xl font-bold text-gray-900">
-          {formattedSegment}
+          {pageTitle}
         </h1>
 
         {/* Right side - Actions */}

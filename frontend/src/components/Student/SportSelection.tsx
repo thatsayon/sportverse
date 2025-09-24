@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useGetAdminSportsQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import Loading from "../Element/Loading";
+import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 
 interface Sport {
   id: string;
@@ -16,20 +19,33 @@ const SportSelection: React.FC = () => {
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [showError, setShowError] = useState(false);
   const router = useRouter();
-  const sports: Sport[] = [
-    {
-      id: "football",
-      name: "Football",
-      image:
-        "https://images.unsplash.com/photo-1553778263-73a83bab9b0c?w=400&h=300&fit=crop",
-    },
-    {
-      id: "basketball",
-      name: "Basketball",
-      image:
-        "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-    },
-  ];
+
+  const {data, isLoading, isError} = useGetAdminSportsQuery()
+
+  if(isLoading) return <Loading/>
+  if(isError) return <ErrorLoadingPage/>
+
+  const sports = data?.results || []
+
+  // Dynamic grid class based on sports count
+  const getGridClass = (sportsCount: number) => {
+    if (sportsCount === 1) {
+      return "grid-cols-1 max-w-md";
+    } else if (sportsCount === 2) {
+      return "grid-cols-1 sm:grid-cols-2 max-w-2xl";
+    } else if (sportsCount === 3) {
+      return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl";
+    } else if (sportsCount === 4) {
+      return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 max-w-6xl";
+    } else if (sportsCount <= 6) {
+      return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl";
+    } else if (sportsCount <= 8) {
+      return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl";
+    } else {
+      // For more than 8 sports
+      return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 max-w-screen-2xl";
+    }
+  };
 
   const handleSportSelect = (sportId: string) => {
     setSelectedSports((prev) => {
@@ -71,7 +87,7 @@ const SportSelection: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl w-full">
+      <div className="w-full">
         {/* Header Section */}
         <motion.div
           className="text-center mb-8 sm:mb-6"
@@ -86,6 +102,7 @@ const SportSelection: React.FC = () => {
             Choose your sport to get personalized training content
           </p>
         </motion.div>
+
         {/* Selected Sports Display */}
         {selectedSports.length > 0 ? (
           <motion.div
@@ -108,9 +125,9 @@ const SportSelection: React.FC = () => {
           </div>
         )}
 
-        {/* Sports Selection */}
+        {/* Dynamic Sports Grid */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-3xl mx-auto mb-8"
+          className={`grid gap-4 sm:gap-6 lg:gap-8 mx-auto mb-8 ${getGridClass(sports.length)}`}
           variants={staggerContainer}
           initial="initial"
           animate="animate"
@@ -143,7 +160,11 @@ const SportSelection: React.FC = () => {
                       alt={sport.name}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
+                      sizes={`(max-width: 640px) 100vw, 
+                              (max-width: 1024px) 50vw, 
+                              (max-width: 1280px) 33vw,
+                              (max-width: 1536px) 25vw, 
+                              20vw`}
                     />
 
                     {/* Selected Overlay */}
@@ -193,6 +214,19 @@ const SportSelection: React.FC = () => {
           })}
         </motion.div>
 
+        {/* No Sports Available */}
+        {sports.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-12"
+          >
+            <p className="text-lg text-gray-500">
+              No sports are currently available for selection.
+            </p>
+          </motion.div>
+        )}
+
         {/* Error Message */}
         {showError && (
           <motion.div
@@ -207,36 +241,45 @@ const SportSelection: React.FC = () => {
         )}
 
         {/* Continue Button */}
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Button
-            onClick={handleContinue}
-            className={`px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-all duration-300 ${
-              selectedSports.length > 0
-                ? "bg-orange-500 hover:bg-orange-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
-            disabled={selectedSports.length === 0}
+        {sports.length > 0 && (
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
           >
-            Continue
-          </Button>
-        </motion.div>
+            <Button
+              onClick={handleContinue}
+              className={`px-8 sm:px-12 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-lg transition-all duration-300 ${
+                selectedSports.length > 0
+                  ? "bg-orange-500 hover:bg-orange-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+              disabled={selectedSports.length === 0}
+            >
+              Continue
+            </Button>
+          </motion.div>
+        )}
 
         {/* Instructions */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-6"
-        >
-          <p className="text-xs sm:text-sm text-gray-500">
-            You can select one or both sports for training
-          </p>
-        </motion.div>
+        {sports.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-center mt-6"
+          >
+            <p className="text-xs sm:text-sm text-gray-500">
+              {sports.length === 1 
+                ? "Select the sport for training"
+                : sports.length === 2 
+                ? "You can select one or both sports for training"
+                : `You can select any combination of the ${sports.length} available sports for training`
+              }
+            </p>
+          </motion.div>
+        )}
       </div>
     </div>
   );

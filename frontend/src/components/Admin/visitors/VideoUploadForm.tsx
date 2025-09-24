@@ -6,7 +6,10 @@ import * as z from "zod";
 import { Upload, Video, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getSignatureReponse, useGetSignatureMutation } from "@/store/Slices/apiSlices/apiSlice";
+import {
+  getSignatureReponse,
+  useGetSignatureMutation,
+} from "@/store/Slices/apiSlices/apiSlice";
 import { toast } from "sonner";
 
 // Form validation schema
@@ -72,22 +75,25 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const watchedValues = watch();
 
   // Mock Cloudinary upload function
-  const uploadToCloudinary = async (file: File, signatureData: getSignatureReponse) => {
+  const uploadToCloudinary = async (
+    file: File,
+    signatureData: getSignatureReponse
+  ) => {
     const formData = new FormData();
-    
+
     // Add required Cloudinary parameters
-    formData.append('file', file);
-    formData.append('api_key', signatureData.api_key);
-    formData.append('timestamp', signatureData.timestamp.toString());
-    formData.append('signature', signatureData.signature);
-    formData.append('folder', signatureData.folder);
-    formData.append('public_id', signatureData.video_id);
+    formData.append("file", file);
+    formData.append("api_key", signatureData.api_key);
+    formData.append("timestamp", signatureData.timestamp.toString());
+    formData.append("signature", signatureData.signature);
+    formData.append("folder", signatureData.folder);
+    formData.append("public_id", signatureData.video_id);
 
     try {
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${signatureData.cloud_name}/video/upload`,
         {
-          method: 'POST',
+          method: "POST",
           body: formData,
         }
       );
@@ -99,12 +105,12 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('Cloudinary upload error:', error);
+      console.error("Cloudinary upload error:", error);
       throw error;
     }
-  }
+  };
 
-   const handleFormSubmit = async (data: FormData) => {
+  const handleFormSubmit = async (data: FormData) => {
     console.log("Submitted data:", data);
 
     try {
@@ -135,8 +141,11 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       }, 200);
 
       // Upload video to Cloudinary
-      const cloudinaryResponse = await uploadToCloudinary(data.video, signatureResponse);
-      
+      const cloudinaryResponse = await uploadToCloudinary(
+        data.video,
+        signatureResponse
+      );
+
       // Clear progress interval and set to 100%
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -150,6 +159,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       };
 
       // Show success toast
+      reset();
       toast.success("Video has been uploaded successfully.");
 
       // Call the onSubmit callback
@@ -161,10 +171,9 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       reset();
       setSelectedFile(null);
       setUploadProgress(0);
-
     } catch (error) {
       console.error("Upload failed:", error);
-      
+
       // Show error toast
       toast.error("Failed to upload video. Please try again.");
     } finally {
@@ -399,7 +408,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         </div>
 
         {/* Submit and Cancel Buttons */}
-        <div className="flex gap-3 items-center justify-center border mt-5">
+        <div className="flex gap-3 items-center justify-center mt-5">
           <div className="w-full">
             <Button
               className="w-full"

@@ -23,6 +23,8 @@ interface Errors {
   zip_code?: string;
 }
 
+const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app"
+
 const DocUpload: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -195,7 +197,7 @@ const DocUpload: React.FC = () => {
 
       //   const response = await uploadDoc(formDataToSend).unwrap()
       const accessToken = getCookie("access_token");
-      const response = await fetch("http://127.0.0.1:8000/account/teacher-verification/", {
+      const response = await fetch(`${BASE_URL}/account/teacher-verification/`, {
     method: "POST",
     body: formDataToSend,  // Send the FormData with files
     // Don't manually set Content-Type, let the browser do it for multipart/form-data

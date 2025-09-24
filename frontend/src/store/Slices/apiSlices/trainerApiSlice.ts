@@ -200,7 +200,7 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
     postTrainerVideo: builder.mutation<CloudinaryUploadResponse, void>({
       query: ()=>({
         url: "/teacher/d/upload-video/",
-        method: "PUT",
+        method: "POST",
         credentials: "include"
       }),
       invalidatesTags: ["TrainerProfile"],

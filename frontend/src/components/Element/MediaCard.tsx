@@ -159,13 +159,15 @@ const MediaCard: React.FC<MediaCardProps> = ({
           </div>
         </div>
         <div className="absolute right-5 bottom-2">
-          <Button
-            onClick={() => setOpen(true)}
-            variant={"outline"}
-            className="py-2 px-6"
-          >
-            Edit
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={() => setOpen(true)}
+              variant={"outline"}
+              className="py-2 px-6"
+            >
+              Edit
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

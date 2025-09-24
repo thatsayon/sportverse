@@ -26,3 +26,25 @@ export interface WithdrawUpadateResponse{
     error?: string;
 
 }
+
+
+
+export interface WithdrawDetailsResponse {
+  id: string;
+  teacher_name: string;
+  wallet_type: "bank" | "paypal" | "crypto" | string; // extendable if more types
+  transaction_id: string;
+  amount: string;       // kept as string since API returns string
+  left_amount: string;  // kept as string for consistency
+  status: "pending" | "approved" | "rejected" | string;
+  date: string; // format: YYYY-MM-DD
+  wallet_info: WalletInfo;
+}
+
+export interface WalletInfo {
+  full_name: string;
+  bank_name: string;
+  bank_acc_num: string;
+  bank_routing_num: string;
+  account_type: string[]; // e.g., ["checking", "savings"]
+}

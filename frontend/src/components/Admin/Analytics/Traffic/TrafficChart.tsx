@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/select";
 import AnalyticsCard from "@/components/Element/analyticsData";
 import { useGetAdminAnalyticsQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 
 // Updated interfaces
 export interface AnalyticsAllTime {
@@ -192,17 +194,13 @@ export function TrafficChart() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-lg">Loading analytics data...</div>
-      </div>
+      <Loading/>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-lg text-red-500">Error loading analytics data</div>
-      </div>
+      <ErrorLoadingPage/>
     );
   }
 

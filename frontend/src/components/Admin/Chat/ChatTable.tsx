@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -17,48 +17,78 @@ import {
   MessageCircle,
   Users,
   Search,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { chatSessions } from "@/data/ChatData";
+import { useGetAdminConversationQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 
-// Dummy data for chat sessions
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
-// Badge colors for status
-const getStatusStyles = (status: string) => {
-  switch (status) {
-    case "Active":
-      return "bg-green-100 text-green-700 hover:bg-green-100 border-green-200";
-    case "Completed":
-      return "bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200";
-    case "Paused":
-      return "bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-yellow-200";
+// Helper function to get initials from name
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+// Helper function to get subject display name
+const getSubjectDisplay = (subject: string) => {
+  switch (subject) {
+    case "virtual":
+      return "Virtual Session";
+    case "in_person":
+      return "In-Person Session";
     default:
-      return "bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200";
+      return subject;
   }
 };
 
 const ChatTable: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const router = useRouter();
-  const itemsPerPage = 10;
 
-  // Filter data based on status
-  const filteredData = chatSessions.filter(
-    (session) =>
-      session.trainerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      session.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      session.subject.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  // Pagination logic
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredData.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1); // Reset to first page when searching
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // RTK Query
+  const { 
+    data, 
+    isLoading, 
+    isError 
+  } = useGetAdminConversationQuery({
+    search: debouncedSearch || undefined,
+    page: currentPage
+  });
+
+  const conversations = data?.results || [];
+  const totalCount = data?.count || 0;
+  const itemsPerPage = 10; // Assuming 10 items per page based on your original code
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -70,185 +100,273 @@ const ChatTable: React.FC = () => {
     router.push(`/dashboard/chat/${chatId}`);
   };
 
+  // Calculate start index for numbering
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  if (isError) {
+    return (
+      <ErrorLoadingPage/>
+    );
+  }
+
   return (
-    <div className="w-full -mt-6">
-      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold font-montserrat">
-            Chat Sessions
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage trainer-student conversations
-          </p>
-        </div>
-        <div className="relative">
-          <Search stroke="#808080" className="absolute top-1 left-1" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by trainer or student"
-            className="w-full sm:w-[250px] border-[#F15A24] pl-8"
-          />
+    <div className="w-full -mt-6 px-2 sm:px-4 lg:px-0">
+      {/* Header Section */}
+      <div className="mb-4 md:mb-6 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold font-montserrat">
+              Chat Sessions
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              Manage trainer-student conversations ({totalCount} total)
+            </p>
+          </div>
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by trainer, student, or subject"
+              className="md:w-full w-[200px] lg:w-[250px] border-[#F15A24] pl-10 h-9"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="rounded-md border overflow-hidden">
+      {/* Table Container */}
+      <div className="rounded-md border overflow-hidden bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="">
             <TableHeader>
-              <TableRow>
-                <TableHead className="px-4 md:px-4 py-3 min-w-[150px]">
+              <TableRow className="bg-gray-50">
+                <TableHead className="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium w-12 sm:w-16">
                   No.
                 </TableHead>
-                <TableHead className="px-4 md:px-8 py-3 min-w-[150px]">
-                  Trainer
+                <TableHead className="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium min-w-[120px] sm:min-w-[150px]">
+                  Teacher
                 </TableHead>
-                <TableHead className="px-4 md:px-8 py-3 min-w-[150px]">
+                <TableHead className="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium min-w-[120px] sm:min-w-[150px]">
                   Student
                 </TableHead>
-                <TableHead className="px-4 md:px-8 py-3 min-w-[130px]">
+                <TableHead className="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium min-w-[100px] sm:min-w-[130px]">
                   Subject
                 </TableHead>
-                <TableHead className="px-4 md:px-4 py-3 hidden sm:table-cell">
+                <TableHead className="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium hidden md:table-cell">
                   Messages
                 </TableHead>
-                <TableHead className="px-4 md:px-4 py-3 hidden md:table-cell">
+                <TableHead className="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium hidden lg:table-cell">
                   Last Activity
                 </TableHead>
-                <TableHead className="px-4 md:px-8 py-3">Action</TableHead>
+                <TableHead className="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium min-w-[80px]">
+                  Action
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedData.map((session, index) => (
-                <TableRow key={session.chat_id} className="hover:bg-gray-50">
-                  <TableCell className="px-4 md:px-6 py-3">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="px-4 md:px-6 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-medium">
-                        {session.trainerAvatar}
+              {isLoading ? (
+                // Loading skeleton rows
+                Array.from({ length: 5 }, (_, index) => (
+                  <TableRow key={`loading-${index}`}>
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </TableCell>
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse flex-1"></div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {session.trainerName}
+                    </TableCell>
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse flex-1"></div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </TableCell>
+                    <TableCell className="px-2 sm:px-4 py-3 hidden md:table-cell">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </TableCell>
+                    <TableCell className="px-2 sm:px-4 py-3 hidden lg:table-cell">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    </TableCell>
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div className="h-7 sm:h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                conversations.map((conversation, index) => (
+                  <TableRow key={conversation.id} className="hover:bg-gray-50 transition-colors">
+                    {/* Number */}
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <span className="text-xs sm:text-sm font-medium">
+                        {startIndex + index + 1}
+                      </span>
+                    </TableCell>
+
+                    {/* Teacher */}
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-medium flex-shrink-0">
+                          {getInitials(conversation.teacher_name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-xs sm:text-sm truncate">
+                            {conversation.teacher_name}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    {/* Student */}
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-medium flex-shrink-0">
+                          {getInitials(conversation.student_name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-xs sm:text-sm truncate">
+                            {conversation.student_name}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    {/* Subject */}
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <div>
+                        <p className="text-xs sm:text-sm font-medium truncate">
+                          {getSubjectDisplay(conversation.subject)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Created: {formatDate(conversation.created_at)}
                         </p>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 md:px-6 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-medium">
-                        {session.studentAvatar}
+                    </TableCell>
+
+                    {/* Messages - Hidden on mobile */}
+                    <TableCell className="px-2 sm:px-4 py-3 hidden md:table-cell">
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                        <span className="text-xs sm:text-sm">{conversation.message_count}</span>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {session.studentName}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 md:px-6 py-3">
-                    <p className="text-sm font-medium truncate">
-                      {session.subject}
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      {session.duration}
-                    </p>
-                  </TableCell>
-                  <TableCell className="px-4 md:px-6 py-3 hidden sm:table-cell">
-                    <div className="flex items-center gap-1">
-                      <MessageCircle className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm">{session.messageCount}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 md:px-6 py-3 hidden md:table-cell">
-                    <p className="text-sm text-gray-600">
-                      {session.lastActivity}
-                    </p>
-                  </TableCell>
-                  <TableCell className="px-4 md:px-6 py-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewChat(session.chat_id)} // Use session.chat_id here
-                      className="flex items-center gap-1 text-[#F15A24] border-[#F15A24] hover:bg-[#F15A24] hover:text-white"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span className="hidden sm:inline">View</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+
+                    {/* Last Activity - Hidden on mobile and tablet */}
+                    <TableCell className="px-2 sm:px-4 py-3 hidden lg:table-cell">
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {formatDate(conversation.last_activity)}
+                      </p>
+                    </TableCell>
+
+                    {/* Action */}
+                    <TableCell className="px-2 sm:px-4 py-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewChat(conversation.id)}
+                        className="flex items-center gap-1 text-[#F15A24] border-[#F15A24] hover:bg-[#F15A24] hover:text-white h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm"
+                      >
+                        <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">View</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center sm:justify-end mt-4">
-          <div className="flex items-center gap-2">
-            {/* Prev */}
+      {!isLoading && totalPages > 1 && (
+        <div className="flex items-center justify-center sm:justify-end mt-4 sm:mt-6">
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Previous Button */}
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="h-8 w-8"
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
 
             {/* Page Numbers */}
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              let pageNumber;
-              if (totalPages <= 5) {
-                pageNumber = i + 1;
-              } else if (currentPage <= 3) {
-                pageNumber = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNumber = totalPages - 4 + i;
-              } else {
-                pageNumber = currentPage - 2 + i;
-              }
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const maxPages = 5;
+                let pageNumber;
+                
+                if (totalPages <= maxPages) {
+                  pageNumber = i + 1;
+                } else if (currentPage <= Math.ceil(maxPages / 2)) {
+                  pageNumber = i + 1;
+                } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
+                  pageNumber = totalPages - maxPages + 1 + i;
+                } else {
+                  pageNumber = currentPage - Math.floor(maxPages / 2) + i;
+                }
 
-              return (
-                <Button
-                  key={pageNumber}
-                  variant={currentPage === pageNumber ? "default" : "outline"}
-                  className={cn(
-                    "h-8 w-8 text-sm",
-                    currentPage === pageNumber
-                      ? "bg-orange-500 text-white hover:bg-orange-600"
-                      : ""
-                  )}
-                  onClick={() => goToPage(pageNumber)}
-                >
-                  {pageNumber}
-                </Button>
-              );
-            })}
+                return (
+                  <Button
+                    key={pageNumber}
+                    variant={currentPage === pageNumber ? "default" : "outline"}
+                    className={cn(
+                      "h-7 w-7 sm:h-8 sm:w-8 p-0 text-xs sm:text-sm",
+                      currentPage === pageNumber
+                        ? "bg-orange-500 text-white hover:bg-orange-600 border-orange-500"
+                        : "hover:bg-gray-50"
+                    )}
+                    onClick={() => goToPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </Button>
+                );
+              })}
+            </div>
 
-            {/* Next */}
+            {/* Next Button */}
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="h-8 w-8"
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
       )}
 
+      {/* Loading indicator for pagination */}
+      {isLoading && (
+        <div className="flex items-center justify-center mt-4 sm:mt-6">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-gray-500">Loading...</span>
+          </div>
+        </div>
+      )}
+
       {/* No data message */}
-      {filteredData.length === 0 && (
-        <div className="text-center py-8">
-          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">No chat sessions found</p>
+      {!isLoading && conversations.length === 0 && (
+        <div className="text-center py-8 sm:py-12">
+          <Users className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+          <p className="text-sm sm:text-base text-gray-500">
+            {debouncedSearch ? "No chat sessions found" : "No chat sessions available"}
+          </p>
+          {debouncedSearch && (
+            <p className="text-xs sm:text-sm text-gray-400 mt-2">
+              Try adjusting your search terms
+            </p>
+          )}
         </div>
       )}
     </div>

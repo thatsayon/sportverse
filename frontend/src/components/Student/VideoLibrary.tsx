@@ -282,6 +282,7 @@ const VideoLibrary: React.FC = () => {
                 sports={video.sports}
                 consumer={video.consumer}
                 thumbnail={video.thumbnail}
+                isAdmin={false}
               />
             </Link>
           ))}

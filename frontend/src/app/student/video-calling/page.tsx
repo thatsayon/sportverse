@@ -25,7 +25,7 @@ const ParentComponent: React.FC = () => {
   const handleVideoCall = async () => {
     // const accessToken = getCookie("access_token");
     // const response = await fetch(
-    //   "http://127.0.0.1:8000/communication/meeting/agora/token/",
+    //   "https://stingray-intimate-sincerely.ngrok-free.app/communication/meeting/agora/token/",
     //   {
     //     body: JSON.stringify({ channelName: "Student" }), // Assuming it's a GET request. You can change it if needed.
     //     method: "POST",
