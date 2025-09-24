@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TrainingInfo } from "@/types/student/trainerList";
 
 /**
  * UX goals addressed
@@ -65,6 +66,7 @@ export default function TrainerCard({
   institute_name,
   sports,
 }: TrainerCardProps) {
+
   const parsedSessions = (sessionType || []).map((s) => ({
     ...s,
     priceNum: Number.parseFloat(String(s.price).replace(/[^0-9.]/g, "")) || 0,
@@ -86,11 +88,13 @@ export default function TrainerCard({
       } as any);
 
   // State: which session is currently selected for booking
-  const [selected, setSelected] = React.useState(lowest);
+  const [selected, setSelected] = React.useState<TrainingInfo>(lowest);
+
+  console.log("Session type checking:", selected)
+
 
   // Build a booking URL with a session id, so backend knows exactly which one
-  const buildBookingHref = (sessionId: string) =>
-    `/trainer/${id}`;
+  const buildBookingHref = (selected: TrainingInfo) => `/student/session-booking/${selected.id}`;
 
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -211,7 +215,7 @@ export default function TrainerCard({
           {hasMultiple ? (
             <div className="flex-1 flex">
               {/* Main action: uses currently selected session */}
-              <Link href={buildBookingHref(selected.id)} className="flex-1">
+              <Link href={buildBookingHref(selected)} className="flex-1">
                 <Button className="w-full rounded-r-none">
                   Book: {selected.training_type}
                 </Button>
@@ -243,7 +247,7 @@ export default function TrainerCard({
               </DropdownMenu>
             </div>
           ) : (
-            <Link className="flex-1" href={buildBookingHref(selected.id)}>
+            <Link className="flex-1" href={buildBookingHref(selected)}>
               <Button className="w-full">Book: {selected.training_type}</Button>
             </Link>
           )}

@@ -6,8 +6,6 @@ import { motion } from "framer-motion";
 import {
   Star,
   Users,
-  Calendar,
-  MessageCircle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";

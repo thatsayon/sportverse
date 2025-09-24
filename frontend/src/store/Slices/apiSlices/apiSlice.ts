@@ -107,6 +107,7 @@ export interface getSignatureReponse {
 export interface getSignatureRequest {
   title: string;
   description: string;
+  thumbnail: File
 }
 
 
@@ -271,7 +272,7 @@ export const apiSlice = createApi({
     }),
     getSignature: builder.mutation<getSignatureReponse, getSignatureRequest>({
       query:(data)=>({
-        url: "/video/upload-signature/",
+        url: "/control/generate-token/",
         method: "POST",
         body: data,
         credentials: "include"

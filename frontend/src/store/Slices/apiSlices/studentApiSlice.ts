@@ -1,25 +1,6 @@
+import { ApiResponse } from "@/types/student/trainerList";
 import { apiSlice } from "./apiSlice";
 
-export interface TrainingInfo {
-  id: string;
-  training_type: string;
-  price: string;
-}
-
-export interface UserResult {
-  full_name: string;
-  username: string;
-  institute_name: string | null;
-  coach_type: string; // e.g. "controlpanel.Sport.None"
-  training_info: TrainingInfo[];
-}
-
-export interface ApiResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: UserResult[];
-}
 
 
 export const studentApiSlice = apiSlice.injectEndpoints({
@@ -30,8 +11,11 @@ export const studentApiSlice = apiSlice.injectEndpoints({
             credentials: "include"
         })
     }),
+    getSessionDetails: builder.query<string, string>({
+      query: (id)=> `/student/session-detail/${id}`
+    })
   }),
   overrideExisting: true,
 })
 
-export const {useGetVritualTrainersQuery, useLazyGetAllSportsQuery}= studentApiSlice;
+export const {useGetVritualTrainersQuery, useGetSessionDetailsQuery}= studentApiSlice;

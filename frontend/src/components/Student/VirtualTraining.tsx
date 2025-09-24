@@ -14,6 +14,7 @@ import { Button } from "../ui/button";
 import { FilterIcon } from "lucide-react";
 import { useGetVritualTrainersQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import { LoadingSpinner } from "../Element/LoadingSpinner";
+import Loading from "../Element/Loading";
 
 function VirtualTraining() {
   const [filter, setFilter] = useState<string>("all");
@@ -92,7 +93,7 @@ function VirtualTraining() {
       {/* Trainers List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {isLoading ? (
-          <p>Loading...</p>
+          <Loading/>
         ) : filteredData.length === 0 ? (
           <p>No trainers found.</p>
         ) : (

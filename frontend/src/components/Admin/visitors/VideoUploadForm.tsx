@@ -3,17 +3,22 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Upload, Video, ChevronDown } from "lucide-react";
+import {
+  Upload,
+  Video,
+  ChevronDown,
+  Image as ImageIcon,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  getSignatureReponse,
-  useGetSignatureMutation,
-} from "@/store/Slices/apiSlices/apiSlice";
 import { toast } from "sonner";
+import Image from "next/image";
+import { getCookie } from "@/hooks/cookie";
+
+const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
 
 // Form validation schema
-
 const formSchema = z.object({
   title: z
     .string()
@@ -44,6 +49,17 @@ const formSchema = z.object({
         ["video/mp4", "video/webm", "video/quicktime"].includes(file.type),
       "Only MP4, WebM, and MOV video files are supported"
     ),
+
+  thumbnail: z
+    .instanceof(File, { message: "Thumbnail image is required" })
+    .refine(
+      (file) => file.size <= 5 * 1024 * 1024, // 5MB limit
+      "Thumbnail must be less than 5MB"
+    )
+    .refine(
+      (file) => ["image/jpeg", "image/png", "image/jpg"].includes(file.type),
+      "Only JPG and PNG images are supported"
+    ),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -56,10 +72,12 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [thumbnailDragActive, setThumbnailDragActive] = useState(false);
   const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
   const [consumerDropdownOpen, setConsumerDropdownOpen] = useState(false);
-  const [getSignature, { isLoading }] = useGetSignatureMutation();
 
   const {
     register,
@@ -74,11 +92,41 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
 
   const watchedValues = watch();
 
-  // Mock Cloudinary upload function
-  const uploadToCloudinary = async (
-    file: File,
-    signatureData: getSignatureReponse
+  // Get signature from backend using fetch with multipart/form-data
+  const getSignatureFromAPI = async (
+    title: string,
+    description: string,
+    thumbnail: File
   ) => {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("thumbnail", thumbnail);
+
+    try {
+      const token = getCookie("access_token");
+      const response = await fetch(`${BASE_URL}/control/generate-token/`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to get signature: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error getting signature:", error);
+      throw error;
+    }
+  };
+
+  // Mock Cloudinary upload function
+  const uploadToCloudinary = async (file: File, signatureData: any) => {
     const formData = new FormData();
 
     // Add required Cloudinary parameters
@@ -118,10 +166,11 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       setUploadProgress(0);
 
       // Get signature from backend
-      const signatureResponse = await getSignature({
-        title: data.title,
-        description: data.description,
-      }).unwrap();
+      const signatureResponse = await getSignatureFromAPI(
+        data.title,
+        data.description,
+        data.thumbnail
+      );
 
       if (!signatureResponse) {
         throw new Error("Failed to get upload signature");
@@ -159,7 +208,6 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       };
 
       // Show success toast
-      reset();
       toast.success("Video has been uploaded successfully.");
 
       // Call the onSubmit callback
@@ -168,9 +216,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       }
 
       // Reset form
-      reset();
-      setSelectedFile(null);
-      setUploadProgress(0);
+      handleReset();
     } catch (error) {
       console.error("Upload failed:", error);
 
@@ -179,6 +225,14 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleReset = () => {
+    reset();
+    setSelectedFile(null);
+    setSelectedThumbnail(null);
+    setThumbnailPreview(null);
+    setUploadProgress(0);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -211,6 +265,52 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       setSelectedFile(file);
       setValue("video", file, { shouldValidate: true });
     }
+  };
+
+  // Thumbnail handling functions
+  const handleThumbnailDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setThumbnailDragActive(true);
+    } else if (e.type === "dragleave") {
+      setThumbnailDragActive(false);
+    }
+  };
+
+  const handleThumbnailDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setThumbnailDragActive(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      const file = files[0];
+      handleThumbnailFile(file);
+    }
+  };
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files[0]) {
+      const file = files[0];
+      handleThumbnailFile(file);
+    }
+  };
+
+  const handleThumbnailFile = (file: File) => {
+    setSelectedThumbnail(file);
+    setValue("thumbnail", file, { shouldValidate: true });
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setThumbnailPreview(previewUrl);
+  };
+
+  const removeThumbnail = () => {
+    setSelectedThumbnail(null);
+    setThumbnailPreview(null);
+    setValue("thumbnail", undefined as any);
   };
 
   const CustomDropdown = ({
@@ -342,6 +442,71 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
           )}
         </div>
 
+        {/* Thumbnail Upload Area */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            Thumbnail *
+          </label>
+          <div
+            className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+              thumbnailDragActive
+                ? "border-orange-500 bg-orange-50"
+                : selectedThumbnail
+                ? "border-green-500 bg-green-50"
+                : "border-gray-300 bg-gray-50 hover:border-orange-400"
+            }`}
+            onDragEnter={handleThumbnailDrag}
+            onDragLeave={handleThumbnailDrag}
+            onDragOver={handleThumbnailDrag}
+            onDrop={handleThumbnailDrop}
+          >
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/jpg"
+              onChange={handleThumbnailSelect}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isUploading}
+            />
+
+            {thumbnailPreview ? (
+              <div className="relative">
+                <div className="relative w-24 h-16 mx-auto rounded overflow-hidden">
+                  <Image
+                    src={thumbnailPreview}
+                    alt="Thumbnail preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeThumbnail();
+                  }}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                  disabled={isUploading}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  {selectedThumbnail?.name}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <ImageIcon className="mx-auto h-6 w-6 text-gray-400" />
+                <p className="text-sm font-medium">Upload thumbnail</p>
+                <p className="text-xs text-gray-500">JPG or PNG (Max 5MB)</p>
+              </div>
+            )}
+          </div>
+
+          {errors.thumbnail && (
+            <p className="text-sm text-red-600">{errors.thumbnail.message}</p>
+          )}
+        </div>
+
         {/* Title Input */}
         <div className="space-y-1">
           <input
@@ -425,11 +590,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
               className="w-full text-[#F15A24] hover:text-[#F15A24]"
               variant={"outline"}
               type="button"
-              onClick={() => {
-                reset();
-                setSelectedFile(null);
-                setUploadProgress(0);
-              }}
+              onClick={handleReset}
               disabled={isUploading}
             >
               Cancel
