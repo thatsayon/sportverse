@@ -18,15 +18,31 @@ from .models import Sport, Withdraw
 User = get_user_model()
 
 class SportSerializer(serializers.ModelSerializer):
+    total_trainer = serializers.SerializerMethodField()
+    total_trainee = serializers.SerializerMethodField()
+
     class Meta:
         model = Sport
-        fields = ["id", "name", "image"]
+        fields = [
+            "id", 
+            "name", 
+            "image",
+            "total_trainer",
+            "total_trainee"
+        ]
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         if instance.image:
-            rep["image"] = instance.image.url  # Always full URL in response
+            rep["image"] = instance.image.url  
         return rep
+
+    def get_total_trainer(self, obj):
+        return obj.teacher.count()
+
+    def get_total_trainee(self, obj):
+        return obj.students.count()
+
 
 class TrainersSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.full_name')
@@ -125,16 +141,19 @@ class WithdrawRequestSerializer(serializers.ModelSerializer):
         ]
 
 class ProfileSettingSerializer(serializers.ModelSerializer):
-    profile_pic = serializers.SerializerMethodField()
+    profile_pic = serializers.ImageField(required=False, allow_null=True)
+
+    profile_pic_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "profile_pic"]
+        fields = ["id", "full_name", "profile_pic", "profile_pic_url"]
 
-    def get_profile_pic(self, obj):
+    def get_profile_pic_url(self, obj):
         if obj.profile_pic:
             return obj.profile_pic.url
         return None
+
 
 class PasswordUpdateSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True)
@@ -206,14 +225,18 @@ class ChatLogSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source="sender.full_name", read_only=True)
+    sender_username = serializers.CharField(source="sender.username", read_only=True)
     recipient_name = serializers.CharField(source="recipient.full_name", read_only=True)
+    recipient_username = serializers.CharField(source="recipient.username", read_only=True)
 
     class Meta:
         model = Message
         fields = [
             "id",
             "sender_name",
+            "sender_username",
             "recipient_name",
+            "recipient_username",
             "content",
             "created_at",
             "delivered",

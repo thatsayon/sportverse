@@ -265,8 +265,6 @@ class WithdrawPaymentDetailView(generics.RetrieveAPIView):
     lookup_field = "id"
     
 
-
-
 class ProfileSettingView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     serializer_class = ProfileSettingSerializer
