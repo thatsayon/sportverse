@@ -1,12 +1,19 @@
-import VideoPlayer from '@/components/Shared/VideoPlayer'
-import React from 'react'
+import VideoPlayer from "@/components/Shared/VideoPlayer";
+import React from "react";
 
-function page() {
-  return (
-    <div>
-      <VideoPlayer route='/dashboard/media'/>
-    </div>
-  )
+interface PageProps {
+  params: {
+    id: string;
+  };
 }
 
-export default page
+function page({ params }: PageProps) {
+  const { id } = params;
+  return (
+    <div>
+      <VideoPlayer route="/dashboard/media" id={id} />
+    </div>
+  );
+}
+
+export default page;

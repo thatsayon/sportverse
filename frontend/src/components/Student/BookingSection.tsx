@@ -4,23 +4,28 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Star, MapPin, Clock } from "lucide-react";
-import Image from "next/image";
-import {
-  TimeSlot,
-  TrainerAvailabilityType,
-} from "@/data/trainerAvailabilityData";
 import Link from "next/link";
+import { useGetSessionDetailsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 
-interface BookingSectionProps {
-  trainer: TrainerAvailabilityType;
+interface Timeslot {
+  id: string;
+  start_time: string; // HH:mm:ss
+  end_time: string;   // HH:mm:ss
+  day: string;
 }
 
-const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
+interface BookingSectionProps {
+  id: string;
+}
+
+const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
-    null
-  );
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<Timeslot | null>(null);
+
+  const { data: trainer, isLoading, isError } = useGetSessionDetailsQuery(id);
+
+  console.log('trainer details:', trainer)
 
   // Get current month and year
   const currentMonth = currentDate.getMonth();
@@ -29,18 +34,8 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
   // Days of the week
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ];
 
   // Get first day of month and number of days
@@ -50,22 +45,19 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
   // Create calendar days array
   const calendarDays = useMemo(() => {
     const days = [];
-
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(null);
     }
-
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
-
     return days;
   }, [firstDayOfMonth, daysInMonth]);
 
   // Get available days for trainer (convert to day names)
-  const availableDayNames = trainer.available_days.map((day) =>
+  const availableDayNames = trainer?.available_days.map((day) =>
     day.day.toLowerCase()
   );
 
@@ -75,12 +67,12 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
     const dayName = date
       .toLocaleDateString("en-US", { weekday: "long" })
       .toLowerCase();
-    return availableDayNames.includes(dayName);
+    return availableDayNames?.includes(dayName);
   };
 
   // Get available time slots for selected date
   const getAvailableTimeSlots = () => {
-    if (!selectedDate) return [];
+    if (!selectedDate || !trainer) return [];
 
     const dayName = selectedDate
       .toLocaleDateString("en-US", { weekday: "long" })
@@ -125,16 +117,48 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
     setSelectedTimeSlot(null);
   };
 
-  // Format selected date for display
-  const formatSelectedDate = () => {
-    if (!selectedDate) return "";
-    return selectedDate.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  // Get coach types as string
+  const getCoachTypes = () => {
+    if (!trainer?.teacher_info?.coach_type) return trainer?.coach_type || "";
+    if (Array.isArray(trainer.teacher_info.coach_type)) {
+      return trainer.teacher_info.coach_type.join(", ");
+    }
+    return trainer.teacher_info.coach_type;
   };
+
+  // Get institute name
+  const getInstituteName = () => {
+    return trainer?.teacher_info?.institute_name || trainer?.institute_name || "Training Center";
+  };
+
+  // Format training type for display
+  const getTrainingTypeDisplay = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "virtual":
+        return "Virtual";
+      case "in_person":
+      case "in-person":
+        return "In-Person";
+      default:
+        return type;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full p-4 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (isError || !trainer) {
+    return (
+      <div className="w-full p-4 text-center">
+        <p className="text-red-500">Failed to load trainer information</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full p-4">
@@ -168,12 +192,10 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                      {trainer.coach_type}
+                      {getCoachTypes()}
                     </span>
                     <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                      {trainer.training_type === "virtual"
-                        ? "Virtual"
-                        : "In-Person"}
+                      {trainer.training_type}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mt-3">
@@ -194,7 +216,6 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 pt-0">
-              {/* Days of Week Header */}
               <div className="grid grid-cols-1 md:grid-cols-3 items-start gap-8">
                 <div className="col-span-2">
                   {/* Calendar Header */}
@@ -219,6 +240,8 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
+                  
+                  {/* Days of Week Header */}
                   <div className="grid grid-cols-7 gap-1 mb-2">
                     {daysOfWeek.map((day) => (
                       <div
@@ -286,6 +309,11 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
                         </Button>
                       ))}
                     </div>
+                    {getAvailableTimeSlots().length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No time slots available for this date
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -312,7 +340,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
                 </div>
                 <div>
                   <p className="font-medium text-sm">{trainer.full_name}</p>
-                  <p className="text-sm text-gray-600">{trainer.coach_type}</p>
+                  <p className="text-sm text-gray-600">{getCoachTypes()}</p>
                 </div>
               </div>
 
@@ -345,8 +373,10 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
               <div className="flex items-start gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
                 <div>
-                  <p className="font-medium">{trainer.institute_name}</p>
-                  <p className="text-gray-600">2.5 miles away</p>
+                  <p className="font-medium">{getInstituteName()}</p>
+                  <p className="text-gray-600">
+                    {trainer.training_type.toLowerCase() === "virtual" && "Online Session"}
+                  </p>
                 </div>
               </div>
 
@@ -354,7 +384,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
               <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span>Session Price</span>
-                  <span className="font-medium">${trainer.price}.00</span>
+                  <span className="font-medium">${trainer.price}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Tax</span>
@@ -362,7 +392,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
                 </div>
                 <div className="flex justify-between font-semibold text-base border-t pt-3">
                   <span>Total</span>
-                  <span>${trainer.price}.00</span>
+                  <span>${trainer.price}</span>
                 </div>
               </div>
 
@@ -375,9 +405,9 @@ const BookingSection: React.FC<BookingSectionProps> = ({ trainer }) => {
                   Confirm & Pay
                 </Button>
                 <Link href={"/student/virtual-training"}>
-                <Button variant="outline" className="w-full h-10 text-sm">
-                  Cancel
-                </Button>
+                  <Button variant="outline" className="w-full h-10 text-sm">
+                    Cancel
+                  </Button>
                 </Link>
               </div>
             </CardContent>

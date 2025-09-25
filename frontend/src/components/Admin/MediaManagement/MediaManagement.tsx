@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,143 +13,19 @@ import {
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import MediaCard from "@/components/Element/MediaCard";
 import VideoEditFrom from "@/components/Element/VideoEditForm";
+import { useGetAdminVideosQuery } from "@/store/Slices/apiSlices/adminApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 
-export interface VideoData {
+interface VideoItem {
   id: string;
-  videoUrl: string;
   title: string;
   description: string;
-  duration: string;
-  sports: "basketball" | "football";
-  consumer: "student" | "teacher";
-  thumbnail?: string;
+  thumbnail: string;
+  consumer: "student" | "teacher" | string;
+  sport_name: string;
+  created_at: string;
 }
-
-const dummyVideos: VideoData[] = [
-  {
-    id: "1",
-    videoUrl: "/videos/basic-ball-control.mp4",
-    title: "Basic ball control",
-    description: "Learn how to control the ball with your feet and body",
-    duration: "30s",
-    sports: "football",
-    consumer: "student",
-    thumbnail: "/thumbnails/ball-control.jpg",
-  },
-  {
-    id: "2",
-    videoUrl: "/videos/passing-receiving.mp4",
-    title: "Passing & Receiving",
-    description: "Master short and long passes with accuracy and control",
-    duration: "45s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/passing.jpg",
-  },
-  {
-    id: "3",
-    videoUrl: "/videos/dribbling-techniques.mp4",
-    title: "Dribbling Techniques",
-    description: "Improve footwork, speed, and control of the ball",
-    duration: "30s",
-    sports: "football",
-    consumer: "student",
-    thumbnail: "/thumbnails/dribbling.jpg",
-  },
-  {
-    id: "4",
-    videoUrl: "/videos/shooting-finishing.mp4",
-    title: "Shooting & Finishing",
-    description:
-      "Learn powerful and accurate shooting techniques for different game situations",
-    duration: "30s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/shooting.jpg",
-  },
-  {
-    id: "5",
-    videoUrl: "/videos/defensive-skills.mp4",
-    title: "Defensive Skills",
-    description:
-      "Build tackling, marking, and interception strategies to stop opponents",
-    duration: "30s",
-    sports: "football",
-    consumer: "student",
-    thumbnail: "/thumbnails/defensive.jpg",
-  },
-  {
-    id: "6",
-    videoUrl: "/videos/positioning-movement.mp4",
-    title: "Positioning & Movement",
-    description:
-      "Learn how to control the ball with your feet and body movements effectively",
-    duration: "30s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/positioning.jpg",
-  },
-  {
-    id: "7",
-    videoUrl: "/videos/basketball-dribbling.mp4",
-    title: "Basketball Dribbling Fundamentals",
-    description: "Master basic and advanced basketball dribbling techniques",
-    duration: "45s",
-    sports: "basketball",
-    consumer: "student",
-    thumbnail: "/thumbnails/basketball-dribbling.jpg",
-  },
-  {
-    id: "8",
-    videoUrl: "/videos/basketball-shooting.mp4",
-    title: "Basketball Shooting Form",
-    description: "Perfect your shooting technique and accuracy",
-    duration: "60s",
-    sports: "basketball",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/basketball-shooting.jpg",
-  },
-  {
-    id: "9",
-    videoUrl: "/videos/basketball-defense.mp4",
-    title: "Basketball Defense Strategies",
-    description: "Learn defensive positioning and techniques",
-    duration: "40s",
-    sports: "basketball",
-    consumer: "student",
-    thumbnail: "/thumbnails/basketball-defense.jpg",
-  },
-  {
-    id: "10",
-    videoUrl: "/videos/basketball-teamwork.mp4",
-    title: "Basketball Team Play",
-    description: "Develop team coordination and communication skills",
-    duration: "55s",
-    sports: "basketball",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/basketball-teamwork.jpg",
-  },
-  {
-    id: "11",
-    videoUrl: "/videos/football-advanced-tactics.mp4",
-    title: "Advanced Football Tactics",
-    description: "Strategic gameplay and formation understanding",
-    duration: "90s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/advanced-tactics.jpg",
-  },
-  {
-    id: "12",
-    videoUrl: "/videos/basketball-conditioning.mp4",
-    title: "Basketball Conditioning",
-    description: "Physical training and endurance building for basketball",
-    duration: "75s",
-    sports: "basketball",
-    consumer: "student",
-    thumbnail: "/thumbnails/basketball-conditioning.jpg",
-  },
-];
 
 interface MediaManagementProps {
   isAdmin: boolean;
@@ -163,22 +39,37 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
   const [consumerFilter, setConsumerFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState<boolean>(false);
+  const [filteredVideos, setFilteredVideos] = useState<VideoItem[]>([]);
   const itemsPerPage = isAdmin ? 6 : 8;
+  const { data, isLoading, isError } = useGetAdminVideosQuery();
 
-  // Filter videos based on search term and filters
-  const filteredVideos = useMemo(() => {
-    return dummyVideos.filter((video) => {
+  const videos = data?.results || [];
+
+  // Filter videos whenever search term, filters, or videos data changes
+  useEffect(() => {
+    if (!videos.length) {
+      setFilteredVideos([]);
+      return;
+    }
+
+    const filtered = videos.filter((video: VideoItem) => {
       const matchesSearch =
         video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         video.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
       const matchesSports =
-        sportsFilter === "all" || video.sports === sportsFilter;
+        sportsFilter === "all" || 
+        video.sport_name.toLowerCase() === sportsFilter.toLowerCase();
+      
       const matchesConsumer =
-        consumerFilter === "all" || video.consumer === consumerFilter;
+        consumerFilter === "all" || 
+        video.consumer.toLowerCase() === consumerFilter.toLowerCase();
 
       return matchesSearch && matchesSports && matchesConsumer;
     });
-  }, [searchTerm, sportsFilter, consumerFilter]);
+
+    setFilteredVideos(filtered);
+  }, [videos, searchTerm, sportsFilter, consumerFilter]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
@@ -189,7 +80,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
   );
 
   // Reset to first page when filters change
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, sportsFilter, consumerFilter]);
 
@@ -204,6 +95,14 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
     setCurrentPage(1);
   };
 
+  // Get unique sports for filter dropdown
+  const uniqueSports = Array.from(
+    new Set(videos.map((video: VideoItem) => video.sport_name))
+  );
+
+  if (isLoading) return <Loading />;
+  if (isError) return <ErrorLoadingPage />;
+
   return (
     <div className={`md:px-6 ${isAdmin ? "" : "mt-6 mb-6"}`}>
       {/* Header */}
@@ -213,7 +112,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
             Videos
           </h1>
           <p className="text-gray-600 mt-1">
-            Showing {filteredVideos.length} of {dummyVideos.length} videos
+            Showing {filteredVideos.length} of {videos.length} videos
           </p>
         </div>
         {isAdmin && (
@@ -254,14 +153,18 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
               Clear Filters
             </Button>
           )}
+          
           <Select value={sportsFilter} onValueChange={setSportsFilter}>
             <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue placeholder="Filter by Sport" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Sports</SelectItem>
-              <SelectItem value="football">Football</SelectItem>
-              <SelectItem value="basketball">Basketball</SelectItem>
+              {uniqueSports.map((sport) => (
+                <SelectItem key={sport} value={sport.toLowerCase()}>
+                  {sport}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -312,20 +215,18 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
       ) : (
         <div
           className={`grid grid-cols-1 md:grid-cols-2 ${
-            isAdmin ? "xl:grid-cols-3" : "lg: grid-cols-3 xl:grid-cols-4"
+            isAdmin ? "xl:grid-cols-3" : "lg:grid-cols-3 xl:grid-cols-4"
           } gap-6 mb-8`}
         >
-          {paginatedVideos.map((video) => (
+          {paginatedVideos.map((video: VideoItem) => (
             <MediaCard
               id={video.id}
               key={video.id}
               open={open}
               setOpen={setOpen}
-              videoUrl={video.videoUrl}
               title={video.title}
               description={video.description}
-              duration={video.duration}
-              sports={video.sports}
+              sports={video.sport_name}
               consumer={video.consumer}
               thumbnail={video.thumbnail}
               isAdmin={isAdmin}

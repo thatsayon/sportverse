@@ -1,4 +1,4 @@
-import VideoUploadForm from '@/components/Admin/visitors/VideoUploadForm'
+import VideoUploadForm from '@/components/Admin/MediaManagement/VideoUploadForm'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'

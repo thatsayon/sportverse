@@ -12,7 +12,11 @@ import {
 import { AdminResponse, UpdatePasswordRequest } from "@/types/admin/profile";
 import { AnalyticsResponse } from "@/types/admin/analytics";
 import { SportCategory, SportCategoryResponse } from "@/types/admin/sports";
-import { ConversationDetail, ConversationResponse } from "@/types/admin/chatConversation";
+import {
+  ConversationDetail,
+  ConversationResponse,
+} from "@/types/admin/chatConversation";
+import { VideoDetails, VideoDetailsResponse, VideoListResponse } from "@/types/admin/video";
 
 export const adminApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -50,9 +54,9 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ["Withdraw"],
     }),
     getWithdrawDetails: builder.query<WithdrawDetailsResponse, string>({
-      query: (id)=> `/control/withdraw-detail/${id}`,
+      query: (id) => `/control/withdraw-detail/${id}`,
     }),
-
+    // Admin Profile
     getAdminProfile: builder.query<AdminResponse, void>({
       query: () => "/control/profile/",
       providesTags: ["AdminProfile"],
@@ -65,15 +69,18 @@ export const adminApiSlice = apiSlice.injectEndpoints({
         credentials: "include",
       }),
     }),
+    // Analytics
     getAdminAnalytics: builder.query<AnalyticsResponse, void>({
       query: () => "/control/analytics/",
     }),
+    // Sports
     getAdminSports: builder.query<SportCategoryResponse, void>({
       query: () => "/control/get-or-create-sport/",
     }),
     getAdminSportById: builder.query<SportCategory, string>({
       query: (id) => `/control/update-sport/${id}`,
     }),
+    // Conversation
     getAdminConversation: builder.query<
       ConversationResponse,
       { search?: string; page?: number }
@@ -108,6 +115,16 @@ export const adminApiSlice = apiSlice.injectEndpoints({
         return `/control/chatlog/${id}/${queryString ? `?${queryString}` : ""}`;
       },
     }),
+    // video
+    getAdminVideos: builder.query<VideoListResponse, void>({
+      query: ()=> "/control/video-list/"
+    }),
+    getAdminVideo: builder.query<VideoDetailsResponse, string>({
+      query: (id) => `/control/video/${id}`
+    }),
+    getAdminVideoDetails: builder.query<VideoDetails, string>({
+      query: (id)=> `/control/video/${id}`
+    }),
   }),
 });
 
@@ -135,4 +152,9 @@ export const {
   // Conversation
   useGetAdminConversationQuery,
   useGetConversationDetailQuery,
+  // Video
+  useGetAdminVideosQuery,
+  useGetAdminVideoQuery,
+  useGetAdminVideoDetailsQuery,
+  //
 } = adminApiSlice;

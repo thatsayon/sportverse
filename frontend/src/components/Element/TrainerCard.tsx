@@ -205,7 +205,7 @@ export default function TrainerCard({
 
       <CardFooter className="pt-0">
         <div className="flex items-center gap-3 w-full">
-          <Link className="flex-1" href={`/student/trainer-profile`}>
+          <Link className="flex-1" href={`/student/virtual-training/${selected.id}`}>
             <Button className="w-full" variant="outline">
               View Profile
             </Button>

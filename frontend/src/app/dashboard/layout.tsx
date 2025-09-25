@@ -49,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </div>
 
         {/* Page Content with top padding to account for fixed navbar */}
-        <main className="flex-1 mt-24 p-4 lg:p-6">{children}</main>
+        <main className="flex-1 mt-14 p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

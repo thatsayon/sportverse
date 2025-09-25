@@ -11,10 +11,9 @@ interface MediaCardProps {
   isAdmin?: boolean;
   title: string;
   description: string;
-  duration: string;
-  sports: "basketball" | "football";
-  consumer: "student" | "teacher";
-  thumbnail?: string;
+  sports: string | null;
+  consumer: string;
+  thumbnail: string;
   open: boolean;
   setOpen: (open: boolean) => void;
 }
@@ -24,7 +23,6 @@ const MediaCard: React.FC<MediaCardProps> = ({
   isAdmin = true,
   title,
   description,
-  duration,
   sports,
   consumer,
   thumbnail,
@@ -34,83 +32,100 @@ const MediaCard: React.FC<MediaCardProps> = ({
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
   const router = useRouter();
+
   const getSportsColor = (sport: string) => {
-    switch (sport) {
+    const sportLower = sport !== null ? sport.toLowerCase() : sport;
+    switch (sportLower) {
       case "football":
         return "bg-blue-100 text-blue-800 border-blue-200";
       case "basketball":
         return "bg-orange-100 text-orange-800 border-orange-200";
+      case "soccer":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "tennis":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "volleyball":
+        return "bg-purple-100 text-purple-800 border-purple-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getConsumerColor = (consumer: string) => {
-    switch (consumer) {
+    const consumerLower = consumer.toLowerCase();
+    switch (consumerLower) {
       case "student":
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "teacher":
         return "bg-green-100 text-green-800 border-green-200";
+      case "trainers":
+        return "bg-orange-100 text-orange-800 border-orange-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const getSportsIcon = (sport: string) => {
-    switch (sport) {
+  const getSportsIcon = (sport: string | null) => {
+    const sportLower = sport !== null ? sport.toLowerCase() : sport;
+    switch (sportLower) {
       case "football":
-        return "⚽";
+        return "🏈";
       case "basketball":
         return "🏀";
+      case "soccer":
+        return "⚽";
+      case "tennis":
+        return "🎾";
+      case "volleyball":
+        return "🏐";
+      case "baseball":
+        return "⚾";
       default:
         return "🏃";
     }
   };
+
   const getConsumerIcon = (consumer: string) => {
-    switch (consumer) {
+    const consumerLower = consumer.toLowerCase();
+    switch (consumerLower) {
       case "teacher":
         return "👨‍🏫";
       case "student":
         return "🧑‍🎓";
+      case "trainers":
+        return "🏋️‍♂️";
       default:
-        return "🏃";
+        return "👤";
     }
   };
 
-  const hendleRoute = () => {
+  const handleRoute = () => {
     router.push(`/dashboard/media/${id}`);
   };
+
   return (
     <Card
-      className="group cursor-pointer h-[400px] transition-all duration-300 hover:shadow-lg overflow-hidden py-0 pb-2 "
+      className="group cursor-pointer h-[400px] transition-all duration-300 hover:shadow-lg overflow-hidden py-0 pb-2"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        onClick={hendleRoute}
+        onClick={handleRoute}
         className="relative aspect-video bg-gray-100 overflow-hidden"
       >
         {/* Thumbnail or Placeholder */}
-        {thumbnail && !imageError ? (
-          <Image
-            src={thumbnail}
-            alt={title}
-            width={320}
-            height={231}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-4xl mb-2">{getSportsIcon(sports)}</div>
-              <div className="text-gray-500 text-sm font-medium">{sports}</div>
-            </div>
-          </div>
-        )}
+
+        <Image
+          src={thumbnail}
+          alt={title}
+          width={320}
+          height={231}
+          className="w-full h-full object-cover transition-transform duration-300 scale-95 group-hover:scale-100 rounded-2xl"
+          onError={() => setImageError(true)}
+        />
 
         {/* Play Button Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+        <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
           <div
             className={`w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center transition-all duration-300 ${
               isHovered ? "scale-100 opacity-100" : "scale-75 opacity-0"
@@ -122,12 +137,11 @@ const MediaCard: React.FC<MediaCardProps> = ({
       </div>
 
       <CardContent className="p-4 -mt-6 relative">
-        <div onClick={hendleRoute} className="mb-3">
+        <div onClick={handleRoute} className="mb-3">
           <h3 className="font-semibold text-xl flex items-center justify-between text-gray-900 mb-2 line-clamp-1">
             <span className="group-hover:text-[#F15A24] transition-colors">
               {title}
             </span>
-            <span className="text-base font-normal">{duration}</span>
           </h3>
           <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
             {description}
@@ -136,7 +150,7 @@ const MediaCard: React.FC<MediaCardProps> = ({
 
         {/* Tags */}
         <div
-          onClick={hendleRoute}
+          onClick={handleRoute}
           className="flex items-center justify-between"
         >
           <div className="flex flex-wrap gap-2">
@@ -151,7 +165,6 @@ const MediaCard: React.FC<MediaCardProps> = ({
                 variant="outline"
                 className={`text-xs ${getConsumerColor(consumer)} capitalize`}
               >
-                {/* <User className="w-3 h-3 mr-1" /> */}
                 {getConsumerIcon(consumer)}
                 {consumer}
               </Badge>

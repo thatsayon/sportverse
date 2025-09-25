@@ -14,7 +14,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useGetAllSportsQuery } from "@/store/Slices/apiSlices/apiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 import { getCookie } from "@/hooks/cookie";
+import { useRouter } from "next/navigation";
+import { useGetAdminVideosQuery } from "@/store/Slices/apiSlices/adminApiSlice";
 
 const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
 
@@ -25,9 +30,7 @@ const formSchema = z.object({
     .min(1, "Title is required")
     .min(3, "Title must be at least 3 characters"),
 
-  sport: z.enum(["Basketball", "Football"]).refine((val) => val, {
-    message: "Please select a sport",
-  }),
+  sport: z.string().min(1, "Please select a sport"),
 
   consumer: z.enum(["Student", "Trainers"]).refine((val) => val, {
     message: "Please select a consumer type",
@@ -77,8 +80,11 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const [dragActive, setDragActive] = useState(false);
   const [thumbnailDragActive, setThumbnailDragActive] = useState(false);
   const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
+  const [selectedSportId, setSelectedSportId] = useState<string>("");
   const [consumerDropdownOpen, setConsumerDropdownOpen] = useState(false);
-
+  const { data, isLoading, isError } = useGetAllSportsQuery();
+  const { refetch } = useGetAdminVideosQuery();
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -96,12 +102,17 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
   const getSignatureFromAPI = async (
     title: string,
     description: string,
-    thumbnail: File
+    thumbnail: File,
+    sport: string,
+    consumer: string
   ) => {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
     formData.append("thumbnail", thumbnail);
+    // Fixed: Added sport and consumer to FormData
+    formData.append("sport", sport);
+    formData.append("consumer", consumer.toLocaleLowerCase());
 
     try {
       const token = getCookie("access_token");
@@ -169,7 +180,9 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       const signatureResponse = await getSignatureFromAPI(
         data.title,
         data.description,
-        data.thumbnail
+        data.thumbnail,
+        selectedSportId, // Send the sport ID
+        data.consumer
       );
 
       if (!signatureResponse) {
@@ -209,7 +222,8 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
 
       // Show success toast
       toast.success("Video has been uploaded successfully.");
-
+      refetch();
+      router.push("/dashboard/media");
       // Call the onSubmit callback
       if (onSubmit) {
         onSubmit(finalData);
@@ -233,6 +247,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
     setSelectedThumbnail(null);
     setThumbnailPreview(null);
     setUploadProgress(0);
+    setSelectedSportId("");
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -312,6 +327,11 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
     setThumbnailPreview(null);
     setValue("thumbnail", undefined as any);
   };
+
+  if (isLoading) return <Loading />;
+  if (isError) return <ErrorLoadingPage />;
+
+  const sportsOptions = data?.results || [];
 
   const CustomDropdown = ({
     value,
@@ -524,13 +544,19 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         {/* Sports Dropdown */}
         <CustomDropdown
           value={watchedValues.sport || ""}
-          options={["Basketball", "Football"]}
+          options={sportsOptions?.map((sport) => sport.name)}
           placeholder="Sports"
-          onSelect={(value) =>
-            setValue("sport", value as "Basketball" | "Football", {
-              shouldValidate: true,
-            })
-          }
+          onSelect={(value) => {
+            const selectedSport = sportsOptions.find(
+              (sport) => sport.name === value
+            );
+            if (selectedSport) {
+              setSelectedSportId(selectedSport.id);
+              setValue("sport", value, {
+                shouldValidate: true,
+              });
+            }
+          }}
           isOpen={sportDropdownOpen}
           setIsOpen={setSportDropdownOpen}
           error={errors.sport?.message}
