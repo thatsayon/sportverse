@@ -1,6 +1,6 @@
 "use client";
-
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
+import TrainerBookingCard from "@/components/Element/TrainerBookingCard";
 import {
   Select,
   SelectContent,
@@ -8,106 +8,119 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BookingPageData } from "@/data/BookingPageData";
-import BookingCard from "../Element/BookingCard";
-import Link from "next/link";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { useGetBookingsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 
-// Session type from your interface
-type SessionType = "Virtual Session" | "Mindset Session" | "In Person";
+function BookingPage() {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 5; // sessions per page
 
-const BookingPage = ({ isHeader = true, sliceNumber= 8 }: { isHeader?: boolean; sliceNumber?: number }) => {
-  const bookings = BookingPageData;
-  const [selectedFilter, setSelectedFilter] = useState<SessionType | "all">(
-    "all"
-  );
-
-  // Filter bookings based on selected sessionType
-  const filteredBookings = useMemo(() => {
-    if (selectedFilter === "all") {
-      return bookings;
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
-    return bookings.filter((booking) => booking.sessionType === selectedFilter);
-  }, [bookings, selectedFilter]);
+  };
 
-  // Count bookings by sessionType
-  const sessionTypeCounts = useMemo(() => {
-    return bookings.reduce((acc, booking) => {
-      acc[booking.sessionType] = (acc[booking.sessionType] || 0) + 1;
-      return acc;
-    }, {} as Record<SessionType, number>);
-  }, [bookings]);
+  const { data } = useGetBookingsQuery();
+
+  console.log("booking data:", data)
+
+  const trainerBookingData = data?.results ?? [];
+
+  if (trainerBookingData?.length === 0) {
+    return (
+      <>
+        <ErrorLoadingPage/>
+      </>
+    );
+  }
+  // Filter logic
+  const filteredData =
+    statusFilter === "all"
+      ? trainerBookingData
+      : trainerBookingData?.filter((item) => item.status === statusFilter);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
-    <div className={`w-full max-w-7xl mx-auto p-4`}>
-      {/* Filter Section */}
-      {isHeader && (
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">My Bookings</h2>
+    <div className="max-w-7xl mx-auto my-8 min-h-screen">
+      {/* Header + Filter */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl">All Booked Sessions</h2>
+        <Select
+          value={statusFilter}
+          onValueChange={(val) => {
+            setStatusFilter(val);
+            setCurrentPage(1); // reset to first page when filter changes
+          }}
+        >
+          <SelectTrigger className="w-48 text-[#F15A24]">
+            <SelectValue placeholder="Filter by Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem className="text-[#F15A24]" value="all">
+              All
+            </SelectItem>
+            <SelectItem className="text-[#F15A24]" value="Ongoing">
+              On Going
+            </SelectItem>
+            <SelectItem className="text-[#F15A24]" value="Upcomming">
+              Up Comming
+            </SelectItem>
+            <SelectItem className="text-[#F15A24]" value="Completed">
+              Completed
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Filter by:</span>
-              <Select
-                value={selectedFilter}
-                onValueChange={(value) =>
-                  setSelectedFilter(value as SessionType | "all")
-                }
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Sessions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    All Sessions ({bookings.length})
-                  </SelectItem>
-                  <SelectItem value="Virtual Session">
-                    Virtual Session ({sessionTypeCounts["Virtual Session"] || 0}
-                    )
-                  </SelectItem>
-                  <SelectItem value="Mindset Session">
-                    Mindset Session ({sessionTypeCounts["Mindset Session"] || 0}
-                    )
-                  </SelectItem>
-                  <SelectItem value="In Person">
-                    In Person ({sessionTypeCounts["In Person"] || 0})
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      {/* Session Cards */}
+      <div className="space-y-4 ">
+        {paginatedData.map((item) => (
+          <TrainerBookingCard key={item.id} {...item} />
+        ))}
+      </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center mt-6 space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeftIcon />
+          </Button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={page === currentPage ? "default" : "outline"}
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </Button>
+          ))}
+
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRightIcon />
+          </Button>
         </div>
       )}
-
-      {
-        !isHeader &&
-        <div className="text-end mb-2">
-          <Link href={"/student/bookings"}>
-          <Button variant={"outline"} className="py-2">
-            View All
-          </Button>
-          </Link>
-        </div>
-      }
-
-      {/* Bookings List */}
-      <div className="space-y-4">
-        {filteredBookings.length > 0 ? (
-          filteredBookings.slice(0, sliceNumber).map((booking) => (
-            <BookingCard key={booking.id} {...booking} />
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">
-              {selectedFilter === "all"
-                ? "No sessions found"
-                : `No ${selectedFilter} sessions found`}
-            </p>
-          </div>
-        )}
-      </div>
     </div>
   );
-};
+}
 
 export default BookingPage;

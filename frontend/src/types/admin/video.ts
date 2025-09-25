@@ -5,7 +5,6 @@ export interface VideoListResponse {
   results: VideoItem[];
 }
 
-
 export interface VideoDetailsResponse {
   video_id: string;
   title: string;
@@ -25,14 +24,18 @@ export interface VideoItem {
   created_at: string; // ISO timestamp
 }
 
-
-
 export interface VideoDetails {
   video_id: string;
   title: string;
   description: string;
   consumer: string;
-  status: 'ready' | 'processing' | 'failed'; // optional, adjust based on possible statuses
+  status: "ready" | "processing" | "failed"; // optional, adjust based on possible statuses
   hls_url: string;
-  related_videos:VideoItem[];
+  related_videos: VideoItem[];
+}
+
+export interface EditVideo {
+  id: string
+  title: string;
+  description: string;
 }

@@ -27,3 +27,15 @@ export interface TeacherInfo {
   institute_name: string | null;
   coach_type: string[];
 }
+
+
+export interface CheckoutResponse {
+  checkout_url: string;
+  booked_session_id: string;
+}
+
+export interface CheckoutRequest {
+  id: string | undefined;
+  available_time_slot_id: string | undefined;
+  session_date: string; // ISO date in YYYY-MM-DD format
+}

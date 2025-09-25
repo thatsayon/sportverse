@@ -20,9 +20,9 @@ function BookingConfirmation() {
   };
   return (
     <div className="p-8">
-      <Button onClick={() => setIsOpen(true)} className="mb-4">
+      {/* <Button onClick={() => setIsOpen(true)} className="mb-4">
         Show Booking Confirmation
-      </Button>
+      </Button> */}
       
       <BookingConfirmationCard
         isOpen={isOpen}

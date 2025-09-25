@@ -10,145 +10,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import MediaCard from "@/components/Element/MediaCard";
+import { useGetVideosQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import Loading from "../Element/Loading";
+import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 
-export interface VideoData {
+// Updated interfaces based on your backend data
+export interface VideoItem {
   id: string;
-  videoUrl: string;
   title: string;
   description: string;
-  duration: string;
-  sports: "basketball" | "football";
-  consumer: "student" | "teacher";
-  thumbnail?: string;
+  thumbnail: string;
+  consumer: "student" | "teacher" | string;
+  sport_name: string;
+  created_at: string;
 }
 
-const dummyVideos: VideoData[] = [
-  {
-    id: "1",
-    videoUrl: "/videos/basic-ball-control.mp4",
-    title: "Basic ball control",
-    description: "Learn how to control the ball with your feet and body",
-    duration: "30s",
-    sports: "football",
-    consumer: "student",
-    thumbnail: "/thumbnails/ball-control.jpg",
-  },
-  {
-    id: "2",
-    videoUrl: "/videos/passing-receiving.mp4",
-    title: "Passing & Receiving",
-    description: "Master short and long passes with accuracy and control",
-    duration: "45s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/passing.jpg",
-  },
-  {
-    id: "3",
-    videoUrl: "/videos/dribbling-techniques.mp4",
-    title: "Dribbling Techniques",
-    description: "Improve footwork, speed, and control of the ball",
-    duration: "30s",
-    sports: "football",
-    consumer: "student",
-    thumbnail: "/thumbnails/dribbling.jpg",
-  },
-  {
-    id: "4",
-    videoUrl: "/videos/shooting-finishing.mp4",
-    title: "Shooting & Finishing",
-    description:
-      "Learn powerful and accurate shooting techniques for different game situations",
-    duration: "30s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/shooting.jpg",
-  },
-  {
-    id: "5",
-    videoUrl: "/videos/defensive-skills.mp4",
-    title: "Defensive Skills",
-    description:
-      "Build tackling, marking, and interception strategies to stop opponents",
-    duration: "30s",
-    sports: "football",
-    consumer: "student",
-    thumbnail: "/thumbnails/defensive.jpg",
-  },
-  {
-    id: "6",
-    videoUrl: "/videos/positioning-movement.mp4",
-    title: "Positioning & Movement",
-    description:
-      "Learn how to control the ball with your feet and body movements effectively",
-    duration: "30s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/positioning.jpg",
-  },
-  {
-    id: "7",
-    videoUrl: "/videos/basketball-dribbling.mp4",
-    title: "Basketball Dribbling Fundamentals",
-    description: "Master basic and advanced basketball dribbling techniques",
-    duration: "45s",
-    sports: "basketball",
-    consumer: "student",
-    thumbnail: "/thumbnails/basketball-dribbling.jpg",
-  },
-  {
-    id: "8",
-    videoUrl: "/videos/basketball-shooting.mp4",
-    title: "Basketball Shooting Form",
-    description: "Perfect your shooting technique and accuracy",
-    duration: "60s",
-    sports: "basketball",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/basketball-shooting.jpg",
-  },
-  {
-    id: "9",
-    videoUrl: "/videos/basketball-defense.mp4",
-    title: "Basketball Defense Strategies",
-    description: "Learn defensive positioning and techniques",
-    duration: "40s",
-    sports: "basketball",
-    consumer: "student",
-    thumbnail: "/thumbnails/basketball-defense.jpg",
-  },
-  {
-    id: "10",
-    videoUrl: "/videos/basketball-teamwork.mp4",
-    title: "Basketball Team Play",
-    description: "Develop team coordination and communication skills",
-    duration: "55s",
-    sports: "basketball",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/basketball-teamwork.jpg",
-  },
-  {
-    id: "11",
-    videoUrl: "/videos/football-advanced-tactics.mp4",
-    title: "Advanced Football Tactics",
-    description: "Strategic gameplay and formation understanding",
-    duration: "90s",
-    sports: "football",
-    consumer: "teacher",
-    thumbnail: "/thumbnails/advanced-tactics.jpg",
-  },
-  {
-    id: "12",
-    videoUrl: "/videos/basketball-conditioning.mp4",
-    title: "Basketball Conditioning",
-    description: "Physical training and endurance building for basketball",
-    duration: "75s",
-    sports: "basketball",
-    consumer: "student",
-    thumbnail: "/thumbnails/basketball-conditioning.jpg",
-  },
-];
+export interface VideoListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: VideoItem[];
+}
 
 const VideoLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -156,19 +40,28 @@ const VideoLibrary: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
+  const { data, isLoading, isError } = useGetVideosQuery();
+
+  const videos = data?.results || [];
+  
+  // Get unique sports for the filter dropdown
+  const uniqueSports = useMemo(() => {
+    const sportsSet = new Set(videos.map(video => video.sport_name.toLowerCase()));
+    return Array.from(sportsSet);
+  }, [videos]);
+
   // Filter videos based on search term and filters
   const filteredVideos = useMemo(() => {
-    return dummyVideos.filter((video) => {
+    return videos.filter((video) => {
       const matchesSearch =
         video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         video.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesSports =
-        sportsFilter === "all" || video.sports === sportsFilter;
-      
+        sportsFilter === "all" || video.sport_name.toLowerCase() === sportsFilter;
 
       return matchesSearch && matchesSports;
     });
-  }, [searchTerm, sportsFilter]);
+  }, [videos, searchTerm, sportsFilter]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
@@ -193,6 +86,9 @@ const VideoLibrary: React.FC = () => {
     setCurrentPage(1);
   };
 
+  if(isLoading) return <Loading/>
+  if(isError) return <ErrorLoadingPage/>
+
   return (
     <div className="md:px-8 my-8">
       {/* Header */}
@@ -202,7 +98,7 @@ const VideoLibrary: React.FC = () => {
             Videos Library
           </h1>
           <p className="text-gray-600 mt-1">
-            Showing {filteredVideos.length} of {dummyVideos.length} videos
+            Showing {filteredVideos.length} of {videos.length} videos
           </p>
         </div>
       </div>
@@ -220,8 +116,7 @@ const VideoLibrary: React.FC = () => {
         </div>
 
         <div className="flex flex-row gap-4">
-          {(searchTerm ||
-            sportsFilter !== "all") && (
+          {(searchTerm || sportsFilter !== "all") && (
             <Button
               variant="outline"
               onClick={clearFilters}
@@ -231,17 +126,19 @@ const VideoLibrary: React.FC = () => {
             </Button>
           )}
           <Select value={sportsFilter} onValueChange={setSportsFilter}>
-            <SelectTrigger className="w-full sm:w-[150px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filter by Sport" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Sports</SelectItem>
-              <SelectItem value="football">Football</SelectItem>
-              <SelectItem value="basketball">Basketball</SelectItem>
+              {uniqueSports.map((sport) => (
+                <SelectItem key={sport} value={sport}>
+                  {sport.charAt(0).toUpperCase() + sport.slice(1)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          {(searchTerm ||
-            sportsFilter !== "all") && (
+          {(searchTerm || sportsFilter !== "all") && (
             <Button
               variant="outline"
               onClick={clearFilters}
@@ -273,16 +170,18 @@ const VideoLibrary: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 px-4 md:px-0">
           {paginatedVideos.map((video) => (
-            <Link key={video.id} href={"/student/video-library/video"}>
+            <Link key={video.id} href={`/student/video-library/${video.id}`}>
               <MediaCard
-                videoUrl={video.videoUrl}
+                id={video.id}
                 title={video.title}
                 description={video.description}
-                duration={video.duration}
-                sports={video.sports}
+                sports={video.sport_name}
                 consumer={video.consumer}
                 thumbnail={video.thumbnail}
                 isAdmin={false}
+                open={false}
+                setOpen={() => {}}
+                setSelectedId={() => {}}
               />
             </Link>
           ))}
@@ -305,7 +204,7 @@ const VideoLibrary: React.FC = () => {
               disabled={currentPage === 1}
               className="w-8 h-8 p-0"
             >
-              <ChevronLeft className="w-8 h-8" />              
+              <ChevronLeft className="w-8 h-8" />
             </Button>
 
             <div className="flex gap-1">

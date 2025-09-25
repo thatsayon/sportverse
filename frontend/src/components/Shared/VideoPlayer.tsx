@@ -7,6 +7,7 @@ import { useGetAdminVideoDetailsQuery } from "@/store/Slices/apiSlices/adminApiS
 import MediaCard from "@/components/Element/MediaCard";
 import Loading from "@/components/Element/Loading";
 import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
+import { useJwt } from "@/hooks/useJwt";
 
 interface VideoDetails {
   video_id: string;
@@ -42,7 +43,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  
+  const {decoded}= useJwt()
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -141,8 +142,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (isLoading) return <Loading />;
-  if (isError || !videoDetails) return <ErrorLoadingPage />;
+  if (isLoading) return (
+    <div className="min-h-screen">
+      <Loading/>
+    </div>
+  )
+  if (isError || !videoDetails) return (
+    <div className="min-h-screen">
+      <ErrorLoadingPage/>
+    </div>
+  )
 
   if (videoDetails.status === "processing") {
     return (
@@ -179,7 +188,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
     <div className="min-h-screen bg-white ">
       {/* Header */}
       <div className="border-b border-gray-200 px-4 py-4">
-         <Link href={`/${route}/video-library`}>
+         <Link href={decoded?.role !== "admin" ?`/${route}/video-library` : "/dashboard/media"}>
         <Button 
           variant="ghost" 
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
@@ -344,7 +353,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
                 Related Videos ({videoDetails.related_videos.length})
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {videoDetails.related_videos.map((video) => (
                   <MediaCard
                     key={video.id}

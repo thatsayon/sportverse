@@ -6,6 +6,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { DialogTitle } from '@radix-ui/react-dialog';
 
 interface BookingConfirmationProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ const BookingConfirmationCard: React.FC<BookingConfirmationProps> = ({
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
+        <DialogTitle></DialogTitle>
         {/* Success Icon */}
         <div className="flex justify-center pt-8 pb-4">
           <div className="relative">

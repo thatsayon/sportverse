@@ -16,7 +16,7 @@ import {
   ConversationDetail,
   ConversationResponse,
 } from "@/types/admin/chatConversation";
-import { VideoDetails, VideoDetailsResponse, VideoListResponse } from "@/types/admin/video";
+import { EditVideo, VideoDetails, VideoDetailsResponse, VideoListResponse } from "@/types/admin/video";
 
 export const adminApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -120,10 +120,26 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       query: ()=> "/control/video-list/"
     }),
     getAdminVideo: builder.query<VideoDetailsResponse, string>({
-      query: (id) => `/control/video/${id}`
+      query: (id) => `/control/video/${id}`,
+      providesTags:["Video"]
+    }),
+    getAdminVideoForEdit: builder.query<VideoDetailsResponse, string>({
+      query: (id) => `/control/video-update/${id}`
     }),
     getAdminVideoDetails: builder.query<VideoDetails, string>({
       query: (id)=> `/control/video/${id}`
+    }),
+    updateAdminVideo: builder.mutation<EditVideo, EditVideo>({
+      query: (body)=> ({
+        url: `/control/video-update/${body.id}/`,
+        method: "PATCH",
+        body: {
+          title: body.title,
+          description: body.description
+        },
+        credentials: 'include'
+      }),
+      invalidatesTags: ["Video"]
     }),
   }),
 });
@@ -155,6 +171,8 @@ export const {
   // Video
   useGetAdminVideosQuery,
   useGetAdminVideoQuery,
+  useGetAdminVideoForEditQuery,
   useGetAdminVideoDetailsQuery,
+  useUpdateAdminVideoMutation,
   //
 } = adminApiSlice;

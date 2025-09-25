@@ -127,9 +127,14 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const getPageTitle = () => {
     // Check if the current path matches the chat conversation pattern
     const chatConversationPattern = /^\/dashboard\/chat\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+    const mediaPattern = /^\/dashboard\/media\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
     
     if (chatConversationPattern.test(pathname)) {
       return "Chat Conversation";
+    }
+
+    if(mediaPattern.test(pathname)){
+      return "Media Player"
     }
 
     // Default behavior for other routes

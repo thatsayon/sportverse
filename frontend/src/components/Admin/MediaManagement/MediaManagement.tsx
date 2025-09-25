@@ -39,6 +39,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
   const [consumerFilter, setConsumerFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState<boolean>(false);
+  const [selectedId, setSelectedId] = useState<string>('')
   const [filteredVideos, setFilteredVideos] = useState<VideoItem[]>([]);
   const itemsPerPage = isAdmin ? 6 : 8;
   const { data, isLoading, isError } = useGetAdminVideosQuery();
@@ -230,6 +231,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
               consumer={video.consumer}
               thumbnail={video.thumbnail}
               isAdmin={isAdmin}
+              setSelectedId={setSelectedId}
             />
           ))}
         </div>
@@ -293,7 +295,7 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
           </div>
         </div>
       )}
-      <VideoEditFrom open={open} setOpen={setOpen} id="2" />
+      <VideoEditFrom open={open} setOpen={setOpen} id={selectedId} />
     </div>
   );
 };

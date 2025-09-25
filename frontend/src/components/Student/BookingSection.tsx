@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Star, MapPin, Clock } from "lucide-react";
 import Link from "next/link";
-import { useGetSessionDetailsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import { useBookSessionMutation, useGetSessionDetailsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import { toast } from "sonner";
+import { redirect } from "next/navigation";
 
 interface Timeslot {
   id: string;
@@ -22,10 +24,8 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<Timeslot | null>(null);
-
+  const [bookSecction] = useBookSessionMutation()
   const { data: trainer, isLoading, isError } = useGetSessionDetailsQuery(id);
-
-  console.log('trainer details:', trainer)
 
   // Get current month and year
   const currentMonth = currentDate.getMonth();
@@ -144,6 +144,19 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
     }
   };
 
+  const handleCheckout = async ()=>{
+    const dateString = new Intl.DateTimeFormat("en-CA").format(selectedDate);
+    const response = await bookSecction({
+      id: trainer?.id,
+      available_time_slot_id: selectedTimeSlot?.id,
+      session_date: dateString
+    }).unwrap()
+
+    if(response.booked_session_id){
+      redirect(response.checkout_url)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="w-full p-4 flex items-center justify-center">
@@ -195,7 +208,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
                       {getCoachTypes()}
                     </span>
                     <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                      {trainer.training_type}
+                      {getTrainingTypeDisplay(trainer.training_type)}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mt-3">
@@ -375,7 +388,9 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
                 <div>
                   <p className="font-medium">{getInstituteName()}</p>
                   <p className="text-gray-600">
-                    {trainer.training_type.toLowerCase() === "virtual" && "Online Session"}
+                    {trainer.training_type.toLowerCase() === "virtual" 
+                      ? "Online Session" 
+                      : "2.5 miles away"}
                   </p>
                 </div>
               </div>
@@ -399,6 +414,7 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
               {/* Action Buttons */}
               <div className="space-y-3 pt-4">
                 <Button
+                onClick={handleCheckout}
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white h-12 text-base font-medium"
                   disabled={!selectedDate || !selectedTimeSlot}
                 >

@@ -7,7 +7,7 @@ import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 
 interface MediaCardProps {
-  id: number | string | null;
+  id: string;
   isAdmin?: boolean;
   title: string;
   description: string;
@@ -16,6 +16,7 @@ interface MediaCardProps {
   thumbnail: string;
   open: boolean;
   setOpen: (open: boolean) => void;
+  setSelectedId: (value: string) => void;
 }
 
 const MediaCard: React.FC<MediaCardProps> = ({
@@ -28,13 +29,18 @@ const MediaCard: React.FC<MediaCardProps> = ({
   thumbnail,
   setOpen,
   open,
+  setSelectedId
 }) => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
   const router = useRouter();
 
-  const getSportsColor = (sport: string) => {
-    const sportLower = sport !== null ? sport.toLowerCase() : sport;
+  console.log("Receiving Consumer:", consumer);
+
+  const getSportsColor = (sport: string | null) => {
+    if (!sport) return "bg-gray-100 text-gray-800 border-gray-200";
+    
+    const sportLower = sport.toLowerCase();
     switch (sportLower) {
       case "football":
         return "bg-blue-100 text-blue-800 border-blue-200";
@@ -46,6 +52,10 @@ const MediaCard: React.FC<MediaCardProps> = ({
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "volleyball":
         return "bg-purple-100 text-purple-800 border-purple-200";
+      case "baseball":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "cricket":
+        return "bg-indigo-100 text-indigo-800 border-indigo-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -66,7 +76,9 @@ const MediaCard: React.FC<MediaCardProps> = ({
   };
 
   const getSportsIcon = (sport: string | null) => {
-    const sportLower = sport !== null ? sport.toLowerCase() : sport;
+    if (!sport) return "🏃";
+    
+    const sportLower = sport.toLowerCase();
     switch (sportLower) {
       case "football":
         return "🏈";
@@ -80,6 +92,12 @@ const MediaCard: React.FC<MediaCardProps> = ({
         return "🏐";
       case "baseball":
         return "⚾";
+      case "cricket":
+        return "🏏";
+      case "badminton":
+        return "🏸";
+      case "table tennis":
+        return "🏓";
       default:
         return "🏃";
     }
@@ -100,8 +118,25 @@ const MediaCard: React.FC<MediaCardProps> = ({
   };
 
   const handleRoute = () => {
-    router.push(`/dashboard/media/${id}`);
+    if (isAdmin) {
+      router.push(`/dashboard/media/${id}`);
+    } else {
+      router.push(`/student/video-library/${id}`);
+    }
   };
+
+  // Helper function to check if thumbnail is a valid URL
+  const isValidImageUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Fallback thumbnail for invalid URLs or missing images
+  const fallbackThumbnail = "/images/video-placeholder.jpg"; // You should add this placeholder image
 
   return (
     <Card
@@ -114,9 +149,8 @@ const MediaCard: React.FC<MediaCardProps> = ({
         className="relative aspect-video bg-gray-100 overflow-hidden"
       >
         {/* Thumbnail or Placeholder */}
-
         <Image
-          src={thumbnail}
+          src={imageError || !isValidImageUrl(thumbnail) ? fallbackThumbnail : thumbnail}
           alt={title}
           width={320}
           height={231}
@@ -154,12 +188,14 @@ const MediaCard: React.FC<MediaCardProps> = ({
           className="flex items-center justify-between"
         >
           <div className="flex flex-wrap gap-2">
-            <Badge
-              variant="outline"
-              className={`text-xs ${getSportsColor(sports)} capitalize`}
-            >
-              {getSportsIcon(sports)} {sports}
-            </Badge>
+            {sports && (
+              <Badge
+                variant="outline"
+                className={`text-xs ${getSportsColor(sports)} capitalize`}
+              >
+                {getSportsIcon(sports)} {sports}
+              </Badge>
+            )}
             {isAdmin && (
               <Badge
                 variant="outline"
@@ -174,7 +210,12 @@ const MediaCard: React.FC<MediaCardProps> = ({
         <div className="absolute right-5 bottom-2">
           {isAdmin && (
             <Button
-              onClick={() => setOpen(true)}
+              onClick={(e) => {
+                e.preventDefault(); // Prevent navigation when clicking edit
+                e.stopPropagation();
+                setOpen(true);
+                setSelectedId(id);
+              }}
               variant={"outline"}
               className="py-2 px-6"
             >

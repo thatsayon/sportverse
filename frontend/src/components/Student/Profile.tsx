@@ -66,7 +66,7 @@ const Profile = () => {
           </div>
           <Link href={"/student/profile/edit"}>
           <Button className="mt-4 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium">
-            Save Update
+            Update
           </Button>
           </Link>
         </div>

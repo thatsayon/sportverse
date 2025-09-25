@@ -3,17 +3,19 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Video } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import moment from "moment";
 import { useLazyGetGeneratedTokenQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setCallConfig } from "@/store/Slices/stateSlices/studentSlice";
+import { useJwt } from "@/hooks/useJwt";
+import { useLazyGenerateStudentTokenQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 interface TrainerBookingCardProps {
   id: string;
-  student_name: string;
+  teacher_name: string;
   price: number;
-  category: string;
+  category?: string;
   session_time: string;
   session_type: "Virtual Session" | "In-person";
   status: "Ongoing" | "Upcomming" | "Completed";
@@ -22,7 +24,7 @@ interface TrainerBookingCardProps {
 
 const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
   id,
-  student_name,
+  teacher_name,
   price,
   category,
   session_time,
@@ -31,7 +33,9 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
   // avatar_url,
 }) => {
   const [getToken] = useLazyGetGeneratedTokenQuery();
+  const [getStudentToken] = useLazyGenerateStudentTokenQuery()
   const router = useRouter();
+  const { decoded } = useJwt();
   const dispatch = useDispatch();
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -47,14 +51,25 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
   };
 
   const handleJoinSession = async () => {
-    const response = await getToken(id).unwrap();
-    if (response.token) {
-      console.log("Token Resonse",response);
+    if (decoded?.role === "student") {
+      const response = await getStudentToken(id).unwrap();
+      if (response.token) {
+        console.log("Token Resonse", response);
 
-      dispatch(setCallConfig(response))
-      router.push("/video")
+        dispatch(setCallConfig(response));
+        router.push("/video");
+      }
+      console.log("pressed. student!!!");
+    } else {
+      const response = await getToken(id).unwrap();
+      if (response.token) {
+        console.log("Token Resonse", response);
+
+        dispatch(setCallConfig(response));
+        router.push("/video");
+      }
+      console.log("pressed. Trainer!!!");
     }
-    console.log("pressed. Now press harder!!!");
   };
 
   return (
@@ -63,15 +78,15 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
         {/* Left Section - Avatar and Info */}
         <div className="flex items-center space-x-3 flex-1">
           <Avatar className="h-16 w-16">
-            {/* <AvatarImage src={avatar_url} alt={student_name} /> */}
+            {/* <AvatarImage src={avatar_url} alt={teacher_name} /> */}
             <AvatarImage
               src={
                 "https://i.pinimg.com/736x/3d/40/e6/3d40e6df5a167e763a170871e526483b.jpg"
               }
-              alt={student_name}
+              alt={teacher_name}
             />
             {/* <AvatarFallback className="bg-orange-100 text-orange-600">
-              {getInitials(student_name)}
+              {getInitials(teacher_name)}
             </AvatarFallback> */}
           </Avatar>
 
@@ -79,15 +94,17 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
             {/* Trainer Name and Price */}
             <div className="flex items-center mb-1">
               <h3 className="text-lg font-semibold text-gray-900 truncate">
-                {student_name}
+                {teacher_name}
               </h3>
             </div>
 
             {/* Category */}
-            <div className="text-[#FF7F51]">
-              <span className="text-lg font-semibold">${price}</span>
-              <p className="font-montserrat font-medium mb-3">{category}</p>
-            </div>
+            {category && (
+              <div className="text-[#FF7F51]">
+                <span className="text-lg font-semibold">${price}</span>
+                <p className="font-montserrat font-medium mb-3">{category}</p>
+              </div>
+            )}
 
             {/* Session Details */}
             <div className="flex flex-wrap justify-between items-center gap-4 text-sm text-gray-500 mb-3">
