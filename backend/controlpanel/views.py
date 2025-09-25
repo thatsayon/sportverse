@@ -4,7 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework import filters
 
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.utils.timezone import now
 from django.contrib.auth import get_user_model
 from django.utils.decorators import method_decorator
@@ -13,6 +13,7 @@ from django.conf import settings
 
 from datetime import timedelta
 from cloudinary.utils import cloudinary_url
+from uuid import UUID
 
 from .serializers import (
     SportSerializer,
@@ -26,10 +27,12 @@ from .serializers import (
     ChatlogDetailSerializer,
     WithdrawDetailSerializer,
     AdminVideoSerializer,
-    VideoListSerializer
+    VideoListSerializer,
+    VerifyDocumentSerializer,
+    UpdateTeacherStatusSerializer
 )
 
-from account.models import Teacher, Student
+from account.models import Teacher, Student, Document
 from teacher.session.models import BookedSession, TRAINING_TYPE
 from teacher.dashboard.models import IncomeHistory
 from communication.messaging.models import Conversation, Message
@@ -437,7 +440,6 @@ class VideoUploadSignatureView(APIView):
         )
 
 
-from uuid import UUID
 class CloudinaryWebhookView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -485,7 +487,6 @@ class VideoListView(generics.ListAPIView):
     serializer_class = VideoListSerializer
     queryset = AdminVideo.objects.all()
    
-
 class GenerateVideoLinkView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -498,12 +499,33 @@ class GenerateVideoLinkView(APIView):
         if not video.public_id:
             return Response({"error": "Video not uploaded yet"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generate HLS (.m3u8) URL using Cloudinary
+        # Generate MP4 (or HLS if you want m3u8) URL
         hls_url, options = cloudinary_url(
             video.public_id,
             resource_type="video",
             format="mp4"
         )
+
+        # Fetch 3 related videos (example: same consumer, excluding current video)
+        related_videos = (
+            AdminVideo.objects.filter(
+                Q(consumer=video.consumer) & ~Q(id=video.id)
+            )
+            .order_by("-created_at")[:3]
+        )
+
+        related_data = [
+            {
+                "id": str(rv.id),
+                "title": rv.title,
+                "description": rv.description,
+                "thumbnail": rv.thumbnail if hasattr(rv, "thumbnail") else None,
+                "consumer": rv.consumer,
+                "created_at": rv.created_at,
+                "sport_name": getattr(rv, "sport_name", None),
+            }
+            for rv in related_videos
+        ]
 
         return Response({
             "video_id": str(video.id),
@@ -512,4 +534,32 @@ class GenerateVideoLinkView(APIView):
             "consumer": video.consumer,
             "status": video.status,
             "hls_url": hls_url,
+            "related_videos": related_data,
         }, status=status.HTTP_200_OK)
+
+class VerifyDocumentView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = VerifyDocumentSerializer
+    queryset = Document.objects.all()
+
+class VerifyDocumentDetailView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = VerifyDocumentSerializer
+    queryset = Document.objects.all()
+    lookup_field = "id"
+
+
+class UpdateTeacherStatusView(generics.UpdateAPIView):
+    serializer_class = UpdateTeacherStatusSerializer
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
+    def get_object(self):
+        doc_id = self.kwargs.get('id')  
+        try:
+            document = Document.objects.get(id=doc_id)
+        except Document.DoesNotExist:
+            raise NotFound("Document not found")
+        return document.teacher  
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)

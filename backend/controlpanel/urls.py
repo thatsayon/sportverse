@@ -17,7 +17,10 @@ from .views import (
     VideoUploadSignatureView,
     CloudinaryWebhookView,
     VideoListView,
-    GenerateVideoLinkView
+    GenerateVideoLinkView,
+    VerifyDocumentView,
+    VerifyDocumentDetailView,
+    UpdateTeacherStatusView
 )
 
 urlpatterns = [
@@ -38,5 +41,8 @@ urlpatterns = [
     path('generate-token/', VideoUploadSignatureView.as_view()),
     path('video-webhook/', CloudinaryWebhookView.as_view()),
     path('video-list/', VideoListView.as_view()),
-    path('video/<uuid:video_id>/', GenerateVideoLinkView.as_view())
+    path('video/<uuid:video_id>/', GenerateVideoLinkView.as_view()),
+    path('document-list/', VerifyDocumentView.as_view()),
+    path('document-detail/<uuid:id>/', VerifyDocumentDetailView.as_view()),
+    path('document-update/<uuid:id>/', UpdateTeacherStatusView.as_view())
 ]

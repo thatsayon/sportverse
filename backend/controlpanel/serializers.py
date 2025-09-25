@@ -3,7 +3,8 @@ from django.db import models
 from django.db.models import Sum
 from account.models import (
     Teacher,
-    Student
+    Student,
+    Document
 )
 from django.utils import timezone
 from django.contrib.auth import get_user_model, password_validation
@@ -372,6 +373,7 @@ class AdminVideoSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "public_id", "format", "duration", "status", "created_at"]
 
 class VideoListSerializer(serializers.ModelSerializer):
+    sport_name = serializers.CharField(source="sport.name", read_only=True)
     class Meta:
         model = AdminVideo
         fields = [
@@ -380,5 +382,54 @@ class VideoListSerializer(serializers.ModelSerializer):
             "description",
             "thumbnail",
             "consumer",
-            "created_at"
+            "created_at",
+            "sport_name"
         ]
+
+class VerifyDocumentSerializer(serializers.ModelSerializer):
+    teacher_name = serializers.CharField(source="teacher.user.full_name")
+    status = serializers.CharField(source="teacher.status")
+    picture = serializers.SerializerMethodField()
+    id_front = serializers.SerializerMethodField()
+    id_back = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Document
+        fields = [
+            "id",
+            "teacher_name",
+            "status",
+            "picture",
+            "id_front",
+            "id_back",
+            "city",
+            "zip_code"
+        ]
+
+    def get_picture(self, obj):
+        if obj.picture:
+            return obj.picture.url
+        return None
+
+    def get_id_front(self, obj):
+        if obj.id_front:
+            return obj.id_front.url
+        return None
+
+    def get_id_back(self, obj):
+        if obj.id_back:
+            return obj.id_back.url
+        return None
+
+class UpdateTeacherStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Teacher
+        fields = ['status']
+
+    def validate_status(self, value):
+        allowed_status = ['verified', 'rejected']
+        if value not in allowed_status:
+            raise serializers.ValidationError(
+                f"Status must be one of {allowed_status}"
+            )
+        return value

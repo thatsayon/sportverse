@@ -9,9 +9,10 @@ import uuid
 User = get_user_model()
 
 STATUS = [
-    ('verfied', 'Verified'),
+    ('verified', 'Verified'),
     ('in_progress', 'In Progress'),
-    ('unverfied', 'Unverfied')
+    ('unverfied', 'Unverfied'),
+    ('reject', 'Reject')
 ]
 
 ACC_TYPE = [
