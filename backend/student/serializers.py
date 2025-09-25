@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from teacher.session.models import SessionOption, AvailableDay, AvailableTimeSlot, BookedSession
 from teacher.serializers import TeacherInfoSerializer
-from account.models import Teacher
+from account.models import Teacher, Student
 
 class TrainingInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -102,6 +102,29 @@ class SessionDetailsSerializer(serializers.ModelSerializer):
 
 
 
+# class BookedSessionSerializer(serializers.ModelSerializer):
+#     teacher_name = serializers.CharField(source='teacher.user.full_name')
+#     session_type = serializers.CharField(source='session.training_type')
+#     status = serializers.SerializerMethodField()
+#
+#     class Meta:
+#         model = BookedSession
+#         fields = ['id', 'teacher_name', 'session_time', 'session_type', 'status']
+#
+#     def get_status(self, obj):
+#         now = timezone.now()
+#         start_time = obj.session_time
+#         end_time = start_time + timedelta(hours=1)
+#
+#         if start_time - timedelta(seconds=15) <= now <= end_time:
+#             return "Ongoing"
+#         elif now < start_time - timedelta(seconds=15):
+#             return "Upcoming"
+#         else:
+#             return "Completed"
+
+
+
 class BookedSessionSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.user.full_name')
     session_type = serializers.CharField(source='session.training_type')
@@ -112,9 +135,14 @@ class BookedSessionSerializer(serializers.ModelSerializer):
         fields = ['id', 'teacher_name', 'session_time', 'session_type', 'status']
 
     def get_status(self, obj):
-        now = timezone.now()
-        start_time = obj.session_time
-        end_time = start_time + timedelta(hours=1)
+        now = timezone.localtime(timezone.now())        # Current time in BD
+        start_time = timezone.localtime(obj.session_time)  # Session start in BD
+        end_time = start_time + timedelta(minutes=obj.duration)  # End based on duration
+
+        # Debugging
+        print("Now:", now)
+        print("Start:", start_time)
+        print("End:", end_time)
 
         if start_time - timedelta(seconds=15) <= now <= end_time:
             return "Ongoing"
@@ -122,3 +150,78 @@ class BookedSessionSerializer(serializers.ModelSerializer):
             return "Upcoming"
         else:
             return "Completed"
+
+class StudentProfileSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.SerializerMethodField()
+    full_name = serializers.CharField(source='student.user.full_name')
+    username = serializers.CharField(source="student.user.username")
+    email = serializers.CharField(source="student.user.email")
+    training_sessions = serializers.SerializerMethodField()
+    coaches_booked = serializers.SerializerMethodField()
+    hours_trained = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Student
+        fields = [
+            "id",
+            "profile_pic",
+            "full_name",
+            "username",
+            "email",
+            "about",
+            "training_sessions",
+            "coaches_booked",
+            "hours_trained",
+            "account_type"
+        ]
+
+    def get_training_sessions(self, obj):
+        return BookedSession.objects.filter(student=obj).count()
+
+    def get_coaches_booked(self, obj):
+        return BookedSession.objects.filter(student=obj).values('teacher').distinct().count()
+
+    def get_hours_trained(self, obj):
+        return BookedSession.objects.filter(student=obj).count() * 60
+
+    def get_profile_pic(self, obj):
+        if obj.profile_pic:
+            return obj.profile_pic.url
+        return None
+
+class StudentProfileUpdateSerializer(serializers.ModelSerializer):
+    profile_pic = serializers.ImageField(source="user.profile_pic", required=False)
+    profile_pic_url = serializers.SerializerMethodField()
+    full_name = serializers.CharField(source="user.full_name", required=False)
+    username = serializers.CharField(source="user.username", required=False)
+    email = serializers.EmailField(source="user.email", required=False)
+
+    class Meta:
+        model = Student
+        fields = [
+            "id",
+            "profile_pic",
+            "profile_pic_url",
+            "full_name",
+            "username",
+            "email",
+            "about",
+        ]
+
+    def get_profile_pic_url(self, obj):
+        if obj.user.profile_pic:
+            return obj.user.profile_pic.url
+        return None
+
+    def update(self, instance, validated_data):
+        # Extract nested user data if present
+        user_data = validated_data.pop("user", {})
+
+        # Update UserAccount fields
+        user = instance.user
+        for attr, value in user_data.items():
+            setattr(user, attr, value)
+        user.save()
+
+        # Update Student fields
+        return super().update(instance, validated_data)

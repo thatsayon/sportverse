@@ -13,12 +13,19 @@ from teacher.session.models import SessionOption, BookedSession, AvailableTimeSl
 from payment.utils import create_stripe_checkout_session
 from teacher.dashboard.utils import increment_dashboard_visit
 
+from controlpanel.serializers import VideoListSerializer
+from controlpanel.models import AdminVideo
+from account.models import Student
 from .serializers import (
     SessionOptionSerializer,
     TrainerDetailsSerializer,
     SessionDetailsSerializer,
-    BookedSessionSerializer
+    BookedSessionSerializer,
+    StudentProfileSerializer,
+    StudentProfileUpdateSerializer
 )
+
+from core.permissions import IsProStudent
 
 import uuid
 import time
@@ -116,7 +123,7 @@ class BookedSessionView(APIView):
         # Validate weekday matches AvailableDay
         weekday = session_date_obj.strftime("%A").lower()  # monday, tuesday, etc.
         if weekday != time_slot.available_day.day:
-            return Response({"error": f"This slot is only available on {time_slot.availabledays.day}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": f"This slot is only available on {time_slot.available_day.day}"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Combine date + start_time into DateTime
         session_datetime = datetime.combine(session_date_obj, time_slot.start_time)
@@ -196,7 +203,7 @@ class GenerateVideoToken(APIView):
             )
 
         channel_name = booked_session.channel_name
-        uid = str(request.user.id)
+        uid = "0"
         role = 1  # host (you can later change to host/audience based on role)
         expire_time_in_seconds = booked_session.duration * 60
 
@@ -207,7 +214,7 @@ class GenerateVideoToken(APIView):
             APP_ID,
             APP_CERTIFICATE,
             booked_session.channel_name,  # must match for all users
-            int(request.user.id),         # unique uid per user
+            int(uid),
             role,                         # 1=host, 2=audience
             privilege_expired_ts          # expiry timestamp
         )
@@ -222,3 +229,29 @@ class GenerateVideoToken(APIView):
             },
             status=status.HTTP_200_OK
         )
+
+class VideoLibraryView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsProStudent]
+    serializer_class = VideoListSerializer
+    queryset = AdminVideo.objects.all()
+
+    def get_queryset(self):
+        return AdminVideo.objects.filter(consumer="student")
+
+class ProfileView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StudentProfileSerializer
+
+    def get_object(self):
+        return self.request.user
+
+class ProfileGetOrUpdateView(generics.RetrieveUpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StudentProfileUpdateSerializer
+
+    def get_object(self):
+        user = self.request.user
+
+        student, _ = Student.objects.get_or_create(user=user)
+        return student
+

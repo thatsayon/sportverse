@@ -102,6 +102,7 @@ class Student(models.Model):
         max_length=12,
         default='basic'
     )
+    about = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.favorite_sports}"

@@ -29,7 +29,8 @@ from .serializers import (
     AdminVideoSerializer,
     VideoListSerializer,
     VerifyDocumentSerializer,
-    UpdateTeacherStatusSerializer
+    UpdateTeacherStatusSerializer,
+    VideoDetailUpdateSerializer
 )
 
 from account.models import Teacher, Student, Document
@@ -438,6 +439,12 @@ class VideoUploadSignatureView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+class VideoDetailUpdateView(generics.RetrieveUpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    serializer_class = VideoDetailUpdateSerializer
+    queryset = AdminVideo.objects.all()
+    lookup_field = "id"
 
 
 class CloudinaryWebhookView(APIView):

@@ -44,12 +44,12 @@ class SportSerializer(serializers.ModelSerializer):
     def get_total_trainee(self, obj):
         return obj.students.count()
 
-
 class TrainersSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.full_name')
     username = serializers.CharField(source='user.username')
     location = serializers.CharField(source='document.city')
     net_income = serializers.SerializerMethodField()
+    coach_type = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Teacher
@@ -433,3 +433,12 @@ class UpdateTeacherStatusSerializer(serializers.ModelSerializer):
                 f"Status must be one of {allowed_status}"
             )
         return value
+
+class VideoDetailUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminVideo
+        fields = [
+            "id",
+            "title",
+            "description"
+        ]

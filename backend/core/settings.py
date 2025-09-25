@@ -30,6 +30,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://stingray-intimate-sincerely.ngrok-free.app",
     "https://7m0vb4fq-3000.inc1.devtunnels.ms",
+    "https://psrwv4awgq.loclx.io",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -45,6 +46,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "https://stingray-intimate-sincerely.ngrok-free.app",
     "https://7m0vb4fq-3000.inc1.devtunnels.ms",
+    "https://psrwv4awgq.loclx.io",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -169,11 +171,19 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Dhaka'  # Bangladesh time
 
 USE_I18N = True
 
 USE_TZ = True
+#
+# LANGUAGE_CODE = 'en-us'
+#
+# TIME_ZONE = 'UTC'
+#
+# USE_I18N = True
+#
+# USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)

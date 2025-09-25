@@ -5,7 +5,10 @@ from .views import (
     SessionDetailView,
     BookedSessionView,
     BookedSessionList,
-    GenerateVideoToken
+    GenerateVideoToken,
+    VideoLibraryView,
+    ProfileView,
+    ProfileGetOrUpdateView
 )
 
 urlpatterns = [
@@ -15,4 +18,7 @@ urlpatterns = [
     path('session-book/<uuid:id>/', BookedSessionView.as_view(), name='Session Book'),
     path('booked-sessions/', BookedSessionList.as_view(), name='Booked Sessions'),
     path('generate-video-token/<uuid:id>/', GenerateVideoToken.as_view(), name='Generate Video Token'),
+    path('video-list/', VideoLibraryView.as_view(), name='Video Library'),
+    path('profile/', ProfileView.as_view(), name='Profile View'),
+    path('profile-update/', ProfileGetOrUpdateView.as_view(), name='Profile Update')
 ]
