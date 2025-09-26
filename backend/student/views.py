@@ -13,6 +13,7 @@ from teacher.session.models import SessionOption, BookedSession, AvailableTimeSl
 from payment.utils import create_stripe_checkout_session
 from teacher.dashboard.utils import increment_dashboard_visit
 
+from teacher.models import RatingReview
 from controlpanel.serializers import VideoListSerializer
 from controlpanel.models import AdminVideo
 from account.models import Student
@@ -22,7 +23,8 @@ from .serializers import (
     SessionDetailsSerializer,
     BookedSessionSerializer,
     StudentProfileSerializer,
-    StudentProfileUpdateSerializer
+    StudentProfileUpdateSerializer,
+    RatingReviewSerializer
 )
 
 from core.permissions import IsProStudent
@@ -255,3 +257,11 @@ class ProfileGetOrUpdateView(generics.RetrieveUpdateAPIView):
         student, _ = Student.objects.get_or_create(user=user)
         return student
 
+class RatingReviewView(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = RatingReviewSerializer
+    queryset = RatingReview.objects.all()
+
+    def get_queryset(self):
+        student = Student.objects.get(user=self.request.user)
+        return RatingReview.objects.filter(student=student)

@@ -8,7 +8,8 @@ from .views import (
     GenerateVideoToken,
     VideoLibraryView,
     ProfileView,
-    ProfileGetOrUpdateView
+    ProfileGetOrUpdateView,
+    RatingReviewView
 )
 
 urlpatterns = [
@@ -20,5 +21,6 @@ urlpatterns = [
     path('generate-video-token/<uuid:id>/', GenerateVideoToken.as_view(), name='Generate Video Token'),
     path('video-list/', VideoLibraryView.as_view(), name='Video Library'),
     path('profile/', ProfileView.as_view(), name='Profile View'),
-    path('profile-update/', ProfileGetOrUpdateView.as_view(), name='Profile Update')
+    path('profile-update/', ProfileGetOrUpdateView.as_view(), name='Profile Update'),
+    path('rating-review/', RatingReviewView.as_view(), name='Rating Review')
 ]

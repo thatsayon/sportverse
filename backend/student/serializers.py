@@ -6,6 +6,7 @@ from datetime import timedelta
 from teacher.session.models import SessionOption, AvailableDay, AvailableTimeSlot, BookedSession
 from teacher.serializers import TeacherInfoSerializer
 from account.models import Teacher, Student
+from teacher.models import RatingReview
 
 class TrainingInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -225,3 +226,15 @@ class StudentProfileUpdateSerializer(serializers.ModelSerializer):
 
         # Update Student fields
         return super().update(instance, validated_data)
+
+class RatingReviewSerializer(serializers.ModelSerializer):
+    teacher_name = serializers.CharField(source="teacher.user.full_name")
+    class Meta:
+        model = RatingReview
+        fields = [
+            "id",
+            "teacher_name",
+            "rating",
+            "review",
+            "created_at"
+        ]
