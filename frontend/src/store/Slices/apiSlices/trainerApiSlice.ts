@@ -11,6 +11,7 @@ import { CreateSessionRequest, CreateSessionResponse, deleteResponse, DeleteTime
 import { TrainerPasswardResponse, TrainerPasswardResquest, TrainerProfileResponse, TrainerProfileUpdateRequset, TrainerProfileUpdateResponse } from "@/types/teacher/profile";
 import build from "next/dist/build";
 import { TeacherMessageListResponse } from "@/types/teacher/messaging";
+import { VideoListResponse } from "@/types/admin/video";
 
 
 export const trainerApiSlice = apiSlice.injectEndpoints({
@@ -219,6 +220,10 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
     getTrainerChatList: builder.query<TeacherMessageListResponse, void>({
       query: ()=>"/communication/msg/list/"
     }),
+    // videos
+    getVideos: builder.query<VideoListResponse, void>({
+          query: () => "/teacher/video-library/",
+        }),
 
   }),
   overrideExisting: true,
@@ -255,5 +260,6 @@ export const {
   usePostTrainerVideoMutation,
   useUpdateTrainerPasswordMutation,
   //Messaging
-  useGetTrainerChatListQuery
+  useGetTrainerChatListQuery,
+  useGetVideosQuery,
 } = trainerApiSlice;

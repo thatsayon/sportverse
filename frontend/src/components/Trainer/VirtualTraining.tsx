@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useMemo } from "react";
-import TrainerCard from "../Element/TrainerCard";
 import { trainersProfiles } from "@/data/TrainersProfiles";
 import {
   DropdownMenu,
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { Input } from "@/components/ui/input";
-import { FilterIcon, Search, Star, DollarSign } from "lucide-react";
+import { Search, Star, DollarSign } from "lucide-react";
 import TrainerviewCard from "../Element/TrainerViewCard";
 
 function VirtualTraining() {

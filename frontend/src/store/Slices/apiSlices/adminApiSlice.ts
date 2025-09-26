@@ -16,7 +16,14 @@ import {
   ConversationDetail,
   ConversationResponse,
 } from "@/types/admin/chatConversation";
-import { EditVideo, VideoDetails, VideoDetailsResponse, VideoListResponse } from "@/types/admin/video";
+import {
+  EditVideo,
+  VideoDetails,
+  VideoDetailsResponse,
+  VideoListResponse,
+} from "@/types/admin/video";
+import { TrainerVerification, TrainerVerificationResponse, VerificationType } from "@/types/admin/documents";
+import { Verification } from "next/dist/lib/metadata/types/metadata-types";
 
 export const adminApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -117,29 +124,48 @@ export const adminApiSlice = apiSlice.injectEndpoints({
     }),
     // video
     getAdminVideos: builder.query<VideoListResponse, void>({
-      query: ()=> "/control/video-list/"
+      query: () => "/control/video-list/",
     }),
     getAdminVideo: builder.query<VideoDetailsResponse, string>({
       query: (id) => `/control/video/${id}`,
-      providesTags:["Video"]
+      providesTags: ["Video"],
     }),
     getAdminVideoForEdit: builder.query<VideoDetailsResponse, string>({
-      query: (id) => `/control/video-update/${id}`
+      query: (id) => `/control/video-update/${id}`,
     }),
     getAdminVideoDetails: builder.query<VideoDetails, string>({
-      query: (id)=> `/control/video/${id}`
+      query: (id) => `/control/video/${id}`,
     }),
     updateAdminVideo: builder.mutation<EditVideo, EditVideo>({
-      query: (body)=> ({
+      query: (body) => ({
         url: `/control/video-update/${body.id}/`,
         method: "PATCH",
         body: {
           title: body.title,
-          description: body.description
+          description: body.description,
         },
-        credentials: 'include'
+        credentials: "include",
       }),
-      invalidatesTags: ["Video"]
+      invalidatesTags: ["Video"],
+    }),
+    // documents
+    getDocuments: builder.query<TrainerVerificationResponse, void>({
+      query: () => "/control/document-list/",
+      providesTags: ["Documents"],
+    }),
+    getDocumentDetails: builder.query<TrainerVerification, string>({
+      query: (id)=> `/control/document-detail/${id}/`
+    }),
+    updateVerification: builder.mutation<VerificationType,VerificationType>({
+      query: (body) => ({
+        url: `/control/document-update/${body.id}/`,
+        method: "PATCH",
+        body: {
+          status: body.status
+        },
+        credentials: "include"
+      }),
+      invalidatesTags: ["Documents"]
     }),
   }),
 });
@@ -174,5 +200,8 @@ export const {
   useGetAdminVideoForEditQuery,
   useGetAdminVideoDetailsQuery,
   useUpdateAdminVideoMutation,
-  //
+  // documents
+  useGetDocumentsQuery,
+  useGetDocumentDetailsQuery,
+  useUpdateVerificationMutation,
 } = adminApiSlice;

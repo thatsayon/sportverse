@@ -1,10 +1,10 @@
-import VisitorTable from '@/components/Admin/visitors/VisitorsTable'
+import TrainerProfile from '@/components/Shared/TrainerProfile'
 import React from 'react'
 
 function page() {
   return (
     <div>
-      <VisitorTable/>
+      <TrainerProfile/>
     </div>
   )
 }

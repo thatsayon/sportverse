@@ -22,9 +22,9 @@ import {
 import { signUpSchema, type SignUpFormData } from "@/schema/auth.schema";
 import Link from "next/link";
 import Image from "next/image";
-import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
+import {  GoogleIcon } from "@/SVG/AuthSCG";
 import { useDispatch } from "react-redux";
-import { setEmail, setUser, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
+import { setEmail, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { toast } from "sonner";
 import { setCookie } from "@/hooks/cookie";
 
@@ -298,10 +298,6 @@ export function SignUpForm() {
           <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
             <GoogleIcon size={22} />
             Continue with Google
-          </Button>
-          <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
-            <AppleIcon size={24} />
-            Continue with Apple
           </Button>
         </div>
 

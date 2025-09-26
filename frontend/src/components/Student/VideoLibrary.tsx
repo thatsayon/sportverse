@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import MediaCard from "@/components/Element/MediaCard";
-import { useGetVideosQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import Loading from "../Element/Loading";
 import ErrorLoadingPage from "../Element/ErrorLoadingPage";
+import { useGetVideosQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 
 // Updated interfaces based on your backend data
 export interface VideoItem {
@@ -170,7 +170,7 @@ const VideoLibrary: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 px-4 md:px-0">
           {paginatedVideos.map((video) => (
-            <Link key={video.id} href={`/student/video-library/${video.id}`}>
+            <Link key={video.id} href={`/trainer/video-library/${video.id}`}>
               <MediaCard
                 id={video.id}
                 title={video.title}

@@ -27,7 +27,7 @@ import {
 import { loginSchema, type LoginFormData } from "@/schema/auth.schema";
 import { toast } from "sonner";
 import { Label } from "../ui/label";
-import { AppleIcon, GoogleIcon } from "@/SVG/AuthSCG";
+import { GoogleIcon } from "@/SVG/AuthSCG";
 import { useRouter } from "next/navigation";
 import { setCookie } from "@/hooks/cookie";
 import { useJwt } from "@/hooks/useJwt";
@@ -114,10 +114,6 @@ export function LoginForm() {
         <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
           <GoogleIcon size={22} />
           Continue with Google
-        </Button>
-        <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
-          <AppleIcon size={24} />
-          Continue with Apple
         </Button>
         <div className="flex items-center gap-4 mt-6">
           <div className="w-full h-[2px] bg-[#C4C3C3]" />

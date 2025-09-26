@@ -60,13 +60,7 @@ function TrainerviewCard({
         <p className="md:text-sm lg:text-base text-[#878787]">
           {description.length > 0 && description.slice(0, 90)}...
         </p>
-        <CardFooter className="flex items-center justify-between gap-6 mt-2 px-0">
-          <p className="text-2xl lg:text-3xl font-semibold lg:font-bold">
-            ${price}
-            <span className="font-medium text-[#707070] text-sm lg:text-base">
-              /Session
-            </span>
-          </p>
+        <CardFooter className="flex items-center justify-between gap-6 mt-4 px-0">
           <Link href={'/trainer/profile'}>
           <Button className="text-base lg:text-lg font-semibold">
             View Profile

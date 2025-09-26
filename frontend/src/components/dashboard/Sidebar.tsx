@@ -23,7 +23,8 @@ import {
   CalendarCheck,
   CreditCard,
   Plus,
-  WalletMinimal
+  WalletMinimal,
+  File
 } from 'lucide-react'
 import { useJwt } from '@/hooks/useJwt'
 
@@ -66,11 +67,11 @@ const adminNavItems: NavItem[] = [
     href: '/dashboard/media',
     icon: Image,
   },
-  // {
-  //   name: 'Payout history',
-  //   href: '/dashboard/payout',
-  //   icon: DollarSign,
-  // },
+  {
+    name: 'Document Submisstion',
+    href: '/dashboard/documents',
+    icon: File,
+  },
   {
     name: 'Withdraw',
     href: '/dashboard/withdraw',

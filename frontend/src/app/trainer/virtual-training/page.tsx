@@ -1,4 +1,4 @@
-import VirtualTraining from '@/components/Trainer/VirtualTraining'
+import VirtualTraining from '@/components/Student/VirtualTraining'
 import React from 'react'
 
 function page() {

@@ -1,10 +1,10 @@
-import MediaManagement from '@/components/Admin/MediaManagement/MediaManagement'
+import VideoLibrary from '@/components/Student/VideoLibrary'
 import React from 'react'
 
 function page() {
   return (
-    <div>
-     <MediaManagement isAdmin={false}/>
+    <div className='min-h-screen'>
+      <VideoLibrary/>
     </div>
   )
 }

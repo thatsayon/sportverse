@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TrainingInfo } from "@/types/student/trainerList";
+import { useJwt } from "@/hooks/useJwt";
 
 /**
  * UX goals addressed
@@ -66,7 +67,6 @@ export default function TrainerCard({
   institute_name,
   sports,
 }: TrainerCardProps) {
-
   const parsedSessions = (sessionType || []).map((s) => ({
     ...s,
     priceNum: Number.parseFloat(String(s.price).replace(/[^0-9.]/g, "")) || 0,
@@ -89,12 +89,12 @@ export default function TrainerCard({
 
   // State: which session is currently selected for booking
   const [selected, setSelected] = React.useState<TrainingInfo>(lowest);
-
-  console.log("Session type checking:", selected)
-
+  const { decoded } = useJwt();
+  console.log("Session type checking:", selected);
 
   // Build a booking URL with a session id, so backend knows exactly which one
-  const buildBookingHref = (selected: TrainingInfo) => `/student/session-booking/${selected.id}`;
+  const buildBookingHref = (selected: TrainingInfo) =>
+    `/student/session-booking/${selected.id}`;
 
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -205,51 +205,60 @@ export default function TrainerCard({
 
       <CardFooter className="pt-0">
         <div className="flex items-center gap-3 w-full">
-          <Link className="flex-1" href={`/student/virtual-training/${selected.id}`}>
+          <Link
+            className="flex-1"
+            href={decoded?.role === "student" ? `/student/virtual-training/${selected.id}`:`/trainer/virtual-training/${selected.id}`}
+          >
             <Button className="w-full" variant="outline">
               View Profile
             </Button>
           </Link>
 
           {/* Primary CTA: choose first, navigate on click */}
-          {hasMultiple ? (
-            <div className="flex-1 flex">
-              {/* Main action: uses currently selected session */}
-              <Link href={buildBookingHref(selected)} className="flex-1">
-                <Button className="w-full rounded-r-none">
-                  Book: {selected.training_type}
-                </Button>
-              </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    aria-label="Choose session"
-                    className="rounded-l-none px-3"
-                    variant="default"
-                  >
-                    <ChevronDown size={18} />
+          {decoded?.role === "student" && (
+            <span>
+              {hasMultiple ? (
+                <div className="flex-1 flex">
+                  {/* Main action: uses currently selected session */}
+                  <Link href={buildBookingHref(selected)} className="flex-1">
+                    <Button className="w-full rounded-r-none">
+                      Book: {selected.training_type}
+                    </Button>
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        aria-label="Choose session"
+                        className="rounded-l-none px-3"
+                        variant="default"
+                      >
+                        <ChevronDown size={18} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      {parsedSessions.map((s) => (
+                        <DropdownMenuItem
+                          key={s.id}
+                          onClick={() => setSelected(s)}
+                          className="cursor-pointer flex items-center justify-between"
+                        >
+                          <span>{s.training_type}</span>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatCurrency(s.priceNum)}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <Link className="flex-1" href={buildBookingHref(selected)}>
+                  <Button className="w-full">
+                    Book: {selected.training_type}
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {parsedSessions.map((s) => (
-                    <DropdownMenuItem
-                      key={s.id}
-                      onClick={() => setSelected(s)}
-                      className="cursor-pointer flex items-center justify-between"
-                    >
-                      <span>{s.training_type}</span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {formatCurrency(s.priceNum)}
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ) : (
-            <Link className="flex-1" href={buildBookingHref(selected)}>
-              <Button className="w-full">Book: {selected.training_type}</Button>
-            </Link>
+                </Link>
+              )}
+            </span>
           )}
         </div>
       </CardFooter>

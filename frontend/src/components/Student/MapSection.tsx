@@ -401,8 +401,11 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
                       <div className="flex flex-row gap-2 justify-between">
                         <Button className="w-1/2 py-3">View Profile</Button>
                         {decoded?.role === "student" && (
-                          <Link href={`/trainer/${teacher.id}`}>
-                          <Button className="w-1/2 py-3" variant="outline">
+
+                          // have to make it dynamic ------------------------------------------------------------------------------
+
+                          <Link href={`/student/session-booking/3e31b8fd-c836-4cda-bb8c-7e84ca4d180f`}>
+                          <Button className=" py-3" variant="outline">
                             Quick Book
                           </Button>
                           </Link>
