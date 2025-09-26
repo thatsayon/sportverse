@@ -25,7 +25,11 @@ interface Errors {
 
 const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app"
 
-const DocUpload: React.FC = () => {
+interface DocUploadProps{
+  isSignUp?: boolean;
+}
+
+const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [frontSidePreview, setFrontSidePreview] = useState<string | null>(null);

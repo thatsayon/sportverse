@@ -295,7 +295,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               <DropdownMenuTrigger asChild>
                 <span className="flex items-center gap-1 cursor-pointer">
                   <Avatar>
-                    <AvatarImage src={"/trainer/profileImage.png"} />
+                    <AvatarImage src={"/avatars/01.png"} />
                     <AvatarFallback>User</AvatarFallback>
                   </Avatar>
                   <ChevronDown />
