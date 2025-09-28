@@ -17,6 +17,7 @@ from teacher.models import RatingReview
 from controlpanel.serializers import VideoListSerializer
 from controlpanel.models import AdminVideo
 from account.models import Student
+
 from .serializers import (
     SessionOptionSerializer,
     TrainerDetailsSerializer,
@@ -26,6 +27,8 @@ from .serializers import (
     StudentProfileUpdateSerializer,
     RatingReviewSerializer
 )
+from communication.notification.models import Notification
+from communication.messaging.socket import sio
 
 from core.permissions import IsProStudent
 
@@ -81,7 +84,7 @@ class SessionDetailView(APIView):
         serializer = SessionDetailsSerializer(session)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+from asgiref.sync import async_to_sync
 class BookedSessionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -150,7 +153,7 @@ class BookedSessionView(APIView):
         checkout_url =  create_stripe_checkout_session(
             name=f"{session_option.training_type} with {session_option.teacher.user.username}",
             amount=float(session_option.price),
-            success_url=f"{settings.DOMAIN_URL}/payment-success?session_id={booked_session.id}",
+            success_url=f"{settings.DOMAIN_URL}/confirmation?session_id={booked_session.id}",
             cancel_url=f"{settings.DOMAIN_URL}/payment-cancel?session_id={booked_session.id}",
             metadata={
                 "type": "booked_session",
@@ -158,6 +161,36 @@ class BookedSessionView(APIView):
                 "user_id": str(request.user.id)
             }
         )       
+
+        # 6. Send notification to the teacher
+        header = "New Session Booked"
+        detail = f"{request.user.full_name} booked a session for {session_datetime.strftime('%Y-%m-%d %H:%M')}."
+        onclick_location = f"/teacher/booked-sessions/{booked_session.id}"
+
+        notification = Notification.objects.create(
+            recipient=session_option.teacher.user,
+            header=header,
+            detail=detail,
+            onclick_location=onclick_location
+        )
+
+        try:
+            async def send_notification():
+                await sio.emit("send_notification", {
+                    "user_id": str(session_option.teacher.user.id),
+                    "header": header,
+                    "detail": detail,
+                    "onclick_location": onclick_location
+                })
+            
+            # Convert async to sync properly
+            sync_send = async_to_sync(send_notification)
+            sync_send()
+            print(f"Real-time notification sent to teacher {session_option.teacher.user.id}")
+            
+        except Exception as e:
+            print(f"Failed to send real-time notification: {e}")
+            # Notification is still saved in database even if Socket.IO fails 
         return Response({"checkout_url": checkout_url.url, "booked_session_id": str(booked_session.id)}, status=201)
 
 class BookedSessionList(generics.ListAPIView):
@@ -265,3 +298,10 @@ class RatingReviewView(generics.ListCreateAPIView):
     def get_queryset(self):
         student = Student.objects.get(user=self.request.user)
         return RatingReview.objects.filter(student=student)
+
+class SubscriptionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        pass
+
