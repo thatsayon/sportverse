@@ -14,7 +14,6 @@ import { useLazyGenerateStudentTokenQuery } from "@/store/Slices/apiSlices/stude
 interface TrainerBookingCardProps {
   id: string;
   teacher_name: string;
-  price: number;
   category?: string;
   session_time: string;
   session_type: "Virtual Session" | "In-person";
@@ -25,7 +24,6 @@ interface TrainerBookingCardProps {
 const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
   id,
   teacher_name,
-  price,
   category,
   session_time,
   session_type,
@@ -101,7 +99,6 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
             {/* Category */}
             {category && (
               <div className="text-[#FF7F51]">
-                <span className="text-lg font-semibold">${price}</span>
                 <p className="font-montserrat font-medium mb-3">{category}</p>
               </div>
             )}

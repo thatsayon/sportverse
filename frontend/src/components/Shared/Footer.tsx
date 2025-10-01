@@ -128,12 +128,6 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
               >
                 Terms of Service
               </Link>
-              <Link
-                href="/cookies"
-                className="text-gray-400 hover:text-orange-500 text-sm transition-colors duration-200"
-              >
-                Cookie Policy
-              </Link>
             </div>
           </div>
         </motion.div>

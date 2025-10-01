@@ -8,26 +8,40 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import BookingPage from "./BookingPage";
 import Link from "next/link";
 import ManageSubscriptionPopUp from "../Element/ManageSubscriptionPopUp";
+import ProfileBookings from "./ProfileBookings";
+import { useGetStudentProfieQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import Loading from "../Element/Loading";
+import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 
 interface StatCard {
   id: number;
-  value: string | number;
+  value: number | undefined;
   label: string;
   icon: ReactNode;
   bgColor: string;
 }
 
-const stats: StatCard[] = [
+
+
+const Profile = () => {
+  const [open, setOpen] = useState<boolean>(false);
+  const { data, isLoading, isError } = useGetStudentProfieQuery();
+
+  if (isLoading) return <Loading />;
+  if (isError) return <ErrorLoadingPage />;
+
+
+  const stats: StatCard[] = [
   {
     id: 1,
-    value: 47,
+    value: data?.training_sessions,
     label: "Training Sessions",
     icon: <Calendar className="w-6 h-6 text-blue-600" />,
     bgColor: "bg-blue-100",
   },
   {
     id: 2,
-    value: 8,
+    value: data?.coaches_booked,
     label: "Coaches Booked",
     icon: (
       <svg
@@ -42,15 +56,13 @@ const stats: StatCard[] = [
   },
   {
     id: 3,
-    value: 156,
+    value: data?.hours_trained,
     label: "Hours Trained",
     icon: <Clock className="w-6 h-6 text-purple-600" />,
     bgColor: "bg-purple-100",
   },
 ];
 
-const Profile = () => {
-  const [open, setOpen] = useState<boolean>(false);
   return (
     <div className=" bg-gray-50 p-4 md:p-6 lg:p-8">
       <div className="px-0 md:px-8">
@@ -65,9 +77,9 @@ const Profile = () => {
             </p>
           </div>
           <Link href={"/student/profile/edit"}>
-          <Button className="mt-4 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium">
-            Update
-          </Button>
+            <Button className="mt-4 sm:mt-0 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium">
+              Update
+            </Button>
           </Link>
         </div>
 
@@ -90,13 +102,13 @@ const Profile = () => {
                     </Avatar>
                   </div>
                   <h2 className="text-3xl font-semibold text-gray-900 mb-1">
-                    Alex Johnson
+                    {data?.full_name}
                   </h2>
-                  <p className="text-gray-500 mb-4 text-lg">@alex.k2024</p>
+                  <p className="text-gray-500 mb-4 text-lg">{data?.username}</p>
 
                   <div className="flex items-center justify-center text-gray-600 mb-6">
                     <Mail className="w-4 h-4 mr-2" />
-                    <span className="text-sm">alex.johnson@gmail.com</span>
+                    <span className="text-sm">{data?.email}</span>
                   </div>
 
                   <div>
@@ -119,7 +131,9 @@ const Profile = () => {
             {/* Subscription Status */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl text-center">Subscriptions Status</CardTitle>
+                <CardTitle className="text-2xl text-center">
+                  Subscriptions Status
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -136,9 +150,10 @@ const Profile = () => {
                   </span>
                 </div>
 
-                <Button 
-                onClick={() => setOpen(true)}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                <Button
+                  onClick={() => setOpen(true)}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                >
                   Manage Subscription
                 </Button>
               </CardContent>
@@ -152,9 +167,9 @@ const Profile = () => {
               <CardContent>
                 <h3 className="text-xl font-semibold mb-2">About Me</h3>
                 <p className="w-full text-gray-500">
-                  Passionate about improving my athletic performance and mental
-                  strength. Love connecting with coaches who can help me reach
-                  my potential. Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sed, reiciendis!
+                  {data?.about === null
+                    ? "About Is not added yet."
+                    : data?.about}
                 </p>
               </CardContent>
             </Card>
@@ -167,8 +182,8 @@ const Profile = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                 {/* Training Sessions Card */}
-                {stats.map((stat) => (
-                  <Card key={stat.id}>
+                {stats.map((stat, index) => (
+                  <Card key={index}>
                     <CardContent className="text-center">
                       <div
                         className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center mx-auto mb-3`}
@@ -184,13 +199,13 @@ const Profile = () => {
                 ))}
               </div>
               <div>
-                <BookingPage sliceNumber={3} isHeader={false}/>
+                <ProfileBookings />
               </div>
             </div>
           </div>
         </div>
       </div>
-      <ManageSubscriptionPopUp open={open} setOpen={setOpen}/>
+      <ManageSubscriptionPopUp open={open} setOpen={setOpen} />
     </div>
   );
 };

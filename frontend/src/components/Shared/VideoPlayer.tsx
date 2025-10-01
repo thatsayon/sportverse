@@ -47,6 +47,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isAdmin = decoded?.role === "admin"
   
   const { data, isLoading, isError } = useGetAdminVideoDetailsQuery(id);
   const videoDetails: VideoDetails | undefined = data;
@@ -365,7 +366,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
                     sports={video.sport_name}
                     consumer={video.consumer}
                     thumbnail={video.thumbnail}
-                    isAdmin={false}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,20 +40,19 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<string>('')
-  const [filteredVideos, setFilteredVideos] = useState<VideoItem[]>([]);
   const itemsPerPage = isAdmin ? 6 : 8;
   const { data, isLoading, isError } = useGetAdminVideosQuery();
 
-  const videos = data?.results || [];
+  // Memoize videos to prevent unnecessary re-renders
+  const videos = useMemo(() => data?.results || [], [data?.results]);
 
-  // Filter videos whenever search term, filters, or videos data changes
-  useEffect(() => {
+  // Filter videos with useMemo to prevent unnecessary recalculations
+  const filteredVideos = useMemo(() => {
     if (!videos.length) {
-      setFilteredVideos([]);
-      return;
+      return [];
     }
 
-    const filtered = videos.filter((video: VideoItem) => {
+    return videos.filter((video: VideoItem) => {
       const matchesSearch =
         video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         video.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -68,17 +67,22 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
 
       return matchesSearch && matchesSports && matchesConsumer;
     });
-
-    setFilteredVideos(filtered);
   }, [videos, searchTerm, sportsFilter, consumerFilter]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedVideos = filteredVideos.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  // Calculate pagination with useMemo
+  const { totalPages, paginatedVideos } = useMemo(() => {
+    const total = Math.ceil(filteredVideos.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginated = filteredVideos.slice(
+      startIndex,
+      startIndex + itemsPerPage
+    );
+    
+    return {
+      totalPages: total,
+      paginatedVideos: paginated
+    };
+  }, [filteredVideos, currentPage, itemsPerPage]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -96,9 +100,10 @@ const MediaManagement: React.FC<MediaManagementProps> = ({
     setCurrentPage(1);
   };
 
-  // Get unique sports for filter dropdown
-  const uniqueSports = Array.from(
-    new Set(videos.map((video: VideoItem) => video.sport_name))
+  // Get unique sports for filter dropdown with useMemo
+  const uniqueSports = useMemo(() => 
+    Array.from(new Set(videos.map((video: VideoItem) => video.sport_name))),
+    [videos]
   );
 
   if (isLoading) return <Loading />;
