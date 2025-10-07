@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.conf import settings
 
 from agora_token_builder import RtcTokenBuilder
+from decimal import Decimal
 from datetime import timedelta, date
 
 from core.permissions import IsTeacher
@@ -624,3 +625,25 @@ class AddedWalletListView(APIView):
             wallets.append("paypal")
 
         return Response(wallets)
+
+class CurrentBalance(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def get(self, request):
+        teacher = request.user.teacher
+
+        total_income = teacher.income_history.aggregate(
+            total=Sum('after_deduction')
+        )['total'] or Decimal('0.00')
+
+        total_withdraw = teacher.withdraws.aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0.00')
+
+        left_amount = total_income - total_withdraw
+
+
+        if left_amount < 0:
+            raise Response({"error": "amount is less then 0"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"balance": left_amount}, status=status.HTTP_200_OK)

@@ -13,6 +13,7 @@ from .views import (
     AccountUploadWebhookView,
     AccountDetailView,
     AddedWalletListView,
+    CurrentBalance
 )
 
 urlpatterns = [
@@ -28,5 +29,6 @@ urlpatterns = [
     path('upload-video/', AccountUploadView.as_view(), name='Account Video'),
     path('webhook/account-upload/', AccountUploadWebhookView.as_view(), name='Upload Webhook'),
     path('account/', AccountDetailView.as_view(), name='Account Detail'),
-    path('wallet-list/', AddedWalletListView.as_view(), name='Wallet List')
+    path('wallet-list/', AddedWalletListView.as_view(), name='Wallet List'),
+    path('current-balance/', CurrentBalance.as_view(), name='Current Balance')
 ]

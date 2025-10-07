@@ -16,6 +16,7 @@ class TrainingInfoSerializer(serializers.ModelSerializer):
 class SessionOptionSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')
     username = serializers.CharField(source='teacher.user.username')
+    profile_pic_url = serializers.SerializerMethodField(read_only=True)
     institute_name = serializers.CharField(source='teacher.institute_name')
     coach_type = serializers.CharField(source='teacher.coach_type')
     training_info = serializers.SerializerMethodField()
@@ -25,6 +26,7 @@ class SessionOptionSerializer(serializers.ModelSerializer):
         fields = [
             'full_name',
             'username',
+            'profile_pic_url',
             'institute_name',
             'coach_type',
             'training_info',
@@ -38,11 +40,17 @@ class SessionOptionSerializer(serializers.ModelSerializer):
         )
         return TrainingInfoSerializer(sessions, many=True).data
 
+    def get_profile_pic_url(self, obj):
+        user = obj.teacher.user
+        if user.profile_pic.url:
+            return user.profile_pic.url
+        return None
+
 class TrainerDetailsSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')
     username = serializers.CharField(source='teacher.user.username')
     institute_name = serializers.CharField(source='teacher.institute_name')
-    coach_type = serializers.CharField(source='teacher.coach_type')
+    coach_type = serializers.SerializerMethodField()
 
     class Meta:
         model = SessionOption
@@ -55,6 +63,10 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             'institute_name',
             'coach_type'
         ]
+
+    def get_coach_type(self, obj):
+        # Returns a list of sport names
+        return [sport.name for sport in obj.teacher.coach_type.all()]
 
 class AvailableTimeSlotSerializer(serializers.ModelSerializer):
     day = serializers.CharField(source="available_day.day", read_only=True)
