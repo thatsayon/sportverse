@@ -239,12 +239,12 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
   transition={{ duration: 0.3 }}
   style={{
     backgroundImage:
-      "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/trainer/vartualTraning.jpg)",
+      "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/teacherImage/vartualTraning.jpg)",
     backgroundSize: "cover",
     backgroundPosition: "center",
   }}
 >
-  <div className="absolute inset-0 bg-black/20"></div>
+  {/* <div className="absolute inset-0 bg-black/20"></div> */}
   <div className="relative z-10 flex flex-col justify-between h-full">
     <div className="w-full h-full flex items-center justify-center">
       <Interactive size={138} />
@@ -267,7 +267,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
               transition={{ duration: 0.3 }}
               style={{
                 backgroundImage:
-                  "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url(/trainer/inPersonTraining.jpg)",
+                  "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url(/teacherImage/inPersonTraining.jpg)",
                 backgroundSize: "cover",
                 backgroundPosition: "50% 20%",
               }}

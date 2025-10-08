@@ -86,7 +86,7 @@ export function LoginForm() {
       }
     } catch (error) {
       //console.error("Login error:", error);
-      alert("Login failed. Please check your credentials and try again.");
+      toast.error("Login failed. Please check your credentials and try again.");
     }
   };
 

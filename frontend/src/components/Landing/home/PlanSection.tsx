@@ -22,7 +22,7 @@ function PlanSection() {
           transition={{ duration: 0.3 }}
           style={{
             backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/trainer/vartualTraning.jpg)",
+              "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/teacherImage/vartualTraning.jpg)",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -50,7 +50,7 @@ function PlanSection() {
           transition={{ duration: 0.3 }}
           style={{
             backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url(/trainer/inPersonTraining.jpg)",
+              "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url(/teacherImage/inPersonTraining.jpg)",
             backgroundSize: "cover",
             backgroundPosition: "50% 20%",
           }}
