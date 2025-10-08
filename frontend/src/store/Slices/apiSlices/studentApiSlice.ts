@@ -9,6 +9,7 @@ import { StudentBookingResponse } from "@/types/student/bookings";
 import { VideoListResponse } from "@/types/admin/video";
 import { AgoraTokenResponse } from "@/types/teacher/dashboard";
 import { UserProfileReponse } from "@/types/student/profile";
+import { TrainerDetailsResponse } from "@/types/student/trainerDetails";
 
 export const studentApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -50,6 +51,12 @@ export const studentApiSlice = apiSlice.injectEndpoints({
     getStudentProfie: builder.query<UserProfileReponse, void>({
       query: ()=> "/student/profile/"
     }),
+    getTrainerDetails: builder.query<TrainerDetailsResponse, string>({
+      query: (id)=>({
+        url: `/student/trainer-detail/${id}`,
+        credentials: "include"
+      })
+    })
   }),
   overrideExisting: true,
 });
@@ -66,4 +73,6 @@ export const {
   useLazyGenerateStudentTokenQuery,
   // profile
   useGetStudentProfieQuery,
+  // trainer details
+  useGetTrainerDetailsQuery
 } = studentApiSlice;

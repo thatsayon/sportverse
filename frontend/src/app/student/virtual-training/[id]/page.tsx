@@ -1,10 +1,15 @@
 import TrainerProfile from '@/components/Shared/TrainerProfile'
 import React from 'react'
 
-function page() {
+interface ParamsProps{
+  id: string
+}
+
+function page({params}:{params: ParamsProps}) {
+  const {id} = params
   return (
     <div>
-      <TrainerProfile/>
+      <TrainerProfile id={id}/>
     </div>
   )
 }

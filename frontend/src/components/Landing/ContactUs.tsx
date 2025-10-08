@@ -21,7 +21,7 @@ const ContactUs = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    //console.log('Form submitted:', formData);
     alert('Thank you for contacting us! We\'ll get back to you soon.');
     setFormData({
       name: '',
@@ -50,7 +50,7 @@ const ContactUs = () => {
             Get in <span className="text-[#F15A24]">Touch</span>
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            Ready to elevate your sports training? Have questions about our platform? We're here to help you on your athletic journey.
+            Ready to elevate your sports training? Have questions about our platform? We&apos;re here to help you on your athletic journey.
           </p>
         </div>
 
@@ -69,7 +69,7 @@ const ContactUs = () => {
                   </div>
                   <div>
                     <p className="text-black font-semibold">Email</p>
-                    <p className="text-gray-700">support@sportverse.com</p>
+                    <p className="text-gray-700">train@brightstarsoccer.com</p>
                   </div>
                 </div>
 
@@ -79,7 +79,7 @@ const ContactUs = () => {
                   </div>
                   <div>
                     <p className="text-black font-semibold">Phone</p>
-                    <p className="text-gray-700">+1 (555) 123-4567</p>
+                    <p className="text-gray-700">+1 (704) 641-9830</p>
                   </div>
                 </div>
 

@@ -180,7 +180,7 @@ const AddWallet = () => {
   }, [paypalData, paypalExists, paypalForm, countries]);
 
   const onSubmitBank = async (data: BankFormData) => {
-    console.log("Bank data", bankExists);
+    //console.log("Bank data", bankExists);
 
     if (bankExists && !isBankModified) {
       toast.error("Please make changes to update your bank details.");
@@ -246,8 +246,8 @@ const AddWallet = () => {
       <Card className="bg-white border-none shadow-none">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-gray-900 font-montserrat">
-            {activeTab === "bank" ? "Bank Details" : "Paypal Details"}
-            <p className="text-base text-gray-300 font-normal mt-2">
+            <h3 className="text-3xl font-bold font-montserrat">{activeTab === "bank" ? "Bank Details" : "Paypal Details"}</h3>
+            <p className="text-base text-gray-400 font-normal mt-2">
               Add your payment details for easy withdraw request
             </p>
           </CardTitle>

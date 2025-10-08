@@ -55,7 +55,7 @@ const ChatConversation: React.FC<ChatProps> = ({
       const decoded = jwtDecode<{ user_id: string }>(token);
       if (decoded?.user_id) setCurrentUserId(decoded.user_id);
     } catch (err) {
-      console.error("Failed to decode JWT", err);
+      //console.error("Failed to decode JWT", err);
     }
   }, []);
  
@@ -96,7 +96,7 @@ const ChatConversation: React.FC<ChatProps> = ({
           setOtherUserId(otherId);
         }
       } catch (err) {
-        console.error("Failed to fetch messages", err);
+        //console.error("Failed to fetch messages", err);
       }
     };
     fetchMessages();

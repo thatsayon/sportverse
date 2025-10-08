@@ -14,7 +14,7 @@ function Logo({href}:{href: string;}) {
           className="rounded-sm"
         />
         <span className="text-2xl font-bold bg-gradient-to-r from-[#FF7442] to-[#994628] bg-clip-text text-transparent">
-          SportVerse
+          Ball Mastery 
         </span>
       </Link>
     </div>

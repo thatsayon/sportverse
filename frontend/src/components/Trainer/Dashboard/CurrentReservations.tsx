@@ -56,7 +56,7 @@ export const CurrentReservations: React.FC<CurrentReservationsProps> = ({
   };
 
   const handleRouting = async (id: string) => {
-    console.log("clicked on handle")
+    //console.log("clicked on handle")
     const response = await getToken(id).unwrap();
     if (response.token) {
       dispatch(setCallConfig(response))

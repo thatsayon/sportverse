@@ -2,18 +2,27 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import Logo from "../Element/Logo";
 import { useJwt } from "@/hooks/useJwt";
 import { usePathname } from "next/navigation";
+import { Facebook, Instagram, Youtube } from "lucide-react";
+import { FaTiktok } from "react-icons/fa";
+
+const socialIcons = [
+  { Icon: Facebook, href: "https://www.facebook.com/share/18sUhsByEL/?mibextid=wwXlfr", label: "Facebook" },
+  { Icon: FaTiktok, href: "#", label: "Tiktok" },
+  { Icon: Instagram, href: "https://www.instagram.com/@officialballmastery", label: "Instagram" },
+  { Icon: Youtube, href: "https://www.youtube.com/@OfficialBallmastery", label: "YouTube" },
+];
 
 interface FooterProps {
   className?: string;
 }
 
 const Footer: React.FC<FooterProps> = ({ className = "" }) => {
-  const {decoded} = useJwt()
-  const pathname = usePathname()
+  const { decoded } = useJwt();
+  const pathname = usePathname();
   const quickLinks = [
     { name: "About", href: "/about" },
     { name: "FAQ", href: "/faq" },
@@ -27,7 +36,6 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
     { name: "Contact Us", href: "/contact" },
   ];
 
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -38,14 +46,32 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
     },
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
-
-  if (pathname === "/login" || pathname === "/signup" || pathname === "/video" || pathname === "/forget-password/success" || pathname === "/forget-password/verify-code" || pathname === "/forget-password" || pathname === "/forget-password/reset-password" || pathname === "forget-password/success" || pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
+  if (
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/video" ||
+    pathname === "/forget-password/success" ||
+    pathname === "/forget-password/verify-code" ||
+    pathname === "/forget-password" ||
+    pathname === "/forget-password/reset-password" ||
+    pathname === "forget-password/success" ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/admin")
+  ) {
     return null;
   }
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeInOut",
+      },
+    },
+  };
 
   return (
     <footer className={`bg-slate-900 text-white ${className}`}>
@@ -60,7 +86,9 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
           {/* Brand Section */}
           <motion.div variants={itemVariants} className="lg:col-span-1 ">
             <div className="mb-4">
-              <Logo href={decoded?.role=== "student" ? "/student":"/trainer"}/>
+              <Logo
+                href={decoded?.role === "student" ? "/student" : "/trainer"}
+              />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
               SportVerse is your all-in-one online sports training platform,
@@ -104,6 +132,42 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
               ))}
             </ul>
           </motion.div>
+
+          <motion.div variants={itemVariants} className="text-center">
+            <h3 className="text-white font-semibold text-lg mb-4">Or connect with me here</h3>
+            <div className="flex items-center justify-center gap-4">
+              {socialIcons.map((social, index) => {
+                const { Icon, href, label } = social;
+
+                return (
+                  <a
+                    key={index}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className={`
+                    group
+                    ${social.label === "Tiktok" ? "p-4l":"p-3"} 
+                    flex items-center justify-center
+                    rounded-full
+                    bg-gray-100 hover:bg-gradient-to-br hover:from-orange-500 hover:to-red-600
+                    transition-all duration-300
+                    hover:scale-110
+                    active:scale-95
+                  `}
+                  >
+                    <Icon
+                      className="
+                    text-gray-600 group-hover:text-white
+                    transition-colors duration-300
+                  "
+                    />
+                  </a>
+                );
+              })}
+            </div>
+          </motion.div>
         </div>
 
         {/* Bottom Section */}
@@ -113,7 +177,7 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
         >
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             <p className="text-gray-400 text-sm text-center sm:text-left">
-              © 2025 SportVerse. All rights reserved.
+              © 2023 by Ball Mastery  All rights reserved.
             </p>
             <div className="flex items-center space-x-6">
               <Link

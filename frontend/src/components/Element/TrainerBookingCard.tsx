@@ -52,21 +52,21 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
     if (decoded?.role === "student") {
       const response = await getStudentToken(id).unwrap();
       if (response.token) {
-        console.log("Token Resonse", response);
+        //console.log("Token Resonse", response);
 
         dispatch(setCallConfig(response));
         router.push("/video");
       }
-      console.log("pressed. student!!!");
+      //console.log("pressed. student!!!");
     } else {
       const response = await getToken(id).unwrap();
       if (response.token) {
-        console.log("Token Resonse", response);
+        //console.log("Token Resonse", response);
 
         dispatch(setCallConfig(response));
         router.push("/video");
       }
-      console.log("pressed. Trainer!!!");
+      //console.log("pressed. Trainer!!!");
     }
   };
 

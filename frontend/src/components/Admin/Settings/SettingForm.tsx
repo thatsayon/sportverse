@@ -122,7 +122,7 @@ export default function SettingForm() {
       // Set the compressed file to form
       profileForm.setValue('profileImage', compressedFile);
     } catch (error) {
-      console.error('Error compressing image:', error);
+      //console.error('Error compressing image:', error);
       setProfileMessage({ type: 'error', text: 'Failed to process image' });
     }
   };

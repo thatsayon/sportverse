@@ -124,7 +124,7 @@ const MapSearch: React.FC = () => {
 
       setSearchResults(result);
     } catch (err) {
-      console.error("Search error:", err);
+      //console.error("Search error:", err);
       setError(
         err instanceof Error
           ? err.message

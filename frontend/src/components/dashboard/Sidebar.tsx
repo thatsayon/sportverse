@@ -149,8 +149,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const pathname = usePathname()
   const { decoded, isExpired } = useJwt()
 
-  console.log("Token info decoded:", decoded)
-  console.log("Token info Expired:", isExpired)
+  //console.log("Token info decoded:", decoded)
+  //console.log("Token info Expired:", isExpired)
   
   const [expandedItems, setExpandedItems] = useState<string[]>(['Analytics and reports'])
 

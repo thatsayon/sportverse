@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
   const dispatch = useDispatch()
   const {userQuery} = useStateSlice()
 
-  console.log("userQuery is:",userQuery)
+  // //console.log("userQuery is:",userQuery)
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(emailSchema),
     defaultValues: {
@@ -52,11 +52,11 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
-      console.log("Requesting code for:", data.email);
+      // //console.log("Requesting code for:", data.email);
       
       const result = await requestCode({ email: data.email }).unwrap();
       
-      console.log("Code request successful:", result);
+      // //console.log("Code request successful:", result);
       
       if(result.success){
         dispatch(setUserQuery("forget"))
@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
       }
       // Redirect to verification code page
     } catch (error) {
-      console.error("Code request error:", error);
+      // //console.error("Code request error:", error);
       alert("Failed to send verification code. Please try again.");
     }
   };

@@ -168,15 +168,15 @@ function UpdateSportsPopUp({ open, setOpen, refetch }: UpdateSportsPopUpProps) {
       // Compress image before uploading
       const compressedImage = await imageCompression(imageFile, options);
 
-      console.log("Original Image Size:", imageFile.size / 1024, "KB");
-      console.log("Compressed Image Size:", compressedImage.size / 1024, "KB");
+      //console.log("Original Image Size:", imageFile.size / 1024, "KB");
+      //console.log("Compressed Image Size:", compressedImage.size / 1024, "KB");
 
       // Prepare formData to send to the backend
       const formDataToSend = new FormData();
       formDataToSend.append("image", compressedImage);
       formDataToSend.append("name", formData.name);
 
-      console.log("Formatted data:", formDataToSend);
+      //console.log("Formatted data:", formDataToSend);
 
       // API call - replace with your actual endpoint
       const accessToken = getCookie("access_token");
@@ -205,7 +205,7 @@ function UpdateSportsPopUp({ open, setOpen, refetch }: UpdateSportsPopUpProps) {
         throw new Error("Failed to submit form");
       }
     } catch (error) {
-      console.error("Upload error:", error);
+      //console.error("Upload error:", error);
       toast.error("Upload failed. Please try again.");
     } finally {
       setIsSubmitting(false);

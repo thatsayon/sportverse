@@ -132,7 +132,8 @@ interface BarChartComponentProps {
 const BarChartComponent: React.FC<BarChartComponentProps> = ({ data }) => {
   const lastObject = data.length - 1;
 
-  const changeRate = data[lastObject].change_rate;
+  // const changeRate = data[lastObject].change_rate;
+  const changeRate = 0
 
   return (
     <Card className="border-0 shadow-sm">

@@ -119,18 +119,18 @@ const AccountSettingForm = () => {
           useWebWorker: true,
         };
 
-        console.log(
-          "Original Image Size:",
-          formData.profile_pic.size / 1024,
-          "KB"
-        );
+        //console.log(
+        //   "Original Image Size:",
+        //   formData.profile_pic.size / 1024,
+        //   "KB"
+        // );
 
         const compressedImage = await imageCompression(
           formData.profile_pic,
           options
         );
 
-        console.log("Compressed Image Size:", compressedImage.size / 1024, "KB");
+        //console.log("Compressed Image Size:", compressedImage.size / 1024, "KB");
 
         // Create a new File object with the original filename to preserve extension
         const compressedFile = new File(
@@ -165,7 +165,7 @@ const AccountSettingForm = () => {
       toast.success("Profile updated successfully!");
       router.push("/student/profile");
     } catch (error) {
-      console.error("Update error:", error);
+      //console.error("Update error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to update profile"
       );

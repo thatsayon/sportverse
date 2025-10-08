@@ -1,9 +1,9 @@
 "use client"
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import moment from "moment";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, TooltipProps } from 'recharts';
 import { months } from '@/data/RevenueData';
 import { useGetTrainerRenenueQuery } from '@/store/Slices/apiSlices/trainerApiSlice';
 import { convertDates } from '@/lib/dataFormatingname';
@@ -13,7 +13,7 @@ const EarningsOverview = () => {
   const [selectedMonth, setSelectedMonth] = useState(moment().format("MMMM").toLocaleLowerCase());
   const {data} = useGetTrainerRenenueQuery(selectedMonth)
   
-  console.log("Current Month", selectedMonth)
+  //console.log("Current Month", selectedMonth)
   
   const convertedData = convertDates(data?.monthly_overview, "date", "amount")
   const formatCurrency = (amount: number) => {
@@ -25,19 +25,23 @@ const EarningsOverview = () => {
     }).format(amount);
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm text-gray-600">{label}</p>
-          <p className="text-lg font-semibold text-gray-900">
-            {formatCurrency(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const CustomTooltip: React.FC<TooltipProps<number, string>> = ({
+  active,
+  payload,
+  label,
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <p className="text-sm text-gray-600">{label}</p>
+        <p className="text-lg font-semibold text-gray-900">
+          {formatCurrency(payload[0].value as number)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
   return (
     <div className="w-full px-6 md:px-8 space-y-6">
@@ -45,7 +49,7 @@ const EarningsOverview = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="bg-white">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">All time</CardTitle>
+            <CardTitle className="text-xl font-medium text-gray-600">All time Income</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -56,7 +60,7 @@ const EarningsOverview = () => {
 
         <Card className="bg-white">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Last month</CardTitle>
+            <CardTitle className="text-xl font-medium text-gray-600">Last month Income</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -67,7 +71,7 @@ const EarningsOverview = () => {
 
         <Card className="bg-white sm:col-span-2 lg:col-span-1">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Current month</CardTitle>
+            <CardTitle className="text-xl font-medium text-gray-600">Current Month Income</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl md:text-3xl font-bold text-gray-900">

@@ -8,7 +8,7 @@ const BookingFailed: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(true);
 
   const handleTryAgain = () => {
-    console.log('Retry booking');
+    //console.log('Retry booking');
     setIsOpen(false);
   };
 

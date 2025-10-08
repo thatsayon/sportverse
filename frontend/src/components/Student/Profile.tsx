@@ -27,8 +27,17 @@ const Profile = () => {
   const [open, setOpen] = useState<boolean>(false);
   const { data, isLoading, isError } = useGetStudentProfieQuery();
 
-  if (isLoading) return <Loading />;
-  if (isError) return <ErrorLoadingPage />;
+  if (isLoading) return (
+    <div className="min-h-screen">
+      <Loading />
+    </div>
+  )
+  if (isError) return (
+    <div className="min-h-screen">
+      <ErrorLoadingPage />
+    </div>
+  )
+  
 
 
   const stats: StatCard[] = [
@@ -57,14 +66,14 @@ const Profile = () => {
   {
     id: 3,
     value: data?.hours_trained,
-    label: "Hours Trained",
+    label: "Minutes Trained",
     icon: <Clock className="w-6 h-6 text-purple-600" />,
     bgColor: "bg-purple-100",
   },
 ];
 
   return (
-    <div className=" bg-gray-50 p-4 md:p-6 lg:p-8">
+    <div className=" bg-gray-50 p-4 md:p-6 lg:p-8 min-h-screen">
       <div className="px-0 md:px-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">

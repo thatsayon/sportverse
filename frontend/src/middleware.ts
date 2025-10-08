@@ -31,7 +31,8 @@ function getDecodedToken(request: NextRequest): DecodedToken | null {
     
     return decoded;
   } catch (error) {
-    console.error("Invalid JWT token:", error);
+    const err = error as Error
+
     return null;
   }
 }
@@ -84,7 +85,6 @@ export function middleware(request: NextRequest) {
     });
   }
   
-  console.log(`🔍 Middleware processing: ${pathname}`);
   
   // Define protected routes that require authentication
   const protectedRoutes = ['/student', '/trainer', '/dashboard'];
@@ -94,7 +94,6 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
   
-  console.log(`🛡️ Is protected route: ${isProtectedRoute}`);
   
   // Skip middleware for public routes, API routes, and static files
   if (
@@ -106,35 +105,33 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/register') ||
     pathname.startsWith('/auth')
   ) {
-    console.log(`✅ Public route allowed: ${pathname}`);
+
     return NextResponse.next();
   }
   
   // If it's NOT a protected route, allow access
   if (!isProtectedRoute) {
-    console.log(`✅ Non-protected route allowed: ${pathname}`);
+
     return NextResponse.next();
   }
 
   // This is a protected route - authentication required
-  console.log(`🔒 Protected route detected: ${pathname}`);
   
   // Get decoded token
   const decoded = getDecodedToken(request);
   
   // If no valid token, redirect to login (AUTHENTICATION CHECK)
   if (!decoded) {
-    console.log(`❌ BLOCKED: Unauthenticated access attempt to: ${pathname}`);
+
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  console.log(`👤 Authenticated user: ${decoded.username} (${decoded.role})`);
 
   // Check if user has access to the current route (AUTHORIZATION CHECK)
   if (!isRouteAllowed(pathname, decoded.role)) {
-    console.log(`❌ BLOCKED: Unauthorized access attempt by ${decoded.role} to: ${pathname}`);
+
     
     // Redirect to appropriate dashboard based on role
     let redirectPath = '/';
@@ -158,7 +155,6 @@ export function middleware(request: NextRequest) {
   }
 
   // User is authenticated and authorized - allow access
-  console.log(`✅ ACCESS GRANTED: ${decoded.role} allowed to access: ${pathname}`);
   return NextResponse.next();
 }
 

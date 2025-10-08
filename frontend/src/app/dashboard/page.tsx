@@ -48,17 +48,17 @@ const DashboardPage: React.FC = () => {
   const route = useRouter();
 
   const handleViewAllReservations = () => {
-    console.log("View all reservations clicked");
+    // //console.log("View all reservations clicked");
     // Navigate to reservations page or open modal
   };
 
   const handleEditReservation = (id: string) => {
-    console.log("Edit reservation:", id);
+    // //console.log("Edit reservation:", id);
     // Open edit modal or navigate to edit page
   };
 
   const handleViewAllStudents = () => {
-    console.log("View all students clicked");
+    // //console.log("View all students clicked");
     // Navigate to students page or open modal
   };
 

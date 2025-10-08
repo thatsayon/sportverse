@@ -68,7 +68,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   // Socket integration for real-time messaging
   useEffect(() => {
     const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
-    console.log("Socket in Student Navbar:", socket);
+    //console.log("Socket in Student Navbar:", socket);
     
     const handleNewMessage = (msg: any) => {
       setLocalMessageList((prev) => {

@@ -45,17 +45,17 @@ const VisitorTable: React.FC = () => {
   };
 
   const handleEdit = (id: string) => {
-    console.log(`Edit document with ID: ${id}`);
+    //console.log(`Edit document with ID: ${id}`);
     // Implement edit functionality
   };
 
   const handleDelete = (id: string) => {
-    console.log(`Delete document with ID: ${id}`);
+    //console.log(`Delete document with ID: ${id}`);
     // Implement delete functionality
   };
 
   const { value } = useAppSelector((state: RootState) => state.state);
-  console.log("Redux state value:", value);
+  //console.log("Redux state value:", value);
 
   if (isLoading) return <Loading />;
   if (isError) return <ErrorLoadingPage />;

@@ -39,7 +39,7 @@ interface SessionType {
 
 interface TrainerCardProps {
   id: number;
-  image: string;
+  profile_pic_url: string;
   name: string;
   rating: number; // 0..5
   price: number; // legacy base price fallback
@@ -58,7 +58,7 @@ function formatCurrency(n: number) {
 }
 
 export default function TrainerCard({
-  image,
+  profile_pic_url,
   name,
   price,
   rating,
@@ -72,6 +72,8 @@ export default function TrainerCard({
     priceNum: Number.parseFloat(String(s.price).replace(/[^0-9.]/g, "")) || 0,
   }));
 
+
+  console.log("Profile image:",profile_pic_url)
   const hasSessions = parsedSessions.length > 0;
   const hasMultiple = parsedSessions.length > 1;
 
@@ -90,7 +92,7 @@ export default function TrainerCard({
   // State: which session is currently selected for booking
   const [selected, setSelected] = React.useState<TrainingInfo>(lowest);
   const { decoded } = useJwt();
-  console.log("Session type checking:", selected);
+  //console.log("Session type checking:", selected);
 
   // Build a booking URL with a session id, so backend knows exactly which one
   const buildBookingHref = (selected: TrainingInfo) =>
@@ -101,7 +103,7 @@ export default function TrainerCard({
       <CardContent>
         <div className="w-full h-[185px] lg:h-[300px] xl:h-[340px] relative overflow-hidden mb-6 rounded-xl border-2">
           <Image
-            src={image}
+            src={profile_pic_url}
             alt={`${name} profile image`}
             width={768}
             height={512}

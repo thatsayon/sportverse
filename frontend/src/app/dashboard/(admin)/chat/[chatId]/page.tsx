@@ -3,7 +3,7 @@ import React from 'react'
 
 function page({params}) {
 
-  console.log("id:", params.chatId)
+  //console.log("id:", params.chatId)
   return (
     <div>
       <ChatConversation chatId={params.chatId}/>

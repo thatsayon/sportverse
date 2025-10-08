@@ -43,7 +43,7 @@ const DocPopup: React.FC<DocPopupProps> = ({ isOpen, setViewDialog, documentId }
         toast.error(`The error is: ${err.message}`)
         setViewDialog(false)
     }
-    console.log("Approving document:", documentId);
+    //console.log("Approving document:", documentId);
   };
 
   const getStatusStyles = (status: "verified" | "unverfied") => {

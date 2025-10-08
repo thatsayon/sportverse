@@ -35,7 +35,7 @@ const MediaCard: React.FC<MediaCardProps> = ({
   const [imageError, setImageError] = useState<boolean>(false);
   const router = useRouter();
 
-  console.log("Receiving Consumer:", consumer);
+  //console.log("Receiving Consumer:", consumer);
 
   const getSportsColor = (sport: string | null) => {
     if (!sport) return "bg-gray-100 text-gray-800 border-gray-200";

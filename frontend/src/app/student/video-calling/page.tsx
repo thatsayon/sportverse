@@ -9,7 +9,7 @@ const ParentComponent: React.FC = () => {
   const [toggle, setToggle] = useState<boolean>(false);
   // const [callConfig, setCallConfig] = useState<any>(null);
   const { callConfig } = useStudentSlice();
-  console.log("calling Config",callConfig)
+  //console.log("calling Config",callConfig)
 
   // useEffect(() => {
   //   // Simulate fetching data from backend
@@ -41,7 +41,7 @@ const ParentComponent: React.FC = () => {
     //   const data = await response.json();
     //   // setCallConfig(data);
     // } else {
-    //   console.log("error occurs");
+    //   //console.log("error occurs");
     // }
   };
 

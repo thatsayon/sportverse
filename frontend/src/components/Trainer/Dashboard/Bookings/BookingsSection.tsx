@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useGetTrainerBookingsQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
+import NoDataFound from "@/components/Element/NoDataFound";
 
 function BookingsSection() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -23,14 +26,21 @@ function BookingsSection() {
     }
   };
 
-  const { data } = useGetTrainerBookingsQuery();
+  const { data, isLoading, isError } = useGetTrainerBookingsQuery();
+
+  console.log("bookings details:", data)
 
   const trainerBookingData = data?.results ?? [];
+
+   if(isLoading) return <Loading/>
+  if(isError) return <ErrorLoadingPage/>
+
+
 
   if (trainerBookingData?.length === 0) {
     return (
       <>
-        <h1>No data Fount</h1>
+        <NoDataFound/>
       </>
     );
   }
@@ -46,6 +56,8 @@ function BookingsSection() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+ 
 
   return (
     <div>

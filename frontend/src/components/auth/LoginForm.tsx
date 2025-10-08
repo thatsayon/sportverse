@@ -42,7 +42,7 @@ export function LoginForm() {
   const { decoded } = useJwt();
   const [login, { isLoading }] = useLoginMutation();
   //   const [getUserPackage] = useLazyGetUserpackageQuery();
-  // console.log("Decoded user info:", decoded);
+  // //console.log("Decoded user info:", decoded);
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -54,19 +54,19 @@ export function LoginForm() {
   const router = useRouter();
 
   const onSubmit = async (data: LoginFormData) => {
-    console.log("Login data:", data);
+    //console.log("Login data:", data);
     try {
       const result = await login(data).unwrap();
 
       if (result.access_token) {
-        console.log("Login successful:", result);
+        //console.log("Login successful:", result);
 
         // Store tokens in cookies
         setCookie("access_token", result.access_token, 7); // 7 days expiry
         // setCookie("refresh_token", result.refresh_token, 7); // 7 days expiry
 
         const user = decodeToken(result.access_token);
-        console.log("user information", user)
+        //console.log("user information", user)
         if (user?.role === "admin") {
           router.push("/dashboard");
         } else {
@@ -85,7 +85,7 @@ export function LoginForm() {
         toast.error("Login Failed!");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      //console.error("Login error:", error);
       alert("Login failed. Please check your credentials and try again.");
     }
   };

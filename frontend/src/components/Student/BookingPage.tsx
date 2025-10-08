@@ -26,7 +26,7 @@ function BookingPage() {
 
   const { data } = useGetBookingsQuery();
 
-  console.log("booking data:", data)
+  //console.log("booking data:", data)
 
   const trainerBookingData = data?.results ?? [];
 

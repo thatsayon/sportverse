@@ -29,7 +29,7 @@ export default function VerifyCodePage() {
   const [resendPasswordCode] = useResendPasswordCodeMutation();
   const [resendregistrationCode] = useResendRegistrationCodeMutation();
 
-  console.log("userQuery is:", userQuery);
+  ////console.log("userQuery is:", userQuery);
 
   useEffect(() => {
     if (timeLeft === 0) return;
@@ -81,9 +81,9 @@ export default function VerifyCodePage() {
     const verificationToken = getCookie("verificationToken");
     const passResetToken = getCookie("passResetToken");
 
-    console.log("verificationToken:", verificationToken);
+    // //console.log("verificationToken:", verificationToken);
     try {
-      console.log("Verifying code:", fullCode);
+      // //console.log("Verifying code:", fullCode);
 
       if (userQuery === "signup") {
         const result = await verifyCode({
@@ -97,6 +97,8 @@ export default function VerifyCodePage() {
           removeCookie("verificationToken");
           // Redirect to success page
           router.push("/forget-password/success");
+        }else{
+          toast.error(result?.error)
         }
       }
       if (userQuery === "forget") {
@@ -116,7 +118,7 @@ export default function VerifyCodePage() {
         }
       }
     } catch (error) {
-      console.error("Code verification error:", error);
+      // //console.error("Code verification error:", error);
       alert("Invalid verification code. Please try again.");
     }
   };

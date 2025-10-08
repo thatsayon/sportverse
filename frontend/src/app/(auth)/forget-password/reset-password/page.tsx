@@ -69,14 +69,14 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     try {
-      console.log("Resetting password for:", email);
+      // //console.log("Resetting password for:", email);
       const passwordResetVerified = getCookie("passwordResetVerified")
       const result = await resetPassword({        
         new_password: data.newPassword,
         passwordResetVerified: passwordResetVerified,
       }).unwrap();
       
-      console.log("Password reset successful:", result);
+      ////console.log("Password reset successful:", result);
       
       // Clear sessionStorage
       sessionStorage.removeItem('forgotPasswordEmail');
@@ -85,7 +85,7 @@ export default function ResetPasswordPage() {
       // Redirect to success page
       router.push("/forget-password/success");
     } catch (error) {
-      console.error("Password reset error:", error);
+      ////console.error("Password reset error:", error);//
       alert("Failed to reset password. Please try again.");
     }
   };

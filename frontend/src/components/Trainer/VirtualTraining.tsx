@@ -20,7 +20,7 @@ function VirtualTraining() {
   const [priceFilter, setPriceFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  console.log("Filter values:", { ratingFilter, priceFilter, searchQuery });
+  //console.log("Filter values:", { ratingFilter, priceFilter, searchQuery });
 
   // Filter the trainers based on rating, price, and search query
   const filteredData = useMemo(() => {

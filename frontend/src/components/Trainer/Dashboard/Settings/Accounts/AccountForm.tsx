@@ -206,7 +206,7 @@ const AccountForm = () => {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error("Cloudinary upload error:", error);
+      //console.error("Cloudinary upload error:", error);
       throw error;
     }
   };
@@ -243,7 +243,7 @@ const AccountForm = () => {
         throw new Error("Failed to get upload signature");
       }
 
-      console.log("Getting the signature response:", signatureResponse);
+      //console.log("Getting the signature response:", signatureResponse);
 
       // Simulate progress for UI
       const progressInterval = setInterval(() => {
@@ -266,7 +266,7 @@ const AccountForm = () => {
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      console.log("Cloudinary upload response:", cloudinaryResponse);
+      //console.log("Cloudinary upload response:", cloudinaryResponse);
 
       // Store the uploaded video URL
       setUploadedVideoUrl(
@@ -276,7 +276,7 @@ const AccountForm = () => {
       // Show success toast
       toast.success("Video has been uploaded successfully.");
     } catch (error) {
-      console.error("Upload failed:", error);
+      //console.error("Upload failed:", error);
       toast.error("Failed to upload video. Please try again.");
       setUploadedFile(null);
     } finally {

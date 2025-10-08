@@ -131,7 +131,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error("Error getting signature:", error);
+      //console.error("Error getting signature:", error);
       throw error;
     }
   };
@@ -164,13 +164,13 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error("Cloudinary upload error:", error);
+      //console.error("Cloudinary upload error:", error);
       throw error;
     }
   };
 
   const handleFormSubmit = async (data: FormData) => {
-    console.log("Submitted data:", data);
+    //console.log("Submitted data:", data);
 
     try {
       setIsUploading(true);
@@ -189,7 +189,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         throw new Error("Failed to get upload signature");
       }
 
-      console.log("Getting the signature response:", signatureResponse);
+      //console.log("Getting the signature response:", signatureResponse);
 
       // Simulate progress for UI (since we can't track real progress with fetch)
       const progressInterval = setInterval(() => {
@@ -212,7 +212,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      console.log("Cloudinary upload response:", cloudinaryResponse);
+      //console.log("Cloudinary upload response:", cloudinaryResponse);
 
       // Prepare final data with video URL
       const finalData = {
@@ -232,7 +232,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
       // Reset form
       handleReset();
     } catch (error) {
-      console.error("Upload failed:", error);
+      //console.error("Upload failed:", error);
 
       // Show error toast
       toast.error("Failed to upload video. Please try again.");

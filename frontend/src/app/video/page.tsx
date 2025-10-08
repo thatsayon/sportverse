@@ -4,7 +4,7 @@ import { useStudentSlice } from "@/store/hooks/sliceHook";
 
 const ParentComponent: React.FC = () => {
   const {callConfig} = useStudentSlice()
-  console.log("video config",callConfig)
+  //console.log("video config",callConfig)
   return (
     <DirectVideoCall
       token={callConfig.token}

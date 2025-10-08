@@ -9,15 +9,15 @@ const socket = io("http://localhost:8000", {
 });
 
 socket.on("connect", () => {
-  console.log("🔌 Connected to notifications service");
+  // //console.log("🔌 Connected to notifications service");
 });
  
 socket.on("new_notification", () => {
-  console.log("🔔 New notification:");
+  // //console.log("🔔 New notification:");
 });
  
 socket.on("notification_read", () => {
-  console.log("✅ Notification marked as read:");
+  // //console.log("✅ Notification marked as read:");
 });
 
   return (

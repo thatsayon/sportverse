@@ -126,7 +126,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
           return [...prevUsers, user];
         });
       } catch (error) {
-        console.error("Error handling user published:", error);
+        //console.error("Error handling user published:", error);
       }
     },
     []
@@ -139,7 +139,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
   }, []);
 
   const handleUserJoined = useCallback((user: IAgoraRTCRemoteUser) => {
-    console.log("User joined:", user.uid);
+    //console.log("User joined:", user.uid);
   }, []);
 
   const handleUserLeft = useCallback((user: IAgoraRTCRemoteUser) => {
@@ -161,7 +161,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
         isInitializedRef.current = true;
         setIsLoading(false);
       } catch (err) {
-        console.error("Failed to load Agora SDK:", err);
+        //console.error("Failed to load Agora SDK:", err);
         setError("Failed to load video calling SDK");
         setIsLoading(false);
       }
@@ -186,7 +186,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
           localVideoTrackRef.current.stop();
           localVideoTrackRef.current.close();
         } catch (e) {
-          console.error("Error closing video track:", e);
+          //console.error("Error closing video track:", e);
         }
         localVideoTrackRef.current = null;
       }
@@ -196,7 +196,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
           localAudioTrackRef.current.stop();
           localAudioTrackRef.current.close();
         } catch (e) {
-          console.error("Error closing audio track:", e);
+          //console.error("Error closing audio track:", e);
         }
         localAudioTrackRef.current = null;
       }
@@ -213,7 +213,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
             await clientRef.current.leave();
           }
         } catch (e) {
-          console.error("Error cleaning up client:", e);
+          //console.error("Error cleaning up client:", e);
         }
         clientRef.current = null;
       }
@@ -221,7 +221,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       dispatch(setIsJoined(false));
       setRemoteUsers([]);
     } catch (error) {
-      console.error("Error during cleanup:", error);
+      //console.error("Error during cleanup:", error);
     } finally {
       cleanupInProgressRef.current = false;
     }
@@ -252,7 +252,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
           videoStream.getTracks().forEach((track) => track.stop());
           cameraPermission = true;
         } catch (e) {
-          console.log("Camera permission denied or not available");
+          //console.log("Camera permission denied or not available");
         }
       }
 
@@ -264,7 +264,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
           audioStream.getTracks().forEach((track) => track.stop());
           microphonePermission = true;
         } catch (e) {
-          console.log("Microphone permission denied or not available");
+          //console.log("Microphone permission denied or not available");
         }
       }
 
@@ -274,7 +274,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
         checked: true,
       });
     } catch (error) {
-      console.error("Error checking device permissions:", error);
+      //console.error("Error checking device permissions:", error);
       setDevicePermissions({
         camera: false,
         microphone: false,
@@ -298,7 +298,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       clientRef.current.on("user-joined", handleUserJoined);
       clientRef.current.on("user-left", handleUserLeft);
     } catch (error) {
-      console.error("Error initializing client:", error);
+      //console.error("Error initializing client:", error);
       throw error;
     }
   };
@@ -344,7 +344,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
 
       return { audioTrack, videoTrack, tracks };
     } catch (error) {
-      console.error("Failed to create local tracks:", error);
+      //console.error("Failed to create local tracks:", error);
       throw new Error(
         "Failed to access camera/microphone. Please check device permissions."
       );
@@ -389,9 +389,9 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       }
 
       dispatch(setIsJoined(true));
-      console.log("Successfully joined channel");
+      //console.log("Successfully joined channel");
     } catch (error) {
-      console.error("Failed to join channel:", error);
+      //console.error("Failed to join channel:", error);
       setError(
         error instanceof Error ? error.message : "Failed to join video call"
       );
@@ -431,9 +431,9 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       dispatch(setIsJoined(false));
       setRemoteUsers([]);
       setError(null);
-      console.log("Successfully left channel");
+      //console.log("Successfully left channel");
     } catch (error) {
-      console.error("Failed to leave channel:", error);
+      //console.error("Failed to leave channel:", error);
       setError("Failed to leave video call");
     }
   };
@@ -444,7 +444,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
         await localVideoTrackRef.current.setEnabled(!isCameraOn);
         setIsCameraOn(!isCameraOn);
       } catch (error) {
-        console.error("Error toggling camera:", error);
+        //console.error("Error toggling camera:", error);
       }
     }
   };
@@ -455,7 +455,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
         await localAudioTrackRef.current.setEnabled(!isMicOn);
         setIsMicOn(!isMicOn);
       } catch (error) {
-        console.error("Error toggling microphone:", error);
+        //console.error("Error toggling microphone:", error);
       }
     }
   };
@@ -469,7 +469,7 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
       await checkDevicePermissions();
       setError(null);
     } catch (error) {
-      console.error("Permission request failed:", error);
+      //console.error("Permission request failed:", error);
       setError(
         "Please allow camera and microphone access to use video calling"
       );

@@ -3,14 +3,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import {
-  Star,
-  Users,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Star, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { Interactive } from "@/SVG/TrainerSVG";
 import { useJwt } from "@/hooks/useJwt";
+import { useGetTrainerDetailsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 
 // Sample review data with full text
 const reviewsData = [
@@ -20,8 +16,10 @@ const reviewsData = [
     role: "Student",
     date: "August 16, 2025",
     rating: 5,
-    shortText: "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp.",
-    fullText: "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp. I feel more confident on the court, and my performance has improved significantly since I started training with them. What I appreciate most is the personalized attention and how they adapt their teaching style to match my learning pace. The drills are challenging but never overwhelming, and I can see measurable progress in my game. Coach also focuses on mental preparation, which has been just as valuable as the physical training. I would highly recommend this training program to anyone looking to improve their basketball skills."
+    shortText:
+      "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp.",
+    fullText:
+      "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp. I feel more confident on the court, and my performance has improved significantly since I started training with them. What I appreciate most is the personalized attention and how they adapt their teaching style to match my learning pace. The drills are challenging but never overwhelming, and I can see measurable progress in my game. Coach also focuses on mental preparation, which has been just as valuable as the physical training. I would highly recommend this training program to anyone looking to improve their basketball skills.",
   },
   {
     id: 2,
@@ -29,25 +27,39 @@ const reviewsData = [
     role: "Student",
     date: "July 28, 2025",
     rating: 5,
-    shortText: "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically.",
-    fullText: "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically since starting sessions three months ago. The structured approach to skill development is outstanding, and I've learned proper shooting form, defensive positioning, and court awareness. Coach creates a supportive environment where making mistakes is part of learning. The feedback is always constructive and specific, helping me understand exactly what to work on. I've gone from struggling with basic dribbling to confidently handling the ball under pressure. The training sessions are well-planned and progressive, building on previous lessons seamlessly."
+    shortText:
+      "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically.",
+    fullText:
+      "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically since starting sessions three months ago. The structured approach to skill development is outstanding, and I've learned proper shooting form, defensive positioning, and court awareness. Coach creates a supportive environment where making mistakes is part of learning. The feedback is always constructive and specific, helping me understand exactly what to work on. I've gone from struggling with basic dribbling to confidently handling the ball under pressure. The training sessions are well-planned and progressive, building on previous lessons seamlessly.",
   },
   {
     id: 3,
     name: "Sarah Chen",
-    role: "Student", 
+    role: "Student",
     date: "July 15, 2025",
     rating: 4,
-    shortText: "Great training program with excellent results. Coach really knows how to motivate and push you to excel.",
-    fullText: "Great training program with excellent results. Coach really knows how to motivate and push you to excel while maintaining a positive atmosphere. The combination of technical skill work and game-situation practice has been perfect for my development. I particularly appreciate how Coach explains the 'why' behind each drill and technique, which helps me understand the game better. The progress tracking and regular feedback sessions keep me motivated and focused on improvement. While the training is intensive, it's never boring thanks to the variety of exercises and the coach's engaging teaching style. I've recommended this program to several friends."
-  }
+    shortText:
+      "Great training program with excellent results. Coach really knows how to motivate and push you to excel.",
+    fullText:
+      "Great training program with excellent results. Coach really knows how to motivate and push you to excel while maintaining a positive atmosphere. The combination of technical skill work and game-situation practice has been perfect for my development. I particularly appreciate how Coach explains the 'why' behind each drill and technique, which helps me understand the game better. The progress tracking and regular feedback sessions keep me motivated and focused on improvement. While the training is intensive, it's never boring thanks to the variety of exercises and the coach's engaging teaching style. I've recommended this program to several friends.",
+  },
 ];
 
-const TrainerProfile: React.FC = () => {
+interface TrainerProfileProps {
+  id: string;
+}
+
+const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
   const { decoded } = useJwt();
   const [expanded, setExpanded] = useState(false);
-  const [expandedReviews, setExpandedReviews] = useState<{ [key: number]: boolean }>({});
-  
+  const [expandedReviews, setExpandedReviews] = useState<{
+    [key: number]: boolean;
+  }>({});
+
+  // details of trainer
+
+  const { data, isLoading, isError } = useGetTrainerDetailsQuery(id);
+
   const text =
     "With years of coaching experience and a passion for athlete development, I focus on understanding each student's strengths and challenges to create a training plan that fits their goals. My approach goes beyond drills — I emphasize discipline, teamwork, and confidence while offering patience, encouragement, and step-by-step guidance";
   const displayText = expanded
@@ -55,9 +67,9 @@ const TrainerProfile: React.FC = () => {
     : text.slice(0, 200) + (text.length > 200 ? "..." : "");
 
   const toggleReviewExpansion = (reviewId: number) => {
-    setExpandedReviews(prev => ({
+    setExpandedReviews((prev) => ({
       ...prev,
-      [reviewId]: !prev[reviewId]
+      [reviewId]: !prev[reviewId],
     }));
   };
 
@@ -97,7 +109,7 @@ const TrainerProfile: React.FC = () => {
                   className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900"
                   {...fadeInUp}
                 >
-                  Football Trainer
+                  {data?.full_name}
                 </motion.h1>
 
                 <motion.h2
@@ -105,7 +117,7 @@ const TrainerProfile: React.FC = () => {
                   {...fadeInUp}
                   transition={{ delay: 0.1 }}
                 >
-                  Football Trainer
+                  {data?.coach_type}
                 </motion.h2>
 
                 <motion.p
@@ -171,8 +183,8 @@ const TrainerProfile: React.FC = () => {
                     </motion.button>
                   )}
                   <div className="flex items-center gap-2 text-gray-700">
-                    <span className="text-2xl font-bold">$10 - $30</span>
-                    <span className="text-sm">/session</span>
+                    <span className="text-2xl font-bold">${data?.price}</span>
+                    <span className="text-sm">/{data?.training_type}</span>
                   </div>
                 </motion.div>
               </div>
@@ -185,7 +197,11 @@ const TrainerProfile: React.FC = () => {
               >
                 <div className="flex items-center justify-center lg:justify-end">
                   <Image
-                    src="/trainer/trainerImage.jpg"
+                    src={
+                      data?.profile_pic_url
+                        ? data?.profile_pic_url
+                        : "/trainer/trainerImage.jpg"
+                    }
                     alt="Football Trainer"
                     className="object-cover object-top w-[490px] h-[402px] rounded-lg"
                     width={400}
@@ -217,32 +233,32 @@ const TrainerProfile: React.FC = () => {
 
           <div className="grid md:grid-cols-2 gap-6">
             <motion.div
-              className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white p-10 h-[504px]"
-              variants={fadeInUp}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/trainer/vartualTraning.jpg)",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              <div className="absolute inset-0 bg-black/20"></div>
-              <div className="relative z-10 flex flex-col justify-between h-full">
-                <div className="w-full h-full flex items-center justify-center">
-                  <Interactive size={138} />
-                </div>
-                <div>
-                  <h3 className="text-3xl font-bold mb-2">Virtual Training</h3>
-                  <p className="text-white/80">
-                    Develop skills at home with guided{" "}
-                    <br className="hidden md:block" />
-                    online drills.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+  className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white p-10 h-[504px]"
+  variants={fadeInUp}
+  whileHover={{ scale: 1.02 }}
+  transition={{ duration: 0.3 }}
+  style={{
+    backgroundImage:
+      "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/trainer/vartualTraning.jpg)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+>
+  <div className="absolute inset-0 bg-black/20"></div>
+  <div className="relative z-10 flex flex-col justify-between h-full">
+    <div className="w-full h-full flex items-center justify-center">
+      <Interactive size={138} />
+    </div>
+    <div>
+      <h3 className="text-3xl font-bold mb-2">Virtual Training</h3>
+      <p className="text-white/80">
+        Develop skills at home with guided{" "}
+        <br className="hidden md:block" />
+        online drills.
+      </p>
+    </div>
+  </div>
+</motion.div>
 
             <motion.div
               className="relative rounded-2xl overflow-hidden text-white p-10 h-[504px]"
@@ -370,11 +386,13 @@ const TrainerProfile: React.FC = () => {
                       <div className="flex w-full justify-between items-start md:items-end gap-2">
                         <div className="flex text-yellow-400">
                           {Array.from({ length: 5 }, (_, index) => (
-                            <Star 
-                              key={index} 
+                            <Star
+                              key={index}
                               className={`w-4 h-4 ${
-                                index < review.rating ? 'fill-current' : 'stroke-current fill-transparent'
-                              }`} 
+                                index < review.rating
+                                  ? "fill-current"
+                                  : "stroke-current fill-transparent"
+                              }`}
                             />
                           ))}
                         </div>
@@ -387,14 +405,16 @@ const TrainerProfile: React.FC = () => {
                     <div className="space-y-3">
                       <motion.div
                         initial={false}
-                        animate={{ 
-                          height: expandedReviews[review.id] ? 'auto' : 'auto',
-                          opacity: 1 
+                        animate={{
+                          height: expandedReviews[review.id] ? "auto" : "auto",
+                          opacity: 1,
                         }}
                         transition={{ duration: 0.3 }}
                       >
                         <p className="text-gray-700 leading-relaxed">
-                          {expandedReviews[review.id] ? review.fullText : review.shortText}
+                          {expandedReviews[review.id]
+                            ? review.fullText
+                            : review.shortText}
                         </p>
                       </motion.div>
 
@@ -404,7 +424,9 @@ const TrainerProfile: React.FC = () => {
                         whileHover={{ x: 5 }}
                       >
                         <span className="text-sm">
-                          {expandedReviews[review.id] ? "Show less" : "Show more"}
+                          {expandedReviews[review.id]
+                            ? "Show less"
+                            : "Show more"}
                         </span>
                         {expandedReviews[review.id] ? (
                           <ChevronUp className="w-4 h-4" />

@@ -33,8 +33,8 @@ const SportsCategory: React.FC = () => {
 
   const sportsTableData = data?.results || [];
 
-  console.log("add open state:", addOpen);
-  console.log("edit open state:", editOpen);
+  //console.log("add open state:", addOpen);
+  //console.log("edit open state:", editOpen);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {

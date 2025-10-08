@@ -82,7 +82,7 @@ const VideoEditFrom: React.FC<VideoEditFormProps> = ({ id, open, setOpen }) => {
       setOpen(false);
       reset();
     } catch (error) {
-      console.error("Error updating video:", error);
+      //console.error("Error updating video:", error);
       toast.error("Failed to update video. Please try again.");
     }
   };

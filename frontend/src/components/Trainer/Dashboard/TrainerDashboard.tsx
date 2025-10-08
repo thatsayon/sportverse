@@ -4,7 +4,6 @@ import { MetricsCard } from "./MetricsCard";
 import { CurrentReservations } from "./CurrentReservations";
 import { AverageVisitsChart } from "./AverageVisitsChart";
 import {
-  DashboardMetrics,
   TopStudent,
 } from "@/types/Trainerdashboard";
 import { useGetTeacherDashboardQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
@@ -57,9 +56,6 @@ export const TrainerDashboard: React.FC<TrainerDashboardProps> = ({
 }, [data, visitsPeriod]);  // Changed dependency from reservationPeriod
 
 
-  const peakValue = useMemo(() => {
-    return visitsPeriod === "Weekly" ? 2203 : 3450;
-  }, [visitsPeriod]);
 
   //Loading and Error Handling ---------------------------
 

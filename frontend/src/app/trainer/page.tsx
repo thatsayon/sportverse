@@ -15,11 +15,11 @@ function Page() {
     const socket = getSocket(SOCKET_URL, accessToken);
  
     socket.on("connect", () => {
-      console.log("✅ Global socket connected:", socket.id);
+      //console.log("✅ Global socket connected:", socket.id);
     });
  
     socket.on("receive_message", (msg: any) => {
-      console.log("📩 New message received globally:", msg);
+      //console.log("📩 New message received globally:", msg);
       // You can update a global store or trigger a toast/notification here
     });
  

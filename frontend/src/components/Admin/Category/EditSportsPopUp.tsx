@@ -55,7 +55,7 @@ function EditSportsPopUp({ open, setOpen, refetch, id }: EditSportsPopUpProps) {
   const fetchSportData = async () => {
     try {
       setIsLoading(true);
-      console.log("Calling RTK API")
+      //console.log("Calling RTK API")
       const response = await getSports(id).unwrap();
       
       if (response) {
@@ -71,7 +71,7 @@ function EditSportsPopUp({ open, setOpen, refetch, id }: EditSportsPopUpProps) {
         setErrors({});
       }
     } catch (error) {
-      console.error("Failed to fetch sport data:", error);
+      //console.error("Failed to fetch sport data:", error);
       toast.error("Failed to load sport data");
     } finally {
       setIsLoading(false);
@@ -214,13 +214,13 @@ function EditSportsPopUp({ open, setOpen, refetch, id }: EditSportsPopUpProps) {
         // Compress image before uploading
         const compressedImage = await imageCompression(formData.image, options);
 
-        console.log("Original Image Size:", formData.image.size / 1024, "KB");
-        console.log("Compressed Image Size:", compressedImage.size / 1024, "KB");
+        //console.log("Original Image Size:", formData.image.size / 1024, "KB");
+        //console.log("Compressed Image Size:", compressedImage.size / 1024, "KB");
 
         formDataToSend.append("image", compressedImage);
       }
 
-      console.log("Formatted data:", formDataToSend);
+      //console.log("Formatted data:", formDataToSend);
 
       // API call for update
       const accessToken = getCookie("access_token");
@@ -241,7 +241,7 @@ function EditSportsPopUp({ open, setOpen, refetch, id }: EditSportsPopUpProps) {
         throw new Error("Failed to update sport");
       }
     } catch (error) {
-      console.error("Update error:", error);
+      //console.error("Update error:", error);
       toast.error("Update failed. Please try again.");
     } finally {
       setIsSubmitting(false);

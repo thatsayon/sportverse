@@ -13,7 +13,7 @@ import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 const AdminDashboard: React.FC = () => {
   const { data, isLoading, isError } = useGetDashboardQuery();
 
-  console.log("Geting admin dashboard data:", data);
+  //console.log("Geting admin dashboard data:", data);
   if (isLoading) return <Loading />;
   if (isError) return <ErrorLoadingPage />;
 

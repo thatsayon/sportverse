@@ -58,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   // Socket integration for real-time messaging
   useEffect(() => {
     const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
-    console.log("Socket in Dashboard Navbar:", socket);
+    //console.log("Socket in Dashboard Navbar:", socket);
     
     const handleNewMessage = (msg: any) => {
       setLocalMessageList((prev) => {

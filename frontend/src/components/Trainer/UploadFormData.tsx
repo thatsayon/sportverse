@@ -169,22 +169,22 @@ const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
       );
       const compressedBackSide = await imageCompression(backSideFile, options);
 
-      console.log("Original Photo Size:", photoFile.size / 1024, "KB");
-      console.log("Compressed Photo Size:", compressedPhoto.size / 1024, "KB");
+      //console.log("Original Photo Size:", photoFile.size / 1024, "KB");
+      //console.log("Compressed Photo Size:", compressedPhoto.size / 1024, "KB");
 
-      console.log("Original Front Side Size:", frontSideFile.size / 1024, "KB");
-      console.log(
-        "Compressed Front Side Size:",
-        compressedFrontSide.size / 1024,
-        "KB"
-      );
+      //console.log("Original Front Side Size:", frontSideFile.size / 1024, "KB");
+      //console.log(
+      //   "Compressed Front Side Size:",
+      //   compressedFrontSide.size / 1024,
+      //   "KB"
+      // );
 
-      console.log("Original Back Side Size:", backSideFile.size / 1024, "KB");
-      console.log(
-        "Compressed Back Side Size:",
-        compressedBackSide.size / 1024,
-        "KB"
-      );
+      //console.log("Original Back Side Size:", backSideFile.size / 1024, "KB");
+      //console.log(
+      //   "Compressed Back Side Size:",
+      //   compressedBackSide.size / 1024,
+      //   "KB"
+      // );
 
       // Prepare formData to send to the backend
       const formDataToSend = new FormData();
@@ -194,8 +194,8 @@ const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
       formDataToSend.append("city", formData.city);
       formDataToSend.append("zip_code", formData.zip_code);
 
-      console.log("formated data:", formDataToSend);
-      console.log("formated data 1:", formData);
+      //console.log("formated data:", formDataToSend);
+      //console.log("formated data 1:", formData);
 
       //   Send to backend (replace URL with your backend endpoint)
 
@@ -230,7 +230,7 @@ const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
         // will impliment push to a different route
       }
     } catch (error) {
-      console.error("Upload error:", error);
+      //console.error("Upload error:", error);
       alert("Upload failed. Please try again.");
     } finally {
       setIsSubmitting(false);

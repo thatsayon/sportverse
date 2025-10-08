@@ -62,6 +62,7 @@ export interface LoginResponse {
 }
 export interface verifyEmailCodeResponse {
   access_token: string;
+  error?: string;
 }
 export interface verifyForgotPasswordCodeResponse {
   message: string;
@@ -137,8 +138,8 @@ export const apiSlice = createApi({
     },
     // Add response handling for debugging
     validateStatus: (response, body) => {
-      console.log("API Response Status:", response.status);
-      console.log("API Response Body:", body);
+      //console.log("API Response Status:", response.status);
+      //console.log("API Response Body:", body);
       return response.status < 500; // Don't treat 4xx as errors
     },
   }),

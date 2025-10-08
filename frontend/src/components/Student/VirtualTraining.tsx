@@ -20,8 +20,8 @@ function VirtualTraining() {
   const [filter, setFilter] = useState<string>("all");
   const { data, isLoading } = useGetVritualTrainersQuery();
 
-  console.log("Filter values:", filter);
-  console.log("Data values:", data);
+  //console.log("Filter values:", filter);
+  //console.log("Data values:", data);
 
   // Filter based on new API structure
   const filteredData =
@@ -108,6 +108,7 @@ function VirtualTraining() {
             return (
               <TrainerCard
                 key={index}
+                profile_pic_url={item.profile_pic_url}
                 institute_name={item.institute_name}
                 id={index}
                 image="/trainer/default.jpg" // fallback until API provides images

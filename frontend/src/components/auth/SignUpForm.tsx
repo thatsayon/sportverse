@@ -53,7 +53,7 @@ export function SignUpForm() {
     },
   });
 
-  console.log("hello error", form.formState.errors);
+  //console.log("hello error", form.formState.errors);
 
   const router = useRouter();
 
@@ -82,7 +82,7 @@ export function SignUpForm() {
         toast.error(result.message || "Signup failed");
       }
     } catch (error) {
-      console.error("Signup error:", error);
+      //console.error("Signup error:", error);
       if (error instanceof Error) toast.error(`Error: ${error.message}`);
       else toast.error("Unknown error occurred");
     }

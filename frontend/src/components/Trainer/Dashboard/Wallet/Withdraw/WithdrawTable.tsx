@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   ChevronLeft,
   ChevronRight,
@@ -28,6 +27,8 @@ import {
 } from "lucide-react";
 import WithdrawRequest from "./WithdrawRequest";
 import { useGetTainerWithdrawQuery, useGetTeacherDashboardQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import Loading from "@/components/Element/Loading";
+import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 
 export interface InvoiceType {
   transaction_Id: string; // updated typo from transition_Id
@@ -87,7 +88,7 @@ const WithdrawTable = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data } = useGetTainerWithdrawQuery();
+  const { data, isLoading, isError } = useGetTainerWithdrawQuery();
   const { data:currentBal } = useGetTeacherDashboardQuery();
 
   const invoices = data?.results || [];
@@ -124,19 +125,6 @@ const WithdrawTable = () => {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "accepted":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "rejected":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -148,8 +136,11 @@ const WithdrawTable = () => {
   const goToNextPage = () =>
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
+  if(isLoading) return <Loading/>
+  if(isError) return <ErrorLoadingPage/>
+
   return (
-    <div className="-mt-10">
+    <div className="">
       <WithdrawRequest open={open} setOpen={setOpen} currentBalance={Number(currentBal?.total_revenue)}/>
       <Card className="bg-white shadow-none border-none">
         <CardHeader className="pb-4">

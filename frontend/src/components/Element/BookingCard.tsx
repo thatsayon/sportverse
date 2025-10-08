@@ -75,13 +75,13 @@ const BookingCard: React.FC<BookingCardProps> = ({
     );
     if (response) {
       const data = await response.json();
-      console.log("Generated Booking data", data);
+      //console.log("Generated Booking data", data);
       dispatch(setCallConfig(data));
 
-      console.log(data);
+      //console.log(data);
       // router.push("/video");
     } else {
-      console.log("error occurs");
+      //console.log("error occurs");
     }
   };
 

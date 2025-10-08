@@ -5,6 +5,7 @@ export interface TrainingInfo {
 }
 
 export interface UserResult {
+  profile_pic_url: string;
   full_name: string;
   username: string;
   institute_name: string | null;

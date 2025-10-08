@@ -35,7 +35,7 @@ const TermsOfService = () => {
                 These terms explain the rules for using Sportverse, our sports training platform that connects athletes with professional trainers.
               </p>
               <p>
-                By using our platform, you agree to follow these terms. We've kept them simple and fair.
+                By using our platform, you agree to follow these terms. We&apos;ve kept them simple and fair.
               </p>
             </div>
           </div>
@@ -64,7 +64,7 @@ const TermsOfService = () => {
                   <li>• Use the platform respectfully</li>
                   <li>• Follow trainer instructions safely</li>
                   <li>• Report any problems to us</li>
-                  <li>• Don't share your account</li>
+                  <li>• Don&apos;t share your account</li>
                 </ul>
               </div>
             </div>
@@ -94,7 +94,7 @@ const TermsOfService = () => {
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-red-800 mb-3 flex items-center">
                   <AlertTriangle className="w-5 h-5 mr-2" />
-                  What's Not Allowed
+                  What&apos;s Not Allowed
                 </h3>
                 <ul className="space-y-1 text-red-700">
                   <li>• Bullying, harassment, or inappropriate behavior</li>
@@ -127,7 +127,7 @@ const TermsOfService = () => {
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">30-Day Guarantee</h3>
-                <p className="text-[#808080] text-sm">Get a full refund within 30 days if you're not satisfied</p>
+                <p className="text-[#808080] text-sm">Get a full refund within 30 days if you&apos;re not satisfied</p>
               </div>
               <div className="text-center">
                 <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -153,7 +153,7 @@ const TermsOfService = () => {
               </p>
               <ul className="space-y-2 text-yellow-700">
                 <li>• Consult a doctor before starting any new fitness program</li>
-                <li>• Follow your trainer's instructions carefully</li>
+                <li>• Follow your trainer&apos;s instructions carefully</li>
                 <li>• Stop immediately if you feel pain or discomfort</li>
                 <li>• Listen to your body and train within your limits</li>
               </ul>
@@ -194,10 +194,11 @@ const TermsOfService = () => {
           <div className="bg-[#F15A24] rounded-xl shadow-lg p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-4">Questions About These Terms?</h2>
             <p className="text-white/90 mb-6">
-              Our legal team is happy to help clarify anything you don't understand.
+              Our legal team is happy to help clarify anything you don&apos;t understand.
             </p>
             <div className="bg-white/10 rounded-lg p-4 inline-block">
-              <p className="text-white font-semibold">legal@sportverse.com</p>
+              <p className="text-white font-semibold">train@brightstarsoccer.com
+</p>
             </div>
             <p className="text-white/80 text-sm mt-4">
               We typically respond within 3-5 business days
