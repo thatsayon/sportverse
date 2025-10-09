@@ -49,8 +49,14 @@ class SessionOptionSerializer(serializers.ModelSerializer):
 class TrainerDetailsSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')
     username = serializers.CharField(source='teacher.user.username')
+    profile_pic_url = serializers.SerializerMethodField(read_only=True)
     institute_name = serializers.CharField(source='teacher.institute_name')
     coach_type = serializers.SerializerMethodField()
+
+    # New boolean fields
+    virtual = serializers.SerializerMethodField()
+    mindset = serializers.SerializerMethodField()
+    in_person = serializers.SerializerMethodField()
 
     class Meta:
         model = SessionOption
@@ -60,13 +66,32 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             'price', 
             'full_name',
             'username',
+            'profile_pic_url',
             'institute_name',
-            'coach_type'
+            'coach_type',
+            'virtual',
+            'mindset',
+            'in_person'
         ]
 
     def get_coach_type(self, obj):
-        # Returns a list of sport names
         return [sport.name for sport in obj.teacher.coach_type.all()]
+
+    def get_profile_pic_url(self, obj):
+        user = obj.teacher.user
+        if user.profile_pic and hasattr(user.profile_pic, 'url'):
+            return user.profile_pic.url
+        return None
+
+    def get_virtual(self, obj):
+        return obj.teacher.session.filter(training_type='virtual').exists()
+
+    def get_mindset(self, obj):
+        return obj.teacher.session.filter(training_type='mindset').exists()
+
+    def get_in_person(self, obj):
+        return obj.teacher.session.filter(training_type='in_person').exists()
+
 
 class AvailableTimeSlotSerializer(serializers.ModelSerializer):
     day = serializers.CharField(source="available_day.day", read_only=True)
