@@ -86,7 +86,11 @@ const VideoLibrary: React.FC = () => {
     setCurrentPage(1);
   };
 
-  if(isLoading) return <Loading/>
+  if(isLoading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loading/>
+    </div>
+  )
   if(isError) return <ErrorLoadingPage/>
 
   return (

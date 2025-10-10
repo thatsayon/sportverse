@@ -148,7 +148,7 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
                     aria-label={label}
                     className={`
                     group
-                    ${social.label === "Tiktok" ? "p-4l":"p-3"} 
+                    ${social.label === "Tiktok" ? "p-4":"p-3"} 
                     flex items-center justify-center
                     rounded-full
                     bg-gray-100 hover:bg-gradient-to-br hover:from-orange-500 hover:to-red-600

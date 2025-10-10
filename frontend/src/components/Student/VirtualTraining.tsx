@@ -11,10 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
-import { FilterIcon } from "lucide-react";
+import { CloudCog, FilterIcon } from "lucide-react";
 import { useGetVritualTrainersQuery } from "@/store/Slices/apiSlices/studentApiSlice";
-import { LoadingSpinner } from "../Element/LoadingSpinner";
+// import { LoadingSpinner } from "../Element/LoadingSpinner";
 import Loading from "../Element/Loading";
+import NoDataFound from "../Element/NoDataFound";
 
 function VirtualTraining() {
   const [filter, setFilter] = useState<string>("all");
@@ -38,13 +39,13 @@ function VirtualTraining() {
       return false;
     }) || [];
 
-
-    if (isLoading) {
-      return (
-
-        <LoadingSpinner size="xl" className="mx-auto my-20" />
-      )
-    }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading size="md" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-[calc(100vh-240px)]">
@@ -55,8 +56,8 @@ function VirtualTraining() {
             {filter === "all"
               ? "Virtual Trainers"
               : filter === "virtual"
-              ? "Virtual Sessions"
-              : "Mindset Sessions"}
+                ? "Virtual Sessions"
+                : "Mindset Sessions"}
           </h2>
           <p>Connect with professional trainers through live video sessions</p>
         </div>
@@ -93,9 +94,9 @@ function VirtualTraining() {
       {/* Trainers List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {isLoading ? (
-          <Loading/>
+          <Loading />
         ) : filteredData.length === 0 ? (
-          <p>No trainers found.</p>
+          <NoDataFound />
         ) : (
           filteredData.map((item, index) => {
             // pick first matching price (virtual or mindset)
@@ -111,7 +112,6 @@ function VirtualTraining() {
                 profile_pic_url={item.profile_pic_url}
                 institute_name={item.institute_name}
                 id={index}
-                image="/trainer/default.jpg" // fallback until API provides images
                 name={item.full_name}
                 rating={4.5} // placeholder, API doesn’t provide rating yet
                 price={matchingTraining ? Number(matchingTraining.price) : 0.00}

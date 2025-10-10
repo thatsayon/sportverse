@@ -16,7 +16,7 @@ const TermsOfService = () => {
             </h1>
           </div>
           <p className="text-xl text-[#808080] max-w-2xl mx-auto">
-            Simple, fair terms that protect both you and Sportverse.
+            Simple, fair terms that protect both you and Ball Mastery.
           </p>
           <p className="text-sm text-[#808080] mt-4">Last updated: September 10, 2025</p>
         </div>
@@ -28,11 +28,11 @@ const TermsOfService = () => {
               <div className="bg-[#F15A24] p-3 rounded-lg mr-4">
                 <Globe className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Welcome to Sportverse</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Welcome to Ball Mastery</h2>
             </div>
             <div className="space-y-4 text-[#808080] leading-relaxed">
               <p>
-                These terms explain the rules for using Sportverse, our sports training platform that connects athletes with professional trainers.
+                These terms explain the rules for using Ball Mastery, our sports training platform that connects athletes with professional trainers.
               </p>
               <p>
                 By using our platform, you agree to follow these terms. We&apos;ve kept them simple and fair.

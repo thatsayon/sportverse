@@ -20,6 +20,8 @@ import {
 import { useResetPasswordMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { z } from "zod";
 import { getCookie } from "@/hooks/cookie";
+import { useDispatch } from "react-redux";
+import { setEmail } from "@/store/Slices/stateSlices/stateSlice";
 
 // Password validation schema
 const resetPasswordSchema = z.object({
@@ -40,10 +42,11 @@ interface ResetPasswordFormData {
 export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  // const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
   const router = useRouter();
+  const dispatch = useDispatch()
 
   useEffect(() => {
     // Get email and code from sessionStorage
@@ -83,6 +86,7 @@ export default function ResetPasswordPage() {
       sessionStorage.removeItem('verificationCode');
       
       // Redirect to success page
+      dispatch(setEmail(""))
       router.push("/forget-password/success");
     } catch (error) {
       ////console.error("Password reset error:", error);//

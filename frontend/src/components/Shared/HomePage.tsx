@@ -27,7 +27,7 @@ const HomePage: React.FC = () => {
       bgColor: "bg-[#EB5A0D]",
       href: "/trainer/in-person",
       hrefStudent: "/student/in-person",
-      image: "/trainer/home-1.jpg", // Sports team training image
+      image: "/teacherImage/home-1.jpg", // Sports team training image
     },
     {
       icon: Video,
@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
       bgColor: "bg-[#2867EC]",
       href: "/trainer/virtual-training",
       hrefStudent: "/student/virtual-training",
-      image: "/trainer/home-2.jpg", // Virtual training session image
+      image: "/teacherImage/home-2.jpg", // Virtual training session image
     },
     {
       icon: SquarePlay,
@@ -47,7 +47,7 @@ const HomePage: React.FC = () => {
       bgColor: "bg-[#17A54B]",
       href: "/trainer/video-library",
       hrefStudent: "/student/video-library",
-      image: "/trainer/home-3.jpg", // Video library on laptop image
+      image: "/teacherImage/home-3.jpg", // Video library on laptop image
       badge: "Pro Only",
     },
   ];

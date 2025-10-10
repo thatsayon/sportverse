@@ -21,7 +21,7 @@ import { useRequestForgotPasswordCodeMutation } from "@/store/Slices/apiSlices/a
 import { z } from "zod";
 import { useStateSlice } from "@/store/hooks/sliceHook";
 import { useDispatch } from "react-redux";
-import { setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
+import { setEmail, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { setCookie } from "@/hooks/cookie";
 
 // Email validation schema
@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
   const [requestCode, { isLoading }] = useRequestForgotPasswordCodeMutation();
   const router = useRouter();
   const dispatch = useDispatch()
-  const {userQuery} = useStateSlice()
+  // const {userQuery} = useStateSlice()
 
   // //console.log("userQuery is:",userQuery)
   const form = useForm<ForgotPasswordFormData>({
@@ -61,6 +61,7 @@ export default function ForgotPasswordPage() {
       if(result.success){
         dispatch(setUserQuery("forget"))
         setCookie("passResetToken", result.passResetToken, 7)
+        dispatch(setEmail(data.email))
         router.push("/forget-password/verify-code");
       }
       // Redirect to verification code page

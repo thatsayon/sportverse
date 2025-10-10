@@ -458,8 +458,8 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     <p className="text-sm text-gray-500">No notifications yet</p>
                   </DropdownMenuItem>
                 ) : (
-                  notifications.map((notification) => (
-                    <React.Fragment key={notification.id}>
+                  notifications.map((notification, index) => (
+                    <React.Fragment key={index}>
                       <DropdownMenuItem
                         onClick={() => handleNotificationClick(notification.id)}
                         className={notification.read ? "opacity-60" : ""}

@@ -22,11 +22,36 @@ import { usePathname, useRouter } from "next/navigation";
 import ChatConversation from "../Element/ChatConversation";
 import { useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { getSocket } from "@/lib/socket";
+import io from "socket.io-client";
+import { jwtDecode } from "jwt-decode";
 
 const SOCKET_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
+const NOTIFICATION_SOCKET_URL = "https://5zpgdqz5-8004.inc1.devtunnels.ms/";
 
 interface NavbarProps {
   onMenuClick: () => void;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+}
+
+interface NotificationAPIResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: {
+    id: string;
+    user_id: string;
+    title: string;
+    message: string;
+    is_read: boolean;
+    created_at: string;
+  }[];
 }
 
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
@@ -37,6 +62,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     otherUser: string;
   } | null>(null);
   const [localMessageList, setLocalMessageList] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -58,7 +85,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   // Socket integration for real-time messaging
   useEffect(() => {
     const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
-    //console.log("Socket in Dashboard Navbar:", socket);
     
     const handleNewMessage = (msg: any) => {
       setLocalMessageList((prev) => {
@@ -95,6 +121,125 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     };
   }, []);
 
+  // Fetch existing notifications from API
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const accessToken = getCookie("access_token");
+
+      if (!accessToken) {
+        console.warn("⚠️ No access token found in cookies.");
+        setIsLoadingNotifications(false);
+        return;
+      }
+      try {
+        const response = await fetch(`${NOTIFICATION_SOCKET_URL}notifications/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: NotificationAPIResponse = await response.json();
+        console.log("📥 Fetched notifications:", data);
+
+        // Transform API response to match our Notification interface
+        const transformedNotifications: Notification[] = data.results.map((notif) => ({
+          id: notif.id,
+          title: notif.title,
+          message: notif.message,
+          timestamp: notif.created_at,
+          read: notif.is_read,
+        }));
+
+        setNotifications(transformedNotifications);
+      } catch (error) {
+        console.error("❌ Error fetching notifications:", error);
+      } finally {
+        setIsLoadingNotifications(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  // Socket integration for real-time notifications
+  useEffect(() => {
+    const accessToken = getCookie("access_token");
+
+    if (!accessToken) {
+      console.warn("⚠️ No access token found in cookies.");
+      return;
+    }
+
+    let userId: string | undefined;
+
+    try {
+      const decoded: any = jwtDecode(accessToken);
+      userId = decoded?.user_id || decoded?.id;
+      console.log("Decoded user ID:", userId);
+    } catch (err) {
+      console.error("❌ Error decoding JWT:", err);
+      return;
+    }
+
+    if (!userId) {
+      console.error("❌ No user_id found in token payload.");
+      return;
+    }
+
+    // ✅ Establish socket connection
+    const notificationSocket = io(NOTIFICATION_SOCKET_URL, {
+      auth: { user_id: userId },
+      transports: ["websocket"],
+      autoConnect: true,
+    });
+
+    // 🔌 Connection events
+    notificationSocket.on("connect", () => {
+      console.log("🔌 Notification Socket Connected:", notificationSocket.id);
+    });
+
+    notificationSocket.on("disconnect", () => {
+      console.log("❌ Notification Socket Disconnected");
+    });
+
+    // 🔔 New notification
+    notificationSocket.on("new_notification", (data: any) => {
+      console.log("🔔 New notification:", data);
+
+      const newNotification: Notification = {
+        id: data.id || Date.now().toString(),
+        title: data.title || "New Notification",
+        message: data.message || data.content || "",
+        timestamp: data.timestamp || data.created_at || new Date().toISOString(),
+        read: false,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+    });
+
+    // ✅ Mark notification as read
+    notificationSocket.on("notification_read", (data: any) => {
+      console.log("✅ Notification marked as read:", data);
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === data.notification_id ? { ...notif, read: true } : notif
+        )
+      );
+    });
+
+    // 🧹 Cleanup on unmount
+    return () => {
+      notificationSocket.disconnect();
+      console.log("🧹 Notification socket disconnected");
+    };
+  }, []);
+
   const handleLogout = () => {
     removeCookie("access_token");
     removeCookie("");
@@ -118,10 +263,53 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     );
   };
 
+  const handleNotificationClick = async (notificationId: string) => {
+    // Mark notification as read locally
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === notificationId ? { ...notif, read: true } : notif
+      )
+    );
+
+    // Send request to server to mark as read
+    try {
+      const accessToken = getCookie("access_token");
+      if (!accessToken) return;
+
+      await fetch(`${NOTIFICATION_SOCKET_URL}notifications/${notificationId}/read/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+      });
+
+      console.log("✅ Notification marked as read on server:", notificationId);
+    } catch (error) {
+      console.error("❌ Error marking notification as read:", error);
+    }
+  };
+
+  const getTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const notifTime = new Date(timestamp);
+    const diffMs = now.getTime() - notifTime.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  };
+
   const totalUnreadCount = localMessageList.reduce(
     (acc, c) => acc + (c.unread_count || 0),
     0
   );
+
+  const unreadNotificationCount = notifications.filter((n) => !n.read).length;
 
   // Function to get the page title based on pathname
   const getPageTitle = () => {
@@ -247,38 +435,51 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="size-5" />
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs"
-                    >
-                      5
-                    </Badge>
+                    {unreadNotificationCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs"
+                      >
+                        {unreadNotificationCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 sm:w-80">
+                <DropdownMenuContent align="end" className="w-72 sm:w-80 max-h-96 overflow-y-auto">
                   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">New booking request</p>
-                      <p className="text-xs text-gray-500">
-                        James Hall requested a training session
-                      </p>
-                      <span className="text-xs text-gray-400">
-                        5 minutes ago
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">Payment received</p>
-                      <p className="text-xs text-gray-500">
-                        $250 payment from Iva Ryan
-                      </p>
-                      <span className="text-xs text-gray-400">1 hour ago</span>
-                    </div>
-                  </DropdownMenuItem>
+                  {isLoadingNotifications ? (
+                    <DropdownMenuItem disabled>
+                      <p className="text-sm text-gray-500">Loading notifications...</p>
+                    </DropdownMenuItem>
+                  ) : notifications.length === 0 ? (
+                    <DropdownMenuItem disabled>
+                      <p className="text-sm text-gray-500">No notifications yet</p>
+                    </DropdownMenuItem>
+                  ) : (
+                    notifications.map((notification) => (
+                      <React.Fragment key={notification.id}>
+                        <DropdownMenuItem
+                          onClick={() => handleNotificationClick(notification.id)}
+                          className={notification.read ? "opacity-60" : ""}
+                        >
+                          <div className="flex flex-col space-y-1 w-full">
+                            <div className="flex items-start justify-between">
+                              <p className="text-sm font-medium">{notification.title}</p>
+                              {!notification.read && (
+                                <span className="h-2 w-2 bg-blue-500 rounded-full mt-1 ml-2 flex-shrink-0"></span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500">{notification.message}</p>
+                            <span className="text-xs text-gray-400">
+                              {getTimeAgo(notification.timestamp)}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </React.Fragment>
+                    ))
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
