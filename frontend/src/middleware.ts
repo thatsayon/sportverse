@@ -32,6 +32,7 @@ function getDecodedToken(request: NextRequest): DecodedToken | null {
     return decoded;
   } catch (error) {
     const err = error as Error
+    console.log(err)
 
     return null;
   }
@@ -53,6 +54,31 @@ const routeAccessRules = {
   }
 };
 
+// Routes that authenticated users should NOT access
+const publicOnlyRoutes = [
+  '/login',
+  '/signup',
+  '/register',
+  '/about',
+  '/faq',
+  '/help',
+  '/privacy',
+  '/terms',
+  '/'
+];
+
+function isPublicOnlyRoute(pathname: string): boolean {
+  return publicOnlyRoutes.some(route => {
+    // Exact match for root
+    if (route === '/' && pathname === '/') return true;
+    
+    // For other routes, check if pathname starts with the route
+    if (route !== '/' && pathname.startsWith(route)) return true;
+    
+    return false;
+  });
+}
+
 function isRouteAllowed(pathname: string, role: string): boolean {
   const rules = routeAccessRules[role as keyof typeof routeAccessRules];
   
@@ -73,6 +99,19 @@ function isRouteAllowed(pathname: string, role: string): boolean {
   return isAllowed;
 }
 
+function getRedirectPathForRole(role: string): string {
+  switch (role) {
+    case 'student':
+      return '/student';
+    case 'teacher':
+      return '/trainer';
+    case 'admin':
+      return '/dashboard';
+    default:
+      return '/login';
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
@@ -85,76 +124,62 @@ export function middleware(request: NextRequest) {
     });
   }
   
-  
-  // Define protected routes that require authentication
-  const protectedRoutes = ['/student', '/trainer', '/dashboard'];
-  
-  // Check if the current path is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  );
-  
-  
-  // Skip middleware for public routes, API routes, and static files
+  // Skip middleware for API routes and static files
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname === '/' ||
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/register') ||
     pathname.startsWith('/auth')
   ) {
-
-    return NextResponse.next();
-  }
-  
-  // If it's NOT a protected route, allow access
-  if (!isProtectedRoute) {
-
     return NextResponse.next();
   }
 
-  // This is a protected route - authentication required
-  
   // Get decoded token
   const decoded = getDecodedToken(request);
   
-  // If no valid token, redirect to login (AUTHENTICATION CHECK)
-  if (!decoded) {
+  // ============================================
+  // HANDLE PUBLIC-ONLY ROUTES (when user IS authenticated)
+  // ============================================
+  if (decoded && isPublicOnlyRoute(pathname)) {
+    // User is authenticated but trying to access public-only routes
+    // Redirect them to their appropriate dashboard
+    const redirectPath = getRedirectPathForRole(decoded.role);
+    const redirectUrl = new URL(redirectPath, request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
 
+  // ============================================
+  // HANDLE PROTECTED ROUTES (when user is NOT authenticated)
+  // ============================================
+  const protectedRoutes = ['/student', '/trainer', '/dashboard'];
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+  
+  // If it's a protected route and user is NOT authenticated
+  if (isProtectedRoute && !decoded) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-
-  // Check if user has access to the current route (AUTHORIZATION CHECK)
-  if (!isRouteAllowed(pathname, decoded.role)) {
-
-    
-    // Redirect to appropriate dashboard based on role
-    let redirectPath = '/';
-    
-    switch (decoded.role) {
-      case 'student':
-        redirectPath = '/student';
-        break;
-      case 'teacher':
-        redirectPath = '/trainer';
-        break;
-      case 'admin':
-        redirectPath = '/dashboard';
-        break;
-      default:
-        redirectPath = '/login';
+  // ============================================
+  // HANDLE AUTHORIZATION (user IS authenticated)
+  // ============================================
+  if (decoded && isProtectedRoute) {
+    // Check if user has access to the current route (AUTHORIZATION CHECK)
+    if (!isRouteAllowed(pathname, decoded.role)) {
+      // Redirect to appropriate dashboard based on role
+      const redirectPath = getRedirectPathForRole(decoded.role);
+      const redirectUrl = new URL(redirectPath, request.url);
+      return NextResponse.redirect(redirectUrl);
     }
-    
-    const redirectUrl = new URL(redirectPath, request.url);
-    return NextResponse.redirect(redirectUrl);
   }
 
-  // User is authenticated and authorized - allow access
+  // User is either:
+  // 1. Accessing a truly public route (not in publicOnlyRoutes)
+  // 2. Authenticated and authorized for a protected route
+  // 3. Not authenticated and accessing a public route
   return NextResponse.next();
 }
 

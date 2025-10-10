@@ -23,7 +23,7 @@ const dispatch = useDispatch()
           if(decoded?.role === "student"){
             router.push("/sports-selection")
           }else{
-            router.push("/trainer")
+            router.push("/doc-submission")
           }
         }
    }else{

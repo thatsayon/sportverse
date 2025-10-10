@@ -7,7 +7,7 @@ function Logo({href}:{href: string;}) {
     <div className="flex items-center space-x-2">
       <Link href={href} className="flex items-center space-x-2">
         <Image
-          src={"/image/logo.png"}
+          src={"https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760122838/logo_cmhlqu.png"}
           alt="logo image"
           width={48}
           height={48}

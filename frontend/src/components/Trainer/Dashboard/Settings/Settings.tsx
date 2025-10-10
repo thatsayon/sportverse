@@ -16,12 +16,12 @@ const Settings = () => {
           >
             Account
           </TabsTrigger>
-          <TabsTrigger
+          {/* <TabsTrigger
             className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 data-[state=active]:border-orange-200"
             value="documents"
           >
             Documents
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-600 data-[state=active]:border-orange-200"
             value="password"
@@ -34,9 +34,9 @@ const Settings = () => {
           <AccountForm />
         </TabsContent>
 
-        <TabsContent value="documents">
+        {/* <TabsContent value="documents">
           <DocUpload />
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="password">
           <PasswordReset />

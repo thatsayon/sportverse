@@ -23,13 +23,13 @@ interface Errors {
   zip_code?: string;
 }
 
-const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app"
+const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
 
-interface DocUploadProps{
+interface DocUploadProps {
   isSignUp?: boolean;
 }
 
-const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
+const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [frontSidePreview, setFrontSidePreview] = useState<string | null>(null);
@@ -42,7 +42,6 @@ const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
     zip_code: "",
   });
   const [errors, setErrors] = useState<Errors>({});
-
 
   // Handle input change for form fields
   const handleInputChange = (
@@ -169,23 +168,6 @@ const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
       );
       const compressedBackSide = await imageCompression(backSideFile, options);
 
-      //console.log("Original Photo Size:", photoFile.size / 1024, "KB");
-      //console.log("Compressed Photo Size:", compressedPhoto.size / 1024, "KB");
-
-      //console.log("Original Front Side Size:", frontSideFile.size / 1024, "KB");
-      //console.log(
-      //   "Compressed Front Side Size:",
-      //   compressedFrontSide.size / 1024,
-      //   "KB"
-      // );
-
-      //console.log("Original Back Side Size:", backSideFile.size / 1024, "KB");
-      //console.log(
-      //   "Compressed Back Side Size:",
-      //   compressedBackSide.size / 1024,
-      //   "KB"
-      // );
-
       // Prepare formData to send to the backend
       const formDataToSend = new FormData();
       formDataToSend.append("picture", compressedPhoto);
@@ -193,28 +175,22 @@ const DocUpload: React.FC<DocUploadProps> = ({isSignUp=false}) => {
       formDataToSend.append("id_back", compressedBackSide);
       formDataToSend.append("city", formData.city);
       formDataToSend.append("zip_code", formData.zip_code);
-
-      //console.log("formated data:", formDataToSend);
-      //console.log("formated data 1:", formData);
-
-      //   Send to backend (replace URL with your backend endpoint)
-
-      //   const response = await uploadDoc(formDataToSend).unwrap()
       const accessToken = getCookie("access_token");
-      const response = await fetch(`${BASE_URL}/account/teacher-verification/`, {
-    method: "POST",
-    body: formDataToSend,  // Send the FormData with files
-    // Don't manually set Content-Type, let the browser do it for multipart/form-data
-    headers: {
-        "Authorization": `Bearer ${accessToken}`, // If you have an authorization token to send
-        // No need to set "Content-Type" here since FormData handles it automatically
-    }
-});
+      const response = await fetch(
+        `${BASE_URL}/account/teacher-verification/`,
+        {
+          method: "POST",
+          body: formDataToSend,
+
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response) {
         toast.success("Documents uploaded successfully!");
 
-        //   Reset form after successful submission
         setFormData({
           city: "",
           zip_code: "",
