@@ -131,13 +131,13 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 backdrop-blur-sm bg-white/20
                 border border-white/20
                 hover:bg-white/30
-                transition-all duration-300
+                transition-all duration-300 rounded-full
               "
             >
               {isMobileMenuOpen ? (
                 <X className="w-5 h-5" />
               ) : (
-                <Menu className="w-5 h-5" />
+                <Menu className="size-8 py-2" />
               )}
             </Button>
           </div>

@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Scale, User, CreditCard, Shield, AlertTriangle, CheckCircle, Globe, Menu, X, FileText, Image, Ban, Users, Gavel, Phone, Mail } from 'lucide-react';
+import { Scale, Shield, AlertTriangle, CheckCircle, Globe, Menu, X, FileText, Image, Ban, Users, Gavel, Phone, Mail, ImageIcon } from 'lucide-react';
 
 const TermsOfService = () => {
   const [activeSection, setActiveSection] = useState('acceptance');
@@ -41,7 +41,7 @@ const TermsOfService = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToSection = (id) => {
+  const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
       const offset = 100;
@@ -136,7 +136,7 @@ const TermsOfService = () => {
                 </div>
                 <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-[#808080] leading-relaxed">
                   <p>
-                    These Terms and Conditions ("Agreement") govern your access to and use of the www.ballmastery.com operated by Ball Mastery LLC, owned by Bright Star Soccer LLC, its affiliates, and subsidiaries (collectively referred to as "we," "our," or "us").
+                    These Terms and Conditions (&ldquo;Agreement&ldquo;) govern your access to and use of the www.ballmastery.com operated by Ball Mastery LLC, owned by Bright Star Soccer LLC, its affiliates, and subsidiaries (collectively referred to as &ldquo;we,&ldquo; &ldquo;our,&ldquo; or &ldquo;us&ldquo;).
                   </p>
                   <p>
                     By accessing, browsing, or using this Site, you agree to comply with and be bound by this Agreement. If you do not agree to these Terms and Conditions, please do not use this Site.
@@ -174,7 +174,7 @@ const TermsOfService = () => {
                 </div>
                 <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-[#808080] leading-relaxed">
                   <p>
-                    All content provided on the Site, including but not limited to articles, images, videos, logos, designs, text, graphics, and other materials (collectively referred to as "Content"), is the intellectual property of Ball Mastery LLC, Bright Star Soccer LLC, or our licensors and is protected by copyright, trademark, and other intellectual property laws.
+                    All content provided on the Site, including but not limited to articles, images, videos, logos, designs, text, graphics, and other materials (collectively referred to as &ldquo;Content&ldquo;), is the intellectual property of Ball Mastery LLC, Bright Star Soccer LLC, or our licensors and is protected by copyright, trademark, and other intellectual property laws.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
@@ -203,7 +203,7 @@ const TermsOfService = () => {
               <div id="images" className="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100 scroll-mt-20 sm:scroll-mt-24">
                 <div className="flex items-center mb-4 sm:mb-6">
                   <div className="bg-[#F15A24] p-2 sm:p-3 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
-                    {/* <Image className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> */}
+                    <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">3. Image Rights and Licensing</h2>
                 </div>
@@ -246,7 +246,7 @@ const TermsOfService = () => {
                     </p>
                   </div>
                   <p>
-                    You are prohibited from using any part of the Site's Content in any manner that competes with Ball Mastery LLC's commercial interests, including but not limited to creating derivative works, republishing, or distributing the Content for resale.
+                    You are prohibited from using any part of the Site&apos;s Content in any manner that competes with Ball Mastery LLC&apos;s commercial interests, including but not limited to creating derivative works, republishing, or distributing the Content for resale.
                   </p>
                 </div>
               </div>
@@ -261,7 +261,7 @@ const TermsOfService = () => {
                 </div>
                 <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-[#808080] leading-relaxed">
                   <p>
-                    You may have the opportunity to submit or upload content to the Site, such as comments, reviews, or other submissions (collectively, "User Content"). By submitting User Content, you grant Ball Mastery LLC a non-exclusive, worldwide, royalty-free, perpetual, and irrevocable license to use, modify, reproduce, distribute, and display such User Content on the Site or through other media.
+                    You may have the opportunity to submit or upload content to the Site, such as comments, reviews, or other submissions (collectively, &ldquo;User Content&ldquo;). By submitting User Content, you grant Ball Mastery LLC a non-exclusive, worldwide, royalty-free, perpetual, and irrevocable license to use, modify, reproduce, distribute, and display such User Content on the Site or through other media.
                   </p>
                   <div className="bg-blue-50 rounded-lg p-4 sm:p-6">
                     <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-2 sm:mb-3">You represent and warrant that:</h3>
@@ -294,7 +294,7 @@ const TermsOfService = () => {
                       <ul className="space-y-1.5 sm:space-y-2 text-red-700 text-xs sm:text-sm">
                         <li>• Violating any applicable laws or regulations</li>
                         <li>• Engaging in activities that could damage or impair the Site</li>
-                        <li>• Interfering with other users' access to the Site</li>
+                        <li>• Interfering with other users&apos; access to the Site</li>
                       </ul>
                     </div>
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
@@ -400,7 +400,7 @@ const TermsOfService = () => {
                 </div>
                 <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-[#808080] leading-relaxed">
                   <p>
-                    Ball Mastery LLC reserves the right to modify or update these Terms and Conditions at any time. Any changes will be posted on this page, and the updated version will include a revised "Effective Date."
+                    Ball Mastery LLC reserves the right to modify or update these Terms and Conditions at any time. Any changes will be posted on this page, and the updated version will include a revised &ldquo;Effective Date.&ldquo;
                   </p>
                   <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 sm:p-4 rounded">
                     <p className="text-yellow-800 font-medium text-sm sm:text-base">
