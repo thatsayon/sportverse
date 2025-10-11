@@ -7,7 +7,7 @@ import imageCompression from "browser-image-compression";
 import { toast } from "sonner";
 import { getCookie } from "@/hooks/cookie";
 
-const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app"
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Define types for form data and errors
 interface FormData {

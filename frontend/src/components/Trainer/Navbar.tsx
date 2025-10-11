@@ -34,8 +34,8 @@ import { getSocket } from "@/lib/socket";
 import  io  from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 
-const SOCKET_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
-const NOTIFICATION_SOCKET_URL = "https://5zpgdqz5-8004.inc1.devtunnels.ms/";
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
+const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL;
 
 interface NavProps {
   className?: string;

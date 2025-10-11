@@ -12,7 +12,7 @@ export interface DecodedToken {
   email: string;
   profile_pic: string;
   role: "teacher" | "student" | "admin";
-  verification_status: "verified" | "unverified";
+  verification_status: "verified" | "unverified" | "not_submitted" | "reject";
 }
 
 // Helper function to get and decode JWT token
@@ -107,6 +107,12 @@ function getRedirectPathForRole(role: string): string {
   }
 }
 
+// Check if teacher has access to dashboard based on verification status
+function canTeacherAccessDashboard(verificationStatus: string): boolean {
+  // Only allow verified teachers to access dashboard
+  return verificationStatus === 'verified';
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
@@ -156,6 +162,28 @@ export function middleware(request: NextRequest) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // ============================================
+  // HANDLE TEACHER VERIFICATION STATUS
+  // ============================================
+  if (decoded && decoded.role === 'teacher' && pathname.startsWith('/dashboard')) {
+    // Check if teacher has proper verification status
+    if (!canTeacherAccessDashboard(decoded.verification_status)) {
+      // Redirect unverified/rejected/not_submitted teachers to trainer page
+      const trainerUrl = new URL('/trainer', request.url);
+      
+      // Optional: Add a query parameter to show a message on the trainer page
+      if (decoded.verification_status === 'not_submitted') {
+        trainerUrl.searchParams.set('message', 'verification_required');
+      } else if (decoded.verification_status === 'reject') {
+        trainerUrl.searchParams.set('message', 'verification_rejected');
+      } else if (decoded.verification_status === 'unverified') {
+        trainerUrl.searchParams.set('message', 'verification_pending');
+      }
+      
+      return NextResponse.redirect(trainerUrl);
+    }
   }
 
   // ============================================

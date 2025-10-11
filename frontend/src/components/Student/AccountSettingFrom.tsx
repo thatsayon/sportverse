@@ -24,7 +24,7 @@ import { useGetAdminSportsQuery } from "@/store/Slices/apiSlices/adminApiSlice";
 import imageCompression from "browser-image-compression";
 import { getCookie } from "@/hooks/cookie";
 
-const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Maximum file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024;

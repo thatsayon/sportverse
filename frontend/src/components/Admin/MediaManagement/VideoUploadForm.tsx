@@ -21,7 +21,7 @@ import { getCookie } from "@/hooks/cookie";
 import { useRouter } from "next/navigation";
 import { useGetAdminVideosQuery } from "@/store/Slices/apiSlices/adminApiSlice";
 
-const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Form validation schema
 const formSchema = z.object({

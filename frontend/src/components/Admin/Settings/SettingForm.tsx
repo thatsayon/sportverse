@@ -39,7 +39,7 @@ const passwordSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-const BASE_URL = 'https://stingray-intimate-sincerely.ngrok-free.app';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function SettingForm() {
   const [profileImage, setProfileImage] = useState<string>('/api/placeholder/150/150');

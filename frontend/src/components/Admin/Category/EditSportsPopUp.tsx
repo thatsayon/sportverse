@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { getCookie } from "@/hooks/cookie";
 import { useLazyGetAdminSportByIdQuery } from "@/store/Slices/apiSlices/adminApiSlice";
 
-const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app"
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Define types for form data and errors
 interface FormData {

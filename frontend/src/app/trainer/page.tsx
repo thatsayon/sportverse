@@ -5,9 +5,10 @@ import HomePage from "@/components/Shared/HomePage";
 import { getCookie } from "@/hooks/cookie";
 import { getSocket } from "@/lib/socket";
  
-const SOCKET_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
  
 function Page() {
+
   useEffect(() => {
     const accessToken = getCookie("access_token");
     if (!accessToken) return;

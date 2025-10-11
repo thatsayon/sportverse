@@ -12,6 +12,9 @@ import { useDispatch } from "react-redux";
 import { setCallConfig } from "@/store/Slices/stateSlices/studentSlice";
 import { useRouter } from "next/navigation";
 
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
+
 const BookingCard: React.FC<BookingCardProps> = ({
   trainerName,
   sports,
@@ -62,7 +65,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
   const handleVideoCall = async () => {
     const accessToken = getCookie("access_token");
     const response = await fetch(
-      "https://stingray-intimate-sincerely.ngrok-free.app/communication/meeting/agora/token/",
+      `${BASE_URL}communication/meeting/agora/token/`,
       {
         body: JSON.stringify({ channelName: "Student" }), // Assuming it's a GET request. You can change it if needed.
         method: "POST",

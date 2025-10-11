@@ -24,12 +24,12 @@ interface Errors {
   zip_code?: string;
 }
 
-interface ResponseAccess{
+interface ResponseAccess {
   access_token?: string;
   error?: string;
 }
 
-const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const DocUpload: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -44,7 +44,7 @@ const DocUpload: React.FC = () => {
     zip_code: "",
   });
   const [errors, setErrors] = useState<Errors>({});
-  const router = useRouter()
+  const router = useRouter();
   // Handle input change for form fields
   const handleInputChange = (
     field: keyof FormData,
@@ -196,9 +196,8 @@ const DocUpload: React.FC = () => {
       console.log("Response Data:", data);
 
       if (data.access_token) {
-
-        removeCookie("access_token")
-        setCookie("access_token", data.access_token, 7)
+        removeCookie("access_token");
+        setCookie("access_token", data.access_token, 7);
         toast.success("Documents uploaded successfully!");
 
         setFormData({
@@ -213,9 +212,9 @@ const DocUpload: React.FC = () => {
         setBackSidePreview(null);
         setErrors({});
 
-          router.push("/trainer")        
-      }else{
-        toast.error(data.error)
+        router.push("/trainer");
+      } else {
+        toast.error(data.error);
       }
     } catch (error) {
       //console.error("Upload error:", error);

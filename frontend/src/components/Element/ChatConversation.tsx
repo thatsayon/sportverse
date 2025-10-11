@@ -28,7 +28,7 @@ interface ChatProps {
   currentUserName: string;
 }
  
-const SOCKET_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
  
 const ChatConversation: React.FC<ChatProps> = ({
   open,

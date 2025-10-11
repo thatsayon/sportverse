@@ -71,6 +71,8 @@ interface ApiResponse {
   };
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
+
 const MapSearch: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<ApiResponse | null>(null);
@@ -102,7 +104,7 @@ const MapSearch: React.FC = () => {
       const access_token = getCookie("access_token");
 
       const response = await fetch(
-        `https://stingray-intimate-sincerely.ngrok-free.app/map/nearest-teacher/?${params.toString()}`,
+        `${BASE_URL}map/nearest-teacher/?${params.toString()}`,
         {
           method: "GET",
           headers: {

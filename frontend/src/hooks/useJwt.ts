@@ -27,7 +27,7 @@ export const useJwt = () => {
     try {
       return jwtDecode<DecodedToken>(token);
     } catch (error) {
-      //console.error("Invalid JWT token:", error);
+      console.error("Invalid JWT token:", error);
       return null;
     }
   }, []);

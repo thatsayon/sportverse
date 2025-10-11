@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { Verification } from "next/dist/lib/metadata/types/metadata-types";
 
 const removeCookie = (name: string) => {
   if (typeof window === "undefined") return;
@@ -112,12 +111,15 @@ export interface getSignatureRequest {
 }
 
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
+
+
 // Create the API slice
 export const apiSlice = createApi({
   reducerPath: "api",
   
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://stingray-intimate-sincerely.ngrok-free.app/", // Your actual API base URL
+    baseUrl: BASE_URL, 
     prepareHeaders: (headers) => {
       // Add any default headers here (e.g., authorization)
       headers.set("Content-Type", "application/json");
@@ -137,7 +139,7 @@ export const apiSlice = createApi({
       return headers;
     },
     // Add response handling for debugging
-    validateStatus: (response, body) => {
+    validateStatus: (response) => {
       //console.log("API Response Status:", response.status);
       //console.log("API Response Body:", body);
       return response.status < 500; // Don't treat 4xx as errors
