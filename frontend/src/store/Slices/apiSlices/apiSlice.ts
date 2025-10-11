@@ -119,7 +119,7 @@ export const apiSlice = createApi({
   reducerPath: "api",
   
   baseQuery: fetchBaseQuery({
-    baseUrl: BASE_URL, 
+    baseUrl: "https://api.ballmastery.com/", 
     prepareHeaders: (headers) => {
       // Add any default headers here (e.g., authorization)
       headers.set("Content-Type", "application/json");
