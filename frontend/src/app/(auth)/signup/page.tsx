@@ -7,7 +7,7 @@ export default function SignupPage() {
       <SignUpForm />
       <div className="hidden lg:block">
         <Image
-          src={"/auth/loginimage.jpg"}
+          src={"https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760122861/loginImage_pwsn1o.jpg"}
           alt="login Image"
           width={700}
           height={620}

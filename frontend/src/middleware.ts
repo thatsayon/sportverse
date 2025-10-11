@@ -59,11 +59,6 @@ const publicOnlyRoutes = [
   '/login',
   '/signup',
   '/register',
-  '/about',
-  '/faq',
-  '/help',
-  '/privacy',
-  '/terms',
   '/'
 ];
 

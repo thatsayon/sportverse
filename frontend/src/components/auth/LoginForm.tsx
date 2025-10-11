@@ -30,8 +30,8 @@ import { Label } from "../ui/label";
 import { GoogleIcon } from "@/SVG/AuthSCG";
 import { useRouter } from "next/navigation";
 import { setCookie } from "@/hooks/cookie";
-import { useJwt } from "@/hooks/useJwt";
 import { decodeToken } from "@/hooks/decodeToken";
+import { DecodedToken } from "@/hooks/useJwt";
 
 // Cookie utility function
 
@@ -39,9 +39,8 @@ import { decodeToken } from "@/hooks/decodeToken";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const { decoded } = useJwt();
   const [login, { isLoading }] = useLoginMutation();
-  //   const [getUserPackage] = useLazyGetUserpackageQuery();
+  //   const [getUserPackage] = useLazyGetUserPackageQuery();
   // //console.log("Decoded user info:", decoded);
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -65,13 +64,18 @@ export function LoginForm() {
         setCookie("access_token", result.access_token, 7); // 7 days expiry
         // setCookie("refresh_token", result.refresh_token, 7); // 7 days expiry
 
-        const user = decodeToken(result.access_token);
+        const user: DecodedToken = decodeToken(result.access_token);
         //console.log("user information", user)
         if (user?.role === "admin") {
           router.push("/dashboard");
         } else {
           if (user?.role === "student") {
             router.push("/student");
+          } else if (
+            user?.verification_status === "not_submitted" || user?.verification_status === "reject" &&
+            user?.role === "teacher"
+          ) {
+            router.push("/doc-submission");
           } else {
             router.push("/trainer");
           }

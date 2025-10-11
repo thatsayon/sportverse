@@ -7,7 +7,7 @@ export default function LoginPage() {
     <div className=" max-h-screen flex items-center justify-center p-6 md:p-10 lg:p-20 gap-20">
       <div className="hidden lg:block">
         <Image
-        src={"/auth/signup.jpg"}
+        src={"https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760122862/signup_z0oifq.jpg"}
         alt="login Image"
         width={720}
         height={820}

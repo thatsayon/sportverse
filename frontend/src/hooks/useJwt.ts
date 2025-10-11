@@ -16,7 +16,7 @@ export interface DecodedToken {
   email: string;
   profile_pic: string;
   role: "teacher" | "student" | "admin";
-  verification_status: "verified" | "unverfied";
+  verification_status: "verified" | "unverfied" | "in_progress" | "reject" | "not_submitted";
 }
 
 export const useJwt = () => {

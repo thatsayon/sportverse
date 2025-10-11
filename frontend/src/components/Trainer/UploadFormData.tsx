@@ -4,7 +4,8 @@ import { Camera, Cloud, X } from "lucide-react";
 import Image from "next/image";
 import imageCompression from "browser-image-compression";
 import { toast } from "sonner";
-import { getCookie } from "@/hooks/cookie";
+import { getCookie, removeCookie, setCookie } from "@/hooks/cookie";
+import { useRouter } from "next/navigation";
 
 // Define types for form data and errors
 interface FormData {
@@ -23,13 +24,14 @@ interface Errors {
   zip_code?: string;
 }
 
-const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
-
-interface DocUploadProps {
-  isSignUp?: boolean;
+interface ResponseAccess{
+  access_token?: string;
+  error?: string;
 }
 
-const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
+const BASE_URL = "https://stingray-intimate-sincerely.ngrok-free.app";
+
+const DocUpload: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [frontSidePreview, setFrontSidePreview] = useState<string | null>(null);
@@ -42,7 +44,7 @@ const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
     zip_code: "",
   });
   const [errors, setErrors] = useState<Errors>({});
-
+  const router = useRouter()
   // Handle input change for form fields
   const handleInputChange = (
     field: keyof FormData,
@@ -119,6 +121,8 @@ const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
 
     if (!formData.zip_code.trim()) {
       newErrors.zip_code = "ZIP code is required";
+    } else if (!/^\d+$/.test(formData.zip_code.trim())) {
+      newErrors.zip_code = "ZIP code must contain only numbers";
     }
 
     if (!formData.picture) {
@@ -188,7 +192,13 @@ const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
         }
       );
 
-      if (response) {
+      const data: ResponseAccess = await response.json();
+      console.log("Response Data:", data);
+
+      if (data.access_token) {
+
+        removeCookie("access_token")
+        setCookie("access_token", data.access_token, 7)
         toast.success("Documents uploaded successfully!");
 
         setFormData({
@@ -203,7 +213,9 @@ const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
         setBackSidePreview(null);
         setErrors({});
 
-        // will impliment push to a different route
+          router.push("/trainer")        
+      }else{
+        toast.error(data.error)
       }
     } catch (error) {
       //console.error("Upload error:", error);
@@ -356,7 +368,7 @@ const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
 
                       <button
                         type="button"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() => triggerFileInput("id_front")}
                       >
                         Browse file
@@ -422,7 +434,7 @@ const DocUpload: React.FC<DocUploadProps> = ({ isSignUp = false }) => {
 
                       <button
                         type="button"
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() => triggerFileInput("id_back")}
                       >
                         Browse file

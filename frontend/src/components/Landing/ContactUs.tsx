@@ -37,10 +37,12 @@ const ContactUs = () => {
     setSubmitStatus('idle');
 
     try {
+      
+      emailjs.init(process.env.NEXT_PUBLIC_PUBLIC_KEY || '');
 
-      emailjs.init("VSlNt2JVRmQL04OMV");
-
-      const result = await emailjs.send("service_7gas7lk", "template_iw4uvfl",
+      const result = await emailjs.send(
+        process.env.NEXT_PUBLIC_SERVICE_ID || '',
+        process.env.NEXT_PUBLIC_TEMPLATE_ID || '',
         {
           from_name: formData.name,
           from_email: formData.email,
@@ -49,7 +51,7 @@ const ContactUs = () => {
           message: formData.message,
           to_email: 'train@brightstarsoccer.com',
         },
-        "VSlNt2JVRmQL04OMV"
+        process.env.NEXT_PUBLIC_PUBLIC_KEY
       );
 
       if (result.status === 200) {

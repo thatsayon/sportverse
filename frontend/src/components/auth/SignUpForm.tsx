@@ -22,7 +22,7 @@ import {
 import { signUpSchema, type SignUpFormData } from "@/schema/auth.schema";
 import Link from "next/link";
 import Image from "next/image";
-import {  GoogleIcon } from "@/SVG/AuthSCG";
+import { GoogleIcon } from "@/SVG/AuthSCG";
 import { useDispatch } from "react-redux";
 import { setEmail, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { toast } from "sonner";
@@ -34,13 +34,6 @@ export function SignUpForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signUp, { isLoading }] = useSignUpMutation();
 
-  const [selectedRole, setSelectedRole] = useState<"student" | "teacher" | null>(null);
-
-  const handleRoleChange = (value: "student" | "teacher") => {
-    form.setValue("role", value)
-    setSelectedRole(value)
-  };
-
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -49,26 +42,29 @@ export function SignUpForm() {
       password: "",
       confirm_password: "",
       agree_terms: false,
-      role: undefined, // optional default
+      role: undefined,
     },
   });
 
-  //console.log("hello error", form.formState.errors);
+  const selectedRole = form.watch("role");
+
+  const handleRoleChange = (value: "student" | "teacher") => {
+    form.setValue("role", value, { 
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true 
+    });
+  };
 
   const router = useRouter();
 
   const onSubmit = async (data: SignUpFormData) => {
-    if (!selectedRole) {
-      toast.error("Please select a role");
-      return;
-    }
-
     try {
       const formattedData = {
         full_name: data.full_name,
         email: data.email,
         password: data.password,
-        role: selectedRole, // include selected role
+        role: data.role,
       };
 
       const result = await signUp(formattedData).unwrap();
@@ -77,12 +73,11 @@ export function SignUpForm() {
         setCookie("verificationToken", result.verificationToken, 7);
         dispatch(setEmail(result?.user?.email ?? ""));
         dispatch(setUserQuery("signup"));
-        router.push("/forget-password/verify-code"); 
+        router.push("/forget-password/verify-code");
       } else {
         toast.error(result.message || "Signup failed");
       }
     } catch (error) {
-      //console.error("Signup error:", error);
       if (error instanceof Error) toast.error(`Error: ${error.message}`);
       else toast.error("Unknown error occurred");
     }
@@ -92,56 +87,67 @@ export function SignUpForm() {
     <Card className="w-full max-w-lg scroll-auto border-none shadow-none">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mb-0 md:mb-1 lg:mb-2">
-         <Link href={"/"}>
-          <Image
-            src={"/image/logo.png"}
-            alt="logo-image"
-            width={63}
-            height={63}
-            className="max-w-20 md:max-w-[63px] max-h-20 md:max-h-[63px] object-center rounded-md"
-            layout="responsive"
-          />
-         </Link>
+          <Link href={"/"}>
+            <Image
+              src={"/image/logo.png"}
+              alt="logo-image"
+              width={63}
+              height={63}
+              className="max-w-20 md:max-w-[63px] max-h-20 md:max-h-[63px] object-center rounded-md"
+              layout="responsive"
+            />
+          </Link>
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
-          <h2 className="text-lg md:text-2xl lg:text-3xl font-medium">Create your account</h2>
-          <div className="flex items-center justify-center md:gap-4 mt-2 md:mt-4">
-            {/* ShadCN Toggle component */}
-            <div
-              value={selectedRole}
-              // onChange={handleRoleChange}
-              className="flex items-center border-2 md:p-1 rounded-md text-lg font-semibold"
-            >
-              {/* Student Option */}
-              <div className="flex items-center p-1 rounded-md text-lg font-semibold">
-                <div
-                  className={`py-2 px-3 rounded-md cursor-pointer ${
-                    selectedRole === "student"
-                      ? "bg-[#118AB2] text-white"
-                      : "bg-white text-[#808080]"
-                  }`}
-                  onClick={() => handleRoleChange("student")}
-                >
-                  Student
-                </div>
-                <div
-                  className={`py-2 px-3 rounded-md cursor-pointer ${
-                    selectedRole === "teacher"
-                      ? "bg-[#118AB2] text-white"
-                      : "bg-white text-[#808080]"
-                  }`}
-                  onClick={() => handleRoleChange("teacher")}
-                >
-                  Teacher
-                </div>
-              </div>
-            </div>
-          </div>
+          <h2 className="text-lg md:text-2xl lg:text-3xl font-medium">
+            Create your account
+          </h2>
         </CardTitle>
       </CardHeader>
       <CardContent className="-mt-3 md:mt-0 lg:-mt-3 xl:mt-0">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 xl:space-y-6">
+            
+            {/* Role Selection Field */}
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="block text-center mb-2">Select Role</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center justify-center">
+                      <div className="flex items-center border-2 md:p-1 rounded-md text-lg font-semibold">
+                        <div className="flex items-center p-1 rounded-md">
+                          <div
+                            className={`py-2 px-3 rounded-md cursor-pointer transition-colors ${
+                              selectedRole === "student"
+                                ? "bg-[#118AB2] text-white"
+                                : "bg-white text-[#808080] hover:bg-gray-100"
+                            }`}
+                            onClick={() => handleRoleChange("student")}
+                          >
+                            Student
+                          </div>
+                          <div
+                            className={`py-2 px-3 rounded-md cursor-pointer transition-colors ${
+                              selectedRole === "teacher"
+                                ? "bg-[#118AB2] text-white"
+                                : "bg-white text-[#808080] hover:bg-gray-100"
+                            }`}
+                            onClick={() => handleRoleChange("teacher")}
+                          >
+                            Teacher
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-center mt-1" />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="full_name"
@@ -195,7 +201,7 @@ export function SignUpForm() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                       >
                         {showPassword ? (
                           <EyeOff size={20} />
@@ -229,7 +235,7 @@ export function SignUpForm() {
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                       >
                         {showConfirmPassword ? (
                           <EyeOff size={20} />
@@ -244,27 +250,29 @@ export function SignUpForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="agree_terms"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div>
-                    <FormLabel className="text-xs leading-[140%] text-gray-600">
-                      By creating an account, I accept the Terms & Conditions &
-                      Privacy Policy.
-                    </FormLabel>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
+            <div className="cursor-pointer">
+              <FormField
+                control={form.control}
+                name="agree_terms"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl className="cursor-pointer">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div>
+                      <FormLabel className="text-xs leading-[140%] text-gray-600 cursor-pointer">
+                        By creating an account, I accept the Terms & Conditions &
+                        Privacy Policy.
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <Button
               type="submit"
@@ -300,8 +308,6 @@ export function SignUpForm() {
             Continue with Google
           </Button>
         </div>
-
-        {/* <SocialLogin title="Or Login With" /> */}
       </CardContent>
     </Card>
   );
