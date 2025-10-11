@@ -27,6 +27,7 @@ import { useDispatch } from "react-redux";
 import { setEmail, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { toast } from "sonner";
 import { setCookie } from "@/hooks/cookie";
+import Logo from "../Element/Logo";
 
 export function SignUpForm() {
   const dispatch = useDispatch();
@@ -87,16 +88,7 @@ export function SignUpForm() {
     <Card className="w-full max-w-lg scroll-auto border-none shadow-none">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mb-0 md:mb-1 lg:mb-2">
-          <Link href={"/"}>
-            <Image
-              src={"/image/logo.png"}
-              alt="logo-image"
-              width={63}
-              height={63}
-              className="max-w-20 md:max-w-[63px] max-h-20 md:max-h-[63px] object-center rounded-md"
-              layout="responsive"
-            />
-          </Link>
+          <Logo href="/"/>
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
           <h2 className="text-lg md:text-2xl lg:text-3xl font-medium">
