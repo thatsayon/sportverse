@@ -17,6 +17,7 @@ from teacher.models import RatingReview
 from controlpanel.serializers import VideoListSerializer
 from controlpanel.models import AdminVideo
 from account.models import Student
+from authentication.tasks import send_session_booking_email_task
 
 from .serializers import (
     SessionOptionSerializer,
@@ -161,6 +162,19 @@ class BookedSessionView(APIView):
                 "user_id": str(request.user.id)
             }
         )       
+        # Format session date and time
+        session_date = session_datetime.strftime("%B %d, %Y")
+        end_time = session_datetime + timedelta(minutes=booked_session.duration)
+        session_time = f"{session_datetime.strftime('%I:%M %p')} - {end_time.strftime('%I:%M %p')}"
+
+        # Send email notification to teacher
+        send_session_booking_email_task.delay(
+            teacher_email=session_option.teacher.user.email,
+            teacher_name=session_option.teacher.user.get_full_name() or session_option.teacher.user.username,
+            student_name=request.user.get_full_name() or request.user.username,
+            session_date=session_date,
+            session_time=session_time
+        )
 
         # 6. Send notification to the teacher
         header = "New Session Booked"

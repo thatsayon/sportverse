@@ -103,6 +103,7 @@ class BookedSession(models.Model):
     channel_name = models.CharField(max_length=120, blank=True, null=True)
     session_time = models.DateTimeField()
     duration = models.PositiveIntegerField(default=60)
+    reminder_sent = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
 
     def __str__(self):
