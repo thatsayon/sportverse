@@ -108,7 +108,7 @@ export function LoginForm() {
           <Logo href="/" />
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
-          <h2 className="text-3xl font-medium">Welcome back</h2>
+          <h2 className="text-3xl font-medium">Welcome back server</h2>
           <p className="text-[#414141]/70 text-base mt-1">
             Sign in to continue to your account
           </p>
