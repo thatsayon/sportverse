@@ -504,3 +504,22 @@ class GoogleLoginView(APIView):
         except ValueError as e:
             return Response({"error": f"Invalid token: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class AccessTokenValidation(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # Create a fresh token with custom claims
+            refresh = RefreshToken.for_user(request.user)
+            access_token = str(refresh.access_token)
+
+            return Response({
+                "access_token": access_token
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "detail": "Token generation failed",
+                "error": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
