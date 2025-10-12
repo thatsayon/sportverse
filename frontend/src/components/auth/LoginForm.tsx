@@ -8,9 +8,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import Image from "next/image";
-import {
-  useLoginMutation,
-} from "@/store/Slices/apiSlices/apiSlice";
+import { useLoginMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,7 +44,20 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     //console.log("Login data:", data);
     try {
-      const result = await login(data).unwrap();
+      // const result = await login(data).unwrap();
+
+      const response = await fetch("https://api.ballmastery.com/auth/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      const result = await response.json();
 
       if (result.access_token) {
         //console.log("Login successful:", result);
@@ -55,7 +66,7 @@ export function LoginForm() {
         setCookie("access_token", result.access_token, 7); // 7 days expiry
         // setCookie("refresh_token", result.refresh_token, 7); // 7 days expiry
 
-        const user = decodeToken(result.access_token); 
+        const user = decodeToken(result.access_token);
         //console.log("user information", user)
         if (user?.role === "admin") {
           router.push("/dashboard");
@@ -63,8 +74,8 @@ export function LoginForm() {
           if (user?.role === "student") {
             router.push("/student");
           } else if (
-            user?.verification_status === "not_submitted" || user?.verification_status === "reject" &&
-            user?.role === "teacher"
+            user?.verification_status === "not_submitted" ||
+            (user?.verification_status === "reject" && user?.role === "teacher")
           ) {
             router.push("/trainer/doc-submission");
           } else {
@@ -80,10 +91,13 @@ export function LoginForm() {
         toast.error("Login Failed!");
       }
     } catch (error) {
-      const err = error as Error
-      
+      const err = error as Error;
+
       //console.error("Login error:", error);
-      toast.error(err?.message || "Login failed. Please check your credentials and try again.");
+      toast.error(
+        err?.message ||
+          "Login failed. Please check your credentials and try again."
+      );
     }
   };
 
@@ -91,7 +105,7 @@ export function LoginForm() {
     <Card className="w-full max-w-lg md:px-3 shadow-none border-none">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center md:mt-6 lg:mt-14 mb-2 md:mb-4 lg:mb-6">
-          <Logo href="/"/>
+          <Logo href="/" />
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
           <h2 className="text-3xl font-medium">Welcome back</h2>
