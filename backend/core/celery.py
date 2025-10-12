@@ -17,6 +17,10 @@ app.conf.beat_schedule = {
         'task': 'authentication.tasks.check_and_send_session_reminders',
         'schedule': 60.0,  # Run every 60 seconds (1 minute)
     },
+    'check-session-reminder-notification-every-minute': {
+        'task': 'communication.notification.tasks.check-session-reminder-notification-every-minute',
+        'schedule': 60.0,
+    }
 }
 
 app.conf.timezone = 'UTC'

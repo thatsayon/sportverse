@@ -104,6 +104,7 @@ class BookedSession(models.Model):
     session_time = models.DateTimeField()
     duration = models.PositiveIntegerField(default=60)
     reminder_sent = models.BooleanField(default=False)
+    notification_reminder_sent = models.BooleanField(default=False)
     is_paid = models.BooleanField(default=False)
 
     def __str__(self):
