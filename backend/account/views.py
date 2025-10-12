@@ -1,3 +1,4 @@
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -10,6 +11,8 @@ from uuid import UUID
 from controlpanel.serializers import SportSerializer
 from controlpanel.models import Sport
 from payment.utils import create_stripe_checkout_session
+from authentication.serializers import CustomTokenObtainPairSerializer
+
 from .models import (
     Teacher,
     Student,
@@ -32,21 +35,39 @@ class TecherVerficationView(generics.CreateAPIView):
         serializer.save(teacher=teacher)
 
     def create(self, request, *args, **kwargs):
+        user = request.user
+        
+        # ✅ Check teacher exists
         try:
-            teacher = Teacher.objects.get(user=request.user)
+            teacher = Teacher.objects.get(user=user)
         except Teacher.DoesNotExist:
             return Response(
                 {"error": "You are not registered as a teacher yet."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # ✅ Prevent duplicate submission
         if Document.objects.filter(teacher=teacher).exists():
             return Response(
                 {"error": "You've already submitted verification"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        return super().create(request, *args, **kwargs)
+        # ✅ Save document
+        response = super().create(request, *args, **kwargs)
+
+        # ✅ Update teacher status (optional)
+        teacher.status = "in_progress"  # or "verified" if needed
+        teacher.save()
+
+        # ✅ Generate updated token
+        refresh = CustomTokenObtainPairSerializer.get_token(user)
+        access_token = str(refresh.access_token)
+
+        # ✅ Append token to the response
+        response.data["access_token"] = access_token
+
+        return response
 
 class GetSportsView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]

@@ -13,13 +13,13 @@ class RatingReview(models.Model):
     teacher = models.ForeignKey(
         Teacher,
         on_delete=models.SET_NULL,
-        related_name='teacher_rating',
+        related_name='ratings',
         null=True
     )
     student = models.ForeignKey(
         Student,
         on_delete=models.SET_NULL,
-        related_name='student_rating',
+        related_name='given_ratings',
         null=True
     )
     rating = models.DecimalField(

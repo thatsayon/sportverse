@@ -9,6 +9,7 @@ import uuid
 User = get_user_model()
 
 STATUS = [
+    ('not_submitted', 'Not Submitted'),
     ('verified', 'Verified'),
     ('in_progress', 'In Progress'),
     ('unverfied', 'Unverfied'),
@@ -50,7 +51,7 @@ class Teacher(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS,
-        default='unverfied'
+        default='not_submitted'
     )
     is_profile_complete = models.BooleanField(
         default=False
