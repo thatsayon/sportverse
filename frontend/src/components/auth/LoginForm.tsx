@@ -44,20 +44,20 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     //console.log("Login data:", data);
     try {
-      const result = await login(data).unwrap();
+      // const result = await login(data).unwrap();
 
-      // const response = await fetch("https://api.ballmastery.com/auth/login/", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     email: data.email,
-      //     password: data.password,
-      //   }),
-      // });
+      const response = await fetch("https://api.ballmastery.com/auth/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
 
-      // const result = await response.json();
+      const result = await response.json();
 
       if (result.access_token) {
         //console.log("Login successful:", result);
