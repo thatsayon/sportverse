@@ -20,12 +20,9 @@ const SportSelection: React.FC = () => {
   const [showError, setShowError] = useState(false);
   const router = useRouter();
 
-  const {data, isLoading, isError} = useGetAdminSportsQuery()
+  const { data, isLoading, isError } = useGetAdminSportsQuery();
 
-  if(isLoading) return <Loading/>
-  if(isError) return <ErrorLoadingPage/>
-
-  const sports = data?.results || []
+  const sports = data?.results || [];
 
   // Dynamic grid class based on sports count
   const getGridClass = (sportsCount: number) => {
@@ -85,6 +82,19 @@ const SportSelection: React.FC = () => {
     },
   };
 
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <ErrorLoadingPage />
+      </div>
+    );
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
       <div className="w-full">
@@ -127,7 +137,9 @@ const SportSelection: React.FC = () => {
 
         {/* Dynamic Sports Grid */}
         <motion.div
-          className={`grid gap-4 sm:gap-6 lg:gap-8 mx-auto mb-8 ${getGridClass(sports.length)}`}
+          className={`grid gap-4 sm:gap-6 lg:gap-8 mx-auto mb-8 ${getGridClass(
+            sports.length
+          )}`}
           variants={staggerContainer}
           initial="initial"
           animate="animate"
@@ -271,12 +283,11 @@ const SportSelection: React.FC = () => {
             className="text-center mt-6"
           >
             <p className="text-xs sm:text-sm text-gray-500">
-              {sports.length === 1 
+              {sports.length === 1
                 ? "Select the sport for training"
-                : sports.length === 2 
+                : sports.length === 2
                 ? "You can select one or both sports for training"
-                : `You can select any combination of the ${sports.length} available sports for training`
-              }
+                : `You can select any combination of the ${sports.length} available sports for training`}
             </p>
           </motion.div>
         )}
