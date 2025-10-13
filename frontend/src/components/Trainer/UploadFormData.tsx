@@ -1,11 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import { Camera, Cloud, X } from "lucide-react";
+import { Camera, Cloud, X, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import imageCompression from "browser-image-compression";
 import { toast } from "sonner";
 import { getCookie, removeCookie, setCookie } from "@/hooks/cookie";
 import { useRouter } from "next/navigation";
+import { useJwt } from "@/hooks/useJwt";
 
 // Define types for form data and errors
 interface FormData {
@@ -32,6 +33,7 @@ interface ResponseAccess {
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const DocUpload: React.FC = () => {
+  const { decoded } = useJwt();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [frontSidePreview, setFrontSidePreview] = useState<string | null>(null);
@@ -45,6 +47,87 @@ const DocUpload: React.FC = () => {
   });
   const [errors, setErrors] = useState<Errors>({});
   const router = useRouter();
+
+  // Status Card Component for different verification states
+  const StatusCard = () => {
+    const status = decoded?.verification_status;
+
+    const getStatusConfig = () => {
+      switch (status) {
+        case "in_progress":
+          return {
+            icon: <Clock className="w-16 h-16 text-yellow-500" />,
+            title: "Verification in Progress",
+            description: "Your documents are currently under review by our team. This process typically takes 24-48 hours.",
+            bgColor: "bg-yellow-50",
+            borderColor: "border-yellow-200",
+            textColor: "text-yellow-700",
+            iconBg: "bg-yellow-100",
+          };
+        case "verified":
+          return {
+            icon: <CheckCircle className="w-16 h-16 text-green-500" />,
+            title: "Verification Complete",
+            description: "Your account has been successfully verified. You now have full access to all features.",
+            bgColor: "bg-green-50",
+            borderColor: "border-green-200",
+            textColor: "text-green-700",
+            iconBg: "bg-green-100",
+          };
+        case "unverfied":
+          return {
+            icon: <AlertCircle className="w-16 h-16 text-orange-500" />,
+            title: "Account Unverified",
+            description: "Your account is currently unverified. Please submit your documents to get verified.",
+            bgColor: "bg-orange-50",
+            borderColor: "border-orange-200",
+            textColor: "text-orange-700",
+            iconBg: "bg-orange-100",
+          };
+        default:
+          return null;
+      }
+    };
+
+    const config = getStatusConfig();
+
+    if (!config) return null;
+
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className={`${config.bgColor} ${config.borderColor} border-2 rounded-2xl p-8 text-center`}>
+          <div className={`${config.iconBg} w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6`}>
+            {config.icon}
+          </div>
+          <h2 className={`text-2xl font-bold ${config.textColor} mb-4`}>
+            {config.title}
+          </h2>
+          <p className="text-gray-700 text-lg mb-6 max-w-md mx-auto">
+            {config.description}
+          </p>
+          {status === "in_progress" && (
+            <div className="flex justify-center items-center space-x-2 text-sm text-gray-600">
+              <div className="animate-pulse flex space-x-1">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-yellow-500 rounded-full animation-delay-200"></div>
+                <div className="w-2 h-2 bg-yellow-500 rounded-full animation-delay-400"></div>
+              </div>
+              <span>Processing your documents...</span>
+            </div>
+          )}
+          {status === "verified" && (
+            <button
+              onClick={() => router.push("/trainer")}
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Go to Home
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Handle input change for form fields
   const handleInputChange = (
     field: keyof FormData,
@@ -55,7 +138,6 @@ const DocUpload: React.FC = () => {
       [field]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
@@ -72,7 +154,6 @@ const DocUpload: React.FC = () => {
     if (files && files[0]) {
       const file = files[0];
 
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         setErrors((prev) => ({
           ...prev,
@@ -94,7 +175,6 @@ const DocUpload: React.FC = () => {
       };
       reader.readAsDataURL(file);
 
-      // Set file to form data
       handleInputChange(fieldName, file);
     }
   };
@@ -152,40 +232,33 @@ const DocUpload: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Get the files from form data
       const photoFile = formData.picture!;
       const frontSideFile = formData.id_front!;
       const backSideFile = formData.id_back!;
 
-      // Compression options
       const options = {
-        maxSizeMB: 1, // target <= 1MB
-        maxWidthOrHeight: 1024, // resize (optional)
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1024,
         useWebWorker: true,
       };
 
-      // Compress files before uploading
       const compressedPhoto = await imageCompression(photoFile, options);
-      const compressedFrontSide = await imageCompression(
-        frontSideFile,
-        options
-      );
+      const compressedFrontSide = await imageCompression(frontSideFile, options);
       const compressedBackSide = await imageCompression(backSideFile, options);
 
-      // Prepare formData to send to the backend
       const formDataToSend = new FormData();
       formDataToSend.append("picture", compressedPhoto);
       formDataToSend.append("id_front", compressedFrontSide);
       formDataToSend.append("id_back", compressedBackSide);
       formDataToSend.append("city", formData.city);
       formDataToSend.append("zip_code", formData.zip_code);
+      
       const accessToken = getCookie("access_token");
       const response = await fetch(
         `${BASE_URL}/account/teacher-verification/`,
         {
           method: "POST",
           body: formDataToSend,
-
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -193,7 +266,6 @@ const DocUpload: React.FC = () => {
       );
 
       const data: ResponseAccess = await response.json();
-      console.log("Response Data:", data);
 
       if (data.access_token) {
         removeCookie("access_token");
@@ -217,8 +289,7 @@ const DocUpload: React.FC = () => {
         toast.error(data.error);
       }
     } catch (error) {
-      //console.error("Upload error:", error);
-      alert("Upload failed. Please try again.");
+      toast.error("Upload failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -229,15 +300,40 @@ const DocUpload: React.FC = () => {
     document.getElementById(inputName)?.click();
   };
 
+  // Show status card for in_progress, verified, or unverfied
+  if (decoded?.verification_status === "in_progress" || 
+      decoded?.verification_status === "verified" || 
+      decoded?.verification_status === "unverfied") {
+    return <StatusCard />;
+  }
+
+  // Show upload form for not_submitted or reject
+  const isRejected = decoded?.verification_status === "reject";
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white">
+      {isRejected && (
+        <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-start space-x-3">
+          <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-red-700 mb-1">Verification Rejected</h3>
+            <p className="text-sm text-red-600">
+              Your previous submission was rejected. Please review your documents carefully and resubmit with correct information.
+            </p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={onSubmit}>
-        {" "}
-        {/* Wrap the content in a <form> element */}
         <div className="text-center mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-6">
-            Please fill the necessary documents to continue
+          <h2 className="text-lg font-medium text-gray-900 mb-2">
+            {isRejected ? "Resubmit Your Documents" : "Submit Your Documents"}
           </h2>
+          <p className="text-sm text-gray-600 mb-6">
+            {isRejected 
+              ? "Please ensure all information is accurate and images are clear before resubmitting"
+              : "Please fill in the necessary documents to continue"}
+          </p>
 
           {/* Photo Upload Circle */}
           <div className="flex justify-center mb-2">
@@ -247,7 +343,7 @@ const DocUpload: React.FC = () => {
                   <Image
                     src={photoPreview}
                     alt="Photo preview"
-                    width={80} // Set width and height for the image
+                    width={80}
                     height={80}
                     className="rounded-full object-cover border-2 border-orange-300"
                   />
@@ -281,6 +377,7 @@ const DocUpload: React.FC = () => {
             <p className="text-sm text-red-500 mb-4">{errors.picture}</p>
           )}
         </div>
+
         <div>
           {/* City Name and ZIP Code Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -332,7 +429,7 @@ const DocUpload: React.FC = () => {
                       <Image
                         src={frontSidePreview}
                         alt="Front side preview"
-                        width={300} // Set width and height for the image
+                        width={300}
                         height={120}
                         className="w-full h-32 object-cover rounded-lg mb-4"
                       />
@@ -380,9 +477,7 @@ const DocUpload: React.FC = () => {
                     type="file"
                     accept="image/*,.pdf"
                     className="hidden"
-                    onChange={(e) =>
-                      handlePhotoChange(e.target.files, "id_front")
-                    }
+                    onChange={(e) => handlePhotoChange(e.target.files, "id_front")}
                   />
                 </div>
                 {errors.id_front && (
@@ -398,7 +493,7 @@ const DocUpload: React.FC = () => {
                       <Image
                         src={backSidePreview}
                         alt="Back side preview"
-                        width={300} // Set width and height for the image
+                        width={300}
                         height={120}
                         className="w-full h-32 object-cover rounded-lg mb-4"
                       />
@@ -446,9 +541,7 @@ const DocUpload: React.FC = () => {
                     type="file"
                     accept="image/*,.pdf"
                     className="hidden"
-                    onChange={(e) =>
-                      handlePhotoChange(e.target.files, "id_back")
-                    }
+                    onChange={(e) => handlePhotoChange(e.target.files, "id_back")}
                   />
                 </div>
                 {errors.id_back && (
@@ -461,11 +554,15 @@ const DocUpload: React.FC = () => {
           {/* Submit Button */}
           <div className="flex justify-center pt-4">
             <button
-              type="submit" // Submit button to trigger the form
+              type="submit"
               disabled={isSubmitting}
               className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white px-8 py-3 rounded-lg font-medium transition-colors"
             >
-              {isSubmitting ? "Uploading..." : "Submit Documents"}
+              {isSubmitting 
+                ? "Uploading..." 
+                : isRejected 
+                  ? "Resubmit Documents" 
+                  : "Submit Documents"}
             </button>
           </div>
         </div>

@@ -16,6 +16,7 @@ import {
 import { useStateSlice } from "@/store/hooks/sliceHook";
 import { getCookie, removeCookie, setCookie } from "@/hooks/cookie";
 import { toast } from "sonner";
+import Logo from "@/components/Element/Logo";
 
 export default function VerifyCodePage() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -150,13 +151,7 @@ export default function VerifyCodePage() {
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-8">
       {/* Logo */}
       <div className="text-center mb-8">
-        <Image
-          src={"/image/logo.png"}
-          alt="logo image"
-          width={80}
-          height={80}
-          className="md:max-w-[80px] md:max-h-[80px]"
-        />
+        <Logo href="/"/>
       </div>
 
       {/* Content */}

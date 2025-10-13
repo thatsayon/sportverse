@@ -165,7 +165,7 @@ const DocPopup: React.FC<DocPopupProps> = ({ isOpen, setViewDialog, documentId }
           <Button variant="outline" onClick={()=> setViewDialog(false)}>
             Cancel
           </Button>
-          {data && data.status === "unverfied" && (
+          {data && (
             <Button
               onClick={handleApprove}
               className="bg-green-600 hover:bg-green-700"

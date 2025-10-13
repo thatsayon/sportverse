@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import Image from "next/image";
-import { useLoginMutation } from "@/store/Slices/apiSlices/apiSlice";
+import { useLazyGoogleLoginQuery, useLoginMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,7 +23,7 @@ import {
 import { loginSchema, type LoginFormData } from "@/schema/auth.schema";
 import { toast } from "sonner";
 import { GoogleIcon } from "@/SVG/AuthSCG";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { setCookie } from "@/hooks/cookie";
 import { decodeToken } from "@/hooks/decodeToken";
 import Logo from "../Element/Logo";
@@ -31,6 +31,7 @@ import Logo from "../Element/Logo";
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [login, { isLoading }] = useLoginMutation();
+  const [googleLogin, {isLoading: googleLoading}] = useLazyGoogleLoginQuery()
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -45,19 +46,6 @@ export function LoginForm() {
     //console.log("Login data:", data);
     try {
       const result = await login(data).unwrap();
-
-      // const response = await fetch("https://api.ballmastery.com/auth/login/", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     email: data.email,
-      //     password: data.password,
-      //   }),
-      // });
-
-      // const result = await response.json();
 
       if (result.access_token) {
         //console.log("Login successful:", result);
@@ -88,7 +76,7 @@ export function LoginForm() {
         sessionStorage.setItem("userEmail", data.email);
         toast.success("Login successful!");
       } else {
-        toast.error("Login Failed!");
+        toast.error(result?.error);
       }
     } catch (error) {
       const err = error as Error;
@@ -101,6 +89,13 @@ export function LoginForm() {
     }
   };
 
+const HandleGoogleLogin = async()=>{
+  const response = await googleLogin().unwrap()
+
+  if(response.auth_url){
+    redirect(response.auth_url)
+  }
+}
   return (
     <Card className="w-full max-w-lg md:px-3 shadow-none border-none">
       <CardHeader className="text-center">
@@ -113,9 +108,10 @@ export function LoginForm() {
             Sign in to continue to your account
           </p>
         </CardTitle>
-        <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
+        <Button disabled={googleLoading} onClick={HandleGoogleLogin} variant={"ghost"} className="bg-[#F3F4F6] font-medium">
           <GoogleIcon size={22} />
-          Continue with Google
+          {googleLoading ? <Loader/>:"Continue with Google"}
+          
         </Button>
         <div className="flex items-center gap-4 mt-6">
           <div className="w-full h-[2px] bg-[#C4C3C3]" />

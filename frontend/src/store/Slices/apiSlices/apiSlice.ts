@@ -57,6 +57,7 @@ export interface SignUpResponse {
 
 export interface LoginResponse {
   access_token: string;
+  error?: string;
   // refresh_token: string;
 }
 export interface verifyEmailCodeResponse {
@@ -110,6 +111,23 @@ export interface getSignatureRequest {
   thumbnail: File
 }
 
+export interface GoogleSignUpResponse{
+  auth_url: string;
+}
+
+export interface GoogleExChangeRequest{
+  code: string;
+  role?: string;
+}
+export interface GoogleExChangeResponse{
+ error?:{
+  error?: string;
+  error_description?: string;
+ }
+ access_token: string;
+}
+
+
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
 
@@ -119,7 +137,7 @@ export const apiSlice = createApi({
   reducerPath: "api",
   
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://api.ballmastery.com/", 
+    baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
       // Add any default headers here (e.g., authorization)
       headers.set("Content-Type", "application/json");
@@ -188,6 +206,24 @@ export const apiSlice = createApi({
       }),
       // No cache invalidation needed for login
     }),
+
+    // Google login
+    googleLogin: builder.query<GoogleSignUpResponse, void>({
+      query: ()=>"/auth/google-login/"
+    }),
+    // Google Signup
+    googleSignup: builder.query<GoogleSignUpResponse, void>({
+      query: ()=> "/auth/google-signup/"
+    }),
+    // Google exchange
+    googleExchange: builder.mutation<GoogleExChangeResponse, GoogleExChangeRequest>({
+      query: (body)=> ({
+        url: "/auth/google-exchange/",
+        method: "POST",
+        body
+      })
+    }),
+
     logout: builder.mutation<{ success: boolean }, void>({
       // No API call needed for logout, just clear cookies and session
       queryFn: async () => {
@@ -293,6 +329,10 @@ export const {
   useLoginMutation,
   useSignUpMutation,
   useLogoutMutation,
+  // google
+  useLazyGoogleSignupQuery,
+  useLazyGoogleLoginQuery,
+  useGoogleExchangeMutation,
   useRequestForgotPasswordCodeMutation,
   useVerifyForgotPasswordCodeMutation,
   useResetPasswordMutation,

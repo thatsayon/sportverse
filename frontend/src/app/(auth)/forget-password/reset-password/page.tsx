@@ -22,6 +22,7 @@ import { z } from "zod";
 import { getCookie } from "@/hooks/cookie";
 import { useDispatch } from "react-redux";
 import { setEmail } from "@/store/Slices/stateSlices/stateSlice";
+import Logo from "@/components/Element/Logo";
 
 // Password validation schema
 const resetPasswordSchema = z.object({
@@ -98,7 +99,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-8">
       {/* Logo */}
       <div className="text-center mb-8">
-        <Image src={"/image/logo.png"} alt="logo image" width={80} height={80} className="md:max-w-[80px] md:max-h-[80px]"/>
+        <Logo href="/"/>
       </div>
 
       {/* Form */}

@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useSignUpMutation } from "@/store/Slices/apiSlices/apiSlice";
+import { Eye, EyeOff, Loader } from "lucide-react";
+import { redirect, useRouter } from "next/navigation";
+import {
+  useLazyGoogleSignupQuery,
+  useSignUpMutation,
+} from "@/store/Slices/apiSlices/apiSlice";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,8 @@ export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signUp, { isLoading }] = useSignUpMutation();
+  const [googleSignup, { isLoading: googleLoading }] =
+    useLazyGoogleSignupQuery();
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -50,10 +55,10 @@ export function SignUpForm() {
   const selectedRole = form.watch("role");
 
   const handleRoleChange = (value: "student" | "teacher") => {
-    form.setValue("role", value, { 
+    form.setValue("role", value, {
       shouldValidate: true,
       shouldDirty: true,
-      shouldTouch: true 
+      shouldTouch: true,
     });
   };
 
@@ -84,11 +89,19 @@ export function SignUpForm() {
     }
   };
 
+  const handleSocialSignup = async () => {
+    const response = await googleSignup().unwrap();
+    console.log("response:", response);
+    if (response.auth_url) {
+      redirect(response.auth_url);
+    }
+  };
+
   return (
     <Card className="w-full max-w-lg scroll-auto border-none shadow-none">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mb-0 md:mb-1 lg:mb-2">
-          <Logo href="/"/>
+          <Logo href="/" />
         </div>
         <CardTitle className="text-lg md:text-2xl font-semibold text-[#232323]">
           <h2 className="text-lg md:text-2xl lg:text-3xl font-medium">
@@ -98,15 +111,19 @@ export function SignUpForm() {
       </CardHeader>
       <CardContent className="-mt-3 md:mt-0 lg:-mt-3 xl:mt-0">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 xl:space-y-6">
-            
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-2 xl:space-y-6"
+          >
             {/* Role Selection Field */}
             <FormField
               control={form.control}
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block text-center mb-2">Select Role</FormLabel>
+                  <FormLabel className="block text-center mb-2">
+                    Select Role
+                  </FormLabel>
                   <FormControl>
                     <div className="flex items-center justify-center">
                       <div className="flex items-center border-2 md:p-1 rounded-md text-lg font-semibold">
@@ -256,8 +273,8 @@ export function SignUpForm() {
                     </FormControl>
                     <div>
                       <FormLabel className="text-xs leading-[140%] text-gray-600 cursor-pointer">
-                        By creating an account, I accept the Terms & Conditions &
-                        Privacy Policy.
+                        By creating an account, I accept the Terms & Conditions
+                        & Privacy Policy.
                       </FormLabel>
                       <FormMessage />
                     </div>
@@ -295,9 +312,14 @@ export function SignUpForm() {
           <div className="w-full h-[2px] bg-[#C4C3C3]" />
         </div>
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
-          <Button variant={"ghost"} className="bg-[#F3F4F6] font-medium">
+          <Button
+            disabled={googleLoading}
+            onClick={handleSocialSignup}
+            variant={"ghost"}
+            className="bg-[#F3F4F6] font-medium"
+          >
             <GoogleIcon size={22} />
-            Continue with Google
+            {googleLoading ? <Loader /> : "Continue with Google"}
           </Button>
         </div>
       </CardContent>

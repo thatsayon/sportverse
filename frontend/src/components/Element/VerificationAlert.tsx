@@ -6,12 +6,28 @@ import { AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useJwt } from "@/hooks/useJwt";
+import { authEvents } from "@/lib/authEvents";
 
 const VerificationAlert = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { decoded } = useJwt();
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // State to trigger re-render when token changes
+  const [tokenVersion, setTokenVersion] = useState(0);
+  
+  // This will re-run when tokenVersion changes
+  const { decoded } = useJwt();
+
+  // Listen for auth changes
+  useEffect(() => {
+    const unsubscribe = authEvents.subscribe(() => {
+      // Increment version to force useJwt to re-decode
+      setTokenVersion(prev => prev + 1);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Get appropriate message based on status
   const getStatusMessage = () => {

@@ -8,6 +8,7 @@ import { useStateSlice } from "@/store/hooks/sliceHook";
 import { useDispatch } from "react-redux";
 import { setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { useJwt } from "@/hooks/useJwt";
+import Logo from "@/components/Element/Logo";
 
 export default function ForgotPasswordSuccessPage() {
   const {decoded} = useJwt()
@@ -35,7 +36,7 @@ const dispatch = useDispatch()
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-8">
       {/* Logo */}
       <div className="text-center mb-8">
-        <Image src={"/image/logo.png"} alt="logo image" width={80} height={80} className="md:max-w-[80px] md:max-h-[px]"/>
+        <Logo href="/"/>
       </div>
 
       {/* Content */}
