@@ -74,7 +74,7 @@ export function LoginForm() {
         // Store login data in sessionStorage for immediate access
         sessionStorage.setItem("isLoggedIn", "true");
         sessionStorage.setItem("userEmail", data.email);
-        toast.success("Login successful!");
+        // toast.success("Login successful!");
       } else {
         toast.error(result?.error);
       }
@@ -109,8 +109,11 @@ const HandleGoogleLogin = async()=>{
           </p>
         </CardTitle>
         <Button disabled={googleLoading} onClick={HandleGoogleLogin} variant={"ghost"} className="bg-[#F3F4F6] font-medium">
-          <GoogleIcon size={22} />
-          {googleLoading ? <Loader/>:"Continue with Google"}
+         
+          {googleLoading ? <Loader/>:<>
+           <GoogleIcon size={22} />
+          Continue with Google
+          </>}
           
         </Button>
         <div className="flex items-center gap-4 mt-6">
@@ -207,9 +210,9 @@ const HandleGoogleLogin = async()=>{
             </Link>
           </p>
           <div className="mt-4 md:mt-6 space-x-4 lg:space-x-6 text-[#666666] text-sm">
-            <Link href={"#"}>Privacy policy</Link>
-            <Link href={"#"}>Terms of service</Link>
-            <Link href={"#"}>Help center</Link>
+            <Link href={"/privacy"} className="hover:underline">Privacy policy</Link>
+            <Link href={"/terms"} className="hover:underline">Terms of service</Link>
+            <Link href={"/help"} className="hover:underline">Help center</Link>
           </div>
         </div>
 

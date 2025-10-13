@@ -272,9 +272,9 @@ export function SignUpForm() {
                       />
                     </FormControl>
                     <div>
-                      <FormLabel className="text-xs leading-[140%] text-gray-600 cursor-pointer">
-                        By creating an account, I accept the Terms & Conditions
-                        & Privacy Policy.
+                      <FormLabel className="text-xs leading-[140%] text-gray-600 cursor-pointer flex flex-wrap gap-1">
+                        By creating an account, I accept the <Link href={"/terms"} className="text-blue-400 hover:underline inline text-xs">Terms & Conditions</Link>
+                        & <Link href={"/privacy"} className="text-blue-400 hover:underline inline text-xs">Privacy Policy</Link>.
                       </FormLabel>
                       <FormMessage />
                     </div>

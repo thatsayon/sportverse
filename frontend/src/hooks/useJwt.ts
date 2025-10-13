@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import {jwtDecode} from "jwt-decode";
+import { useState, useEffect, useMemo } from "react";
+import { jwtDecode } from "jwt-decode";
 import { getCookie } from "./cookie";
-
+import { authEvents } from "@/lib/authEvents";
 
 export interface DecodedToken {
   token_type: "access" | "refresh";
@@ -20,8 +20,24 @@ export interface DecodedToken {
 }
 
 export const useJwt = () => {
+  // State to trigger re-computation when token changes
+  const [tokenVersion, setTokenVersion] = useState(0);
+
+  // Listen for auth events to update tokenVersion
+  useEffect(() => {
+    const unsubscribe = authEvents.subscribe(() => {
+      setTokenVersion(prev => prev + 1);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Decode token - now depends on tokenVersion to re-compute when token changes
   const decoded = useMemo<DecodedToken | null>(() => {
-    const token = getCookie("access_token")
+    // This dependency ensures re-computation when tokenVersion changes
+    void tokenVersion;
+    
+    const token = getCookie("access_token");
     if (!token) return null;
 
     try {
@@ -30,7 +46,7 @@ export const useJwt = () => {
       console.error("Invalid JWT token:", error);
       return null;
     }
-  }, []);
+  }, [tokenVersion]);
 
   const isExpired = useMemo(() => {
     if (!decoded?.exp) return null;

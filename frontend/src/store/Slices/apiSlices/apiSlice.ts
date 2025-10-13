@@ -1,3 +1,4 @@
+import { GoogleExChangeResponse } from "@/types/teacher/profile";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const removeCookie = (name: string) => {
@@ -119,13 +120,7 @@ export interface GoogleExChangeRequest{
   code: string;
   role?: string;
 }
-export interface GoogleExChangeResponse{
- error?:{
-  error?: string;
-  error_description?: string;
- }
- access_token: string;
-}
+
 
 
 
@@ -221,6 +216,13 @@ export const apiSlice = createApi({
         url: "/auth/google-exchange/",
         method: "POST",
         body
+      })
+    }),
+
+    getTrainerToken: builder.mutation<GoogleExChangeResponse, void>({
+      query: ()=>({
+        url: "/auth/generate-access-token/",
+        method: "POST"
       })
     }),
 
@@ -333,6 +335,8 @@ export const {
   useLazyGoogleSignupQuery,
   useLazyGoogleLoginQuery,
   useGoogleExchangeMutation,
+  useGetTrainerTokenMutation,
+  //forget Password
   useRequestForgotPasswordCodeMutation,
   useVerifyForgotPasswordCodeMutation,
   useResetPasswordMutation,

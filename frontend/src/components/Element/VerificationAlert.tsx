@@ -7,33 +7,62 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useJwt } from "@/hooks/useJwt";
 import { authEvents } from "@/lib/authEvents";
+import { getCookie } from "@/hooks/cookie";
 
 const VerificationAlert = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // State to trigger re-render when token changes
-  const [tokenVersion, setTokenVersion] = useState(0);
+  // State to force re-render and store current verification status
+  const [currentToken, setCurrentToken] = useState<string | null>(null);
   
-  // This will re-run when tokenVersion changes
+  // Initial JWT decode
   const { decoded } = useJwt();
 
-  // Listen for auth changes
+  // Listen for auth changes and update token
   useEffect(() => {
     const unsubscribe = authEvents.subscribe(() => {
-      // Increment version to force useJwt to re-decode
-      setTokenVersion(prev => prev + 1);
+      // Force component to re-read the cookie
+      const newToken = getCookie("access_token");
+      setCurrentToken(newToken);
     });
 
     return () => unsubscribe();
   }, []);
 
+  // Decode the current token when it changes
+  const [decodedState, setDecodedState] = useState(decoded);
+  
+  useEffect(() => {
+    if (currentToken) {
+      // Re-decode the JWT when token changes
+      // You'll need to decode it here - either expose decode function from useJwt
+      // or decode it inline
+      try {
+        const base64Url = currentToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        setDecodedState(JSON.parse(jsonPayload));
+      } catch (error) {
+        console.error('Failed to decode token:', error);
+      }
+    }
+  }, [currentToken]);
+
+  // Use decodedState instead of decoded
+  const activeDecoded = decodedState || decoded;
+
   // Get appropriate message based on status
   const getStatusMessage = () => {
-    if (!decoded || decoded.verification_status === "verified") return null;
+    if (!activeDecoded || activeDecoded.verification_status === "verified") return null;
 
-    switch (decoded.verification_status) {
+    switch (activeDecoded.verification_status) {
       case "not_submitted":
         return {
           title: "Verification Required",
@@ -104,8 +133,8 @@ const VerificationAlert = () => {
 
   // Don't show if user is not a teacher or is verified or no status info
   if (
-    !decoded ||
-    decoded.role !== "teacher" ||
+    !activeDecoded ||
+    activeDecoded.role !== "teacher" ||
     !statusInfo
   ) {
     return null;

@@ -14,6 +14,7 @@ import {
   Mail,
   MessageCircle,
   ChevronDown,
+  Loader,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,10 +32,14 @@ import { removeCookie, getCookie } from "@/hooks/cookie";
 import ChatConversation from "../Element/ChatConversation";
 import { useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { getSocket } from "@/lib/socket";
-import  io  from "socket.io-client";
+import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
+import { useGetTrainerTokenMutation } from "@/store/Slices/apiSlices/apiSlice";
+import { decodeToken } from "@/hooks/decodeToken";
+import { Span } from "next/dist/trace";
+import WarningAlert from "../Element/WarningAlart";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
 const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL;
 
 interface NavProps {
@@ -73,10 +78,11 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [localMessageList, setLocalMessageList] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
-  
+  const [getToken, { isLoading }] = useGetTrainerTokenMutation();
   const router = useRouter();
   const pathname = usePathname();
   const { data: messageList } = useGetTrainerChatListQuery();
+  const [open, isOpen] = useState<boolean>(false);
 
   // Initialize local message list from API data
   useEffect(() => {
@@ -94,7 +100,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   // Socket integration for real-time messaging
   useEffect(() => {
     const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
-    
+
     const handleNewMessage = (msg: any) => {
       setLocalMessageList((prev) => {
         const index = prev.findIndex(
@@ -141,13 +147,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
         return;
       }
       try {
-        const response = await fetch(`${NOTIFICATION_SOCKET_URL}notifications/`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetch(
+          `${NOTIFICATION_SOCKET_URL}notifications/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -157,13 +166,15 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
         console.log("📥 Fetched notifications:", data);
 
         // Transform API response to match our Notification interface
-        const transformedNotifications: Notification[] = data.results.map((notif) => ({
-          id: notif.id,
-          title: notif.title,
-          message: notif.message,
-          timestamp: notif.created_at,
-          read: notif.is_read,
-        }));
+        const transformedNotifications: Notification[] = data.results.map(
+          (notif) => ({
+            id: notif.id,
+            title: notif.title,
+            message: notif.message,
+            timestamp: notif.created_at,
+            read: notif.is_read,
+          })
+        );
 
         setNotifications(transformedNotifications);
       } catch (error) {
@@ -225,7 +236,8 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
         id: data.id || Date.now().toString(),
         title: data.title || "New Notification",
         message: data.message || data.content || "",
-        timestamp: data.timestamp || data.created_at || new Date().toISOString(),
+        timestamp:
+          data.timestamp || data.created_at || new Date().toISOString(),
         read: false,
       };
 
@@ -304,13 +316,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       const accessToken = getCookie("access_token");
       if (!accessToken) return;
 
-      await fetch(`${NOTIFICATION_SOCKET_URL}notifications/${notificationId}/read/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      });
+      await fetch(
+        `${NOTIFICATION_SOCKET_URL}notifications/${notificationId}/read/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       console.log("✅ Notification marked as read on server:", notificationId);
     } catch (error) {
@@ -323,7 +338,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     const notifTime = new Date(timestamp);
     const diffMs = now.getTime() - notifTime.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return "just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
@@ -338,6 +353,32 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   );
 
   const unreadNotificationCount = notifications.filter((n) => !n.read).length;
+
+  const handleCheckingMobile = async () => {
+    const response = await getToken().unwrap();
+
+    if (response.access_token) {
+      const user = decodeToken(response.access_token);
+      if (user?.verification_status === "verified") {
+        router.push("/dashboard");
+        setIsMobileMenuOpen(false);
+      } else {
+        isOpen(true);
+      }
+    }
+  };
+  const handleChecking = async () => {
+    const response = await getToken().unwrap();
+
+    if (response.access_token) {
+      const user = decodeToken(response.access_token);
+      if (user?.verification_status === "verified") {
+        router.push("/dashboard");
+      } else {
+        isOpen(true);
+      }
+    }
+  };
 
   return (
     <nav
@@ -399,8 +440,8 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   </DropdownMenuItem>
                 ) : (
                   localMessageList.map((item, index) => (
-                    <DropdownMenuItem 
-                      key={item.conversation_id || index} 
+                    <DropdownMenuItem
+                      key={item.conversation_id || index}
                       onClick={() => handleMessageClick(item)}
                     >
                       <div className="flex items-start w-full space-x-3">
@@ -410,7 +451,9 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                         </Avatar>
                         <div className="flex items-center justify-between w-full">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{item.other_user}</p>
+                            <p className="text-sm font-medium">
+                              {item.other_user}
+                            </p>
                             <p className="text-xs text-gray-500 truncate">
                               {item.last_message}
                             </p>
@@ -446,16 +489,23 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72 sm:w-80 max-h-96 overflow-y-auto">
+              <DropdownMenuContent
+                align="end"
+                className="w-72 sm:w-80 max-h-96 overflow-y-auto"
+              >
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {isLoadingNotifications ? (
                   <DropdownMenuItem disabled>
-                    <p className="text-sm text-gray-500">Loading notifications...</p>
+                    <p className="text-sm text-gray-500">
+                      Loading notifications...
+                    </p>
                   </DropdownMenuItem>
                 ) : notifications.length === 0 ? (
                   <DropdownMenuItem disabled>
-                    <p className="text-sm text-gray-500">No notifications yet</p>
+                    <p className="text-sm text-gray-500">
+                      No notifications yet
+                    </p>
                   </DropdownMenuItem>
                 ) : (
                   notifications.map((notification, index) => (
@@ -466,12 +516,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                       >
                         <div className="flex flex-col space-y-1 w-full">
                           <div className="flex items-start justify-between">
-                            <p className="text-sm font-medium">{notification.title}</p>
+                            <p className="text-sm font-medium">
+                              {notification.title}
+                            </p>
                             {!notification.read && (
                               <span className="h-2 w-2 bg-blue-500 rounded-full mt-1 ml-2 flex-shrink-0"></span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500">{notification.message}</p>
+                          <p className="text-xs text-gray-500">
+                            {notification.message}
+                          </p>
                           <span className="text-xs text-gray-400">
                             {getTimeAgo(notification.timestamp)}
                           </span>
@@ -496,18 +550,29 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 </span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <Link href={"/dashboard/trainer-settings"}>
-                  <DropdownMenuItem>
-                    <User className="size-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                </Link>
-                <Link href={"/dashboard"}>
-                  <DropdownMenuItem>
-                    <BarChart3 className="size-4 mr-2" />
-                    Dashboard
-                  </DropdownMenuItem>
-                </Link>
+                <DropdownMenuItem onClick={handleChecking}>
+                  {isLoading ? (
+                    <Loader className="animate-spin" />
+                  ) : (
+                    <>
+                      {" "}
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </>
+                  )}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={handleChecking}>
+                  {isLoading ? (
+                    <Loader className="animate-spin" />
+                  ) : (
+                    <>
+                      {" "}
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </>
+                  )}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="size-4 mr-2" />
@@ -570,7 +635,11 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   {/* Mobile Messages */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="relative w-full justify-start">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="relative w-full justify-start"
+                      >
                         <Mail className="h-5 w-5 mr-2" />
                         Messages
                         {totalUnreadCount > 0 && (
@@ -588,11 +657,13 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                       <DropdownMenuSeparator />
                       {localMessageList.length === 0 ? (
                         <DropdownMenuItem disabled>
-                          <p className="text-sm text-gray-500">No messages yet</p>
+                          <p className="text-sm text-gray-500">
+                            No messages yet
+                          </p>
                         </DropdownMenuItem>
                       ) : (
                         localMessageList.map((item, index) => (
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             key={item.conversation_id || index}
                             onClick={() => {
                               handleMessageClick(item);
@@ -630,7 +701,11 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   {/* Mobile Notifications */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="relative w-full justify-start">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="relative w-full justify-start"
+                      >
                         <Bell className="h-5 w-5 mr-2" />
                         Notifications
                         {unreadNotificationCount > 0 && (
@@ -643,16 +718,23 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                         )}
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-72 sm:w-80 max-h-96 overflow-y-auto">
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-72 sm:w-80 max-h-96 overflow-y-auto"
+                    >
                       <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       {isLoadingNotifications ? (
                         <DropdownMenuItem disabled>
-                          <p className="text-sm text-gray-500">Loading notifications...</p>
+                          <p className="text-sm text-gray-500">
+                            Loading notifications...
+                          </p>
                         </DropdownMenuItem>
                       ) : notifications.length === 0 ? (
                         <DropdownMenuItem disabled>
-                          <p className="text-sm text-gray-500">No notifications yet</p>
+                          <p className="text-sm text-gray-500">
+                            No notifications yet
+                          </p>
                         </DropdownMenuItem>
                       ) : (
                         notifications.map((notification) => (
@@ -666,12 +748,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                             >
                               <div className="flex flex-col space-y-1 w-full">
                                 <div className="flex items-start justify-between">
-                                  <p className="text-sm font-medium">{notification.title}</p>
+                                  <p className="text-sm font-medium">
+                                    {notification.title}
+                                  </p>
                                   {!notification.read && (
                                     <span className="h-2 w-2 bg-blue-500 rounded-full mt-1 ml-2 flex-shrink-0"></span>
                                   )}
                                 </div>
-                                <p className="text-xs text-gray-500">{notification.message}</p>
+                                <p className="text-xs text-gray-500">
+                                  {notification.message}
+                                </p>
                                 <span className="text-xs text-gray-400">
                                   {getTimeAgo(notification.timestamp)}
                                 </span>
@@ -685,29 +771,39 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   </DropdownMenu>
 
                   {/* Mobile Profile Actions */}
-                  <Link href={"/dashboard/trainer-settings"}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Profile
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={handleCheckingMobile}
+                  >
+                    {isLoading ? (
+                      <Loader className="animate-spin" />
+                    ) : (
+                      <>
+                        {" "}
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
+                      </>
+                    )}
+                  </Button>
 
-                  <Link href={"/dashboard"}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={handleCheckingMobile}
+                  >
+                    {isLoading ? (
+                      <Loader className="animate-spin" />
+                    ) : (
+                      <>
+                        {" "}
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </>
+                    )}
+                  </Button>
 
                   <Button
                     onClick={() => {
@@ -738,6 +834,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
           currentUserName="You"
         />
       )}
+      <WarningAlert open={open} isOpen={isOpen} />
     </nav>
   );
 };

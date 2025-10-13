@@ -69,3 +69,11 @@ export interface TrainerPasswardResquest {
     new_password: string;
 }
 
+export interface GoogleExChangeResponse{
+ error?:{
+  error?: string;
+  error_description?: string;
+ }
+ access_token: string;
+}
+

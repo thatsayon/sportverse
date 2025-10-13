@@ -95,8 +95,13 @@ const GoogleSignUp: React.FC = () => {
         toast.success("Sign Process done!");
         router.push("/student");
       } else if (user?.role === "teacher") {
-        toast.success("Sign Process done!");
-        router.push("/trainer");
+        if (user.verification_status === "not_submitted") {
+          toast.success("Sign Process done!");
+          router.push("/trainer/doc-submission");
+        } else {
+          toast.success("Sign Process done!");
+          router.push("/trainer");
+        }
       }
     } else {
       toast.error(response.error?.error_description);
