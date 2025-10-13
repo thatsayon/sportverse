@@ -13,6 +13,8 @@ from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import redirect, get_object_or_404
+from django.conf import settings
+from urllib.parse import unquote
 
 from urllib.parse import urlencode
 from .models import (
@@ -33,7 +35,8 @@ from .utils import (
     decode_otp_token
 )
 
-import os 
+import os
+import requests
 
 User = get_user_model()
 
@@ -523,3 +526,163 @@ class AccessTokenValidation(APIView):
                 "detail": "Token generation failed",
                 "error": str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GoogleSignup(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """
+        Step 1: Redirect user to Google Auth URL
+        """
+        base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+        params = {
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "redirect_uri": settings.GOOGLE_SIGNUP_REDIRECT_URI,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "consent",      
+        }
+        google_auth_url = f"{base_url}?{urlencode(params)}"
+        return Response({"auth_url": google_auth_url})
+
+class GoogleLogin(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """
+        Step 1: Redirect user to Google Auth URL
+        """
+        base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+        params = {
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "consent",      
+        }
+        google_auth_url = f"{base_url}?{urlencode(params)}"
+        return Response({"auth_url": google_auth_url})
+
+# class GoogleExchangeView(APIView):
+#     permission_classes = [AllowAny]
+#
+#     def post(self, request):
+#         code = request.data.get("code")
+#         role = request.data.get("role")  # ✅ Get the role from frontend
+#
+#         if not code:
+#             return Response({"error": "Code is required"}, status=400)
+#
+#         if role not in ["teacher", "student"]:
+#             return Response({"error": "Invalid or missing role"}, status=400)
+#
+#         token_url = "https://oauth2.googleapis.com/token"
+#         data = {
+#             "code": unquote(code),
+#             "client_id": settings.GOOGLE_CLIENT_ID,
+#             "client_secret": settings.GOOGLE_CLIENT_SECRET,
+#             "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+#             "grant_type": "authorization_code",
+#         }
+#
+#         r = requests.post(token_url, data=data)
+#         if r.status_code != 200:
+#             return Response({"error": r.json()}, status=400)
+#
+#         token_data = r.json()
+#         access_token = token_data.get("access_token")
+#         if not access_token:
+#             return Response({"error": "Invalid access token"}, status=400)
+#
+#         user_info = requests.get(
+#             "https://www.googleapis.com/oauth2/v3/userinfo",
+#             headers={"Authorization": f"Bearer {access_token}"}
+#         ).json()
+#
+#         email = user_info.get("email")
+#         name = user_info.get("name", "")
+#
+#         if not email:
+#             return Response({"error": "No email from Google"}, status=400)
+#
+#         # ✅ Use role when creating a new user
+#         user, created = User.objects.get_or_create(
+#             email=email,
+#             defaults={
+#                 "full_name": name,
+#                 "role": role  # ✅ Make sure your User model has this field
+#             }
+#         )
+#
+#         # ✅ If user exists but has no role yet, we can update it (optional)
+#         if not created and not getattr(user, "role", None):
+#             user.role = role
+#             user.save()
+#
+#         refresh = RefreshToken.for_user(user)
+#
+#         return Response({
+#             "user": {
+#                 "id": user.id,
+#                 "email": user.email,
+#                 "name": user.full_name,
+#                 "role": user.role,  # ✅ Send role back
+#             },
+#             "refresh": str(refresh),
+#             "access": str(refresh.access_token),
+#         })
+
+class GoogleExchangeView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        code = request.data.get("code")
+        role = request.data.get("role")  # Only used if creating a new user
+
+        if not code:
+            return Response({"error": "Code is required"}, status=400)
+
+        token_url = "https://oauth2.googleapis.com/token"
+        data = {
+            "code": unquote(code),
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "client_secret": settings.GOOGLE_CLIENT_SECRET,
+            "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+            "grant_type": "authorization_code",
+        }
+
+        r = requests.post(token_url, data=data)
+        if r.status_code != 200:
+            return Response({"error": r.json()}, status=400)
+
+        token_data = r.json()
+        access_token = token_data.get("access_token")
+        if not access_token:
+            return Response({"error": "Invalid access token"}, status=400)
+
+        user_info = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"}
+        ).json()
+
+        email = user_info.get("email")
+        name = user_info.get("name", "")
+
+        if not email:
+            return Response({"error": "No email from Google"}, status=400)
+
+        # Check if user already exists
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={"full_name": name, "role": role if role in ["teacher", "student"] else "student"}
+        )
+
+        refresh = CustomTokenObtainPairSerializer.get_token(user) 
+        access = refresh.access_token
+
+        return Response({
+            "access_token": str(access),
+        })
