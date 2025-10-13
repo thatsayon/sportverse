@@ -48,6 +48,7 @@ const Footer: React.FC<FooterProps> = ({ className = "" }) => {
 
   if (
     pathname === "/login" ||
+    pathname === "/home" ||
     pathname === "/social/signup" ||
     pathname === "/doc-submission" ||
     pathname === "/signup" ||

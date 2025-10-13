@@ -76,4 +76,11 @@ export interface GoogleExChangeResponse{
  }
  access_token: string;
 }
+export interface TokenResponse{
+ error?:{
+  error?: string;
+  error_description?: string;
+ }
+ access_token: string;
+}
 

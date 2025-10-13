@@ -74,7 +74,7 @@ export function LoginForm() {
         // Store login data in sessionStorage for immediate access
         sessionStorage.setItem("isLoggedIn", "true");
         sessionStorage.setItem("userEmail", data.email);
-        // toast.success("Login successful!");
+        toast.success("Login successful!");
       } else {
         toast.error(result?.error);
       }

@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Logo from "../Element/Logo";
-import { removeCookie, getCookie } from "@/hooks/cookie";
+import { removeCookie, getCookie, setCookie } from "@/hooks/cookie";
 import ChatConversation from "../Element/ChatConversation";
 import { useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { getSocket } from "@/lib/socket";
@@ -36,7 +36,6 @@ import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 import { useGetTrainerTokenMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { decodeToken } from "@/hooks/decodeToken";
-import { Span } from "next/dist/trace";
 import WarningAlert from "../Element/WarningAlart";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -355,10 +354,18 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const unreadNotificationCount = notifications.filter((n) => !n.read).length;
 
   const handleCheckingMobile = async () => {
+    console.log("clicked mobile")
     const response = await getToken().unwrap();
 
+    // console.log("User status:",response)
+
     if (response.access_token) {
+      removeCookie("access_token");
+      setCookie("access_token", response.access_token, 7);
       const user = decodeToken(response.access_token);
+
+      // console.log("User status:",user?.verification_status)
+      // console.log("Token status:",response)
       if (user?.verification_status === "verified") {
         router.push("/dashboard");
         setIsMobileMenuOpen(false);
@@ -368,10 +375,17 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     }
   };
   const handleChecking = async () => {
-    const response = await getToken().unwrap();
+    console.log("clicked")
+    const response = await getToken().unwrap()
+    console.log("Response status:",response)
+
 
     if (response.access_token) {
+      removeCookie("access_token");
+      setCookie("access_token", response.access_token, 7);
       const user = decodeToken(response.access_token);
+      console.log("User status:",user)
+
       if (user?.verification_status === "verified") {
         router.push("/dashboard");
       } else {

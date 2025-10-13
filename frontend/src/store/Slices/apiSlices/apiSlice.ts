@@ -1,4 +1,4 @@
-import { GoogleExChangeResponse } from "@/types/teacher/profile";
+import { GoogleExChangeResponse, TokenResponse } from "@/types/teacher/profile";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const removeCookie = (name: string) => {
@@ -219,7 +219,7 @@ export const apiSlice = createApi({
       })
     }),
 
-    getTrainerToken: builder.mutation<GoogleExChangeResponse, void>({
+    getTrainerToken: builder.mutation<TokenResponse, void>({
       query: ()=>({
         url: "/auth/generate-access-token/",
         method: "POST"

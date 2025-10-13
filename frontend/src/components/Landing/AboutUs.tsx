@@ -64,7 +64,7 @@ const AboutUs = () => {
               About <span className="text-[#F15A24]">Ball Mastery</span>
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-[#808080] max-w-3xl mx-auto leading-relaxed px-4">
-              Empowering soccer players to master ball control and technical skills through innovative training programs and expert guidance from Bright Star Soccer LLC.
+              Empowering soccer players to master ball control and technical skills through innovative training programs and expert guidance from Ball Mastery LLC.
             </p>
           </div>
 
@@ -107,7 +107,7 @@ const AboutUs = () => {
                   Our Story
                 </h2>
                 <p className="text-sm sm:text-base text-[#808080] leading-relaxed mb-3 sm:mb-4">
-                  Ball Mastery LLC, owned by Bright Star Soccer LLC, was founded with a clear vision: to democratize access to elite soccer training techniques. We recognized that many aspiring players lacked access to professional ball control training and technical development resources.
+                  Ball Mastery LLC, was founded with a clear vision: to democratize access to elite soccer training techniques. We recognized that many aspiring players lacked access to professional ball control training and technical development resources.
                 </p>
                 <p className="text-sm sm:text-base text-[#808080] leading-relaxed mb-3 sm:mb-4">
                   Through www.ballmastery.com, we've created a comprehensive digital platform that brings professional training methodologies directly to players, coaches, and soccer enthusiasts worldwide. Our content is carefully curated and protected to ensure the highest quality educational experience.
@@ -185,10 +185,10 @@ const AboutUs = () => {
                 <Star className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">
-                Powered by Bright Star Soccer LLC
+                Powered by Ball Mastery LLC
               </h2>
               <p className="text-base sm:text-lg text-white/90 leading-relaxed mb-4 sm:mb-6">
-                Ball Mastery LLC is proudly owned and operated by Bright Star Soccer LLC, a leader in soccer training and player development. With years of experience in coaching and training methodology, Bright Star Soccer brings professional expertise to every aspect of our platform.
+                Ball Mastery LLC is proudly owned and operated by Ball Mastery LLC, a leader in soccer training and player development. With years of experience in coaching and training methodology, Bright Star Soccer brings professional expertise to every aspect of our platform.
               </p>
               <p className="text-sm sm:text-base text-white/80 leading-relaxed">
                 Our parent company's commitment to excellence ensures that all Ball Mastery content meets the highest standards of quality and effectiveness, helping players worldwide improve their technical abilities and achieve their soccer goals.

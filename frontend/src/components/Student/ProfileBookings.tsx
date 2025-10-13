@@ -12,6 +12,9 @@ import { useGetBookingsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import NoDataFound from "../Element/NoDataFound";
+import { isFloat32Array } from "util/types";
+import Loading from "../Element/Loading";
 
 function ProfileBookings() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -24,17 +27,27 @@ function ProfileBookings() {
     }
   };
 
-  const { data } = useGetBookingsQuery();
+  const { data, isError, isLoading } = useGetBookingsQuery();
 
   //console.log("booking data:", data)
 
   const trainerBookingData = data?.results ?? [];
 
+  if(isLoading)return <Loading/>
+  if(isError)return <ErrorLoadingPage/>
+
   if (trainerBookingData?.length === 0) {
     return (
-      <>
-        <ErrorLoadingPage/>
-      </>
+      <div>
+        <h1 className="mt-14 text-center text-3xl font-semibold">No Session taken yet</h1>
+        <div className="flex items-center justify-center mt-6">
+          <Link href={"/student/virtual-training"}>
+        <Button>
+          View Trainers
+        </Button>
+        </Link>
+        </div>
+      </div>
     );
   }
   // Filter logic
@@ -62,9 +75,18 @@ function ProfileBookings() {
 
       {/* Session Cards */}
       <div className="space-y-4 ">
-        {paginatedData.slice(0,3).map((item) => (
+        {
+          data?.results.length >=0 ? (
+            <div>
+              {paginatedData.slice(0,3).map((item) => (
           <TrainerBookingCard key={item.id} {...item} />
         ))}
+            </div>
+
+      ):(
+        <div><NoDataFound/></div>
+      )
+        }
       </div>
     </div>
   );
