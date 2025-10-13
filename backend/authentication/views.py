@@ -514,11 +514,11 @@ class AccessTokenValidation(APIView):
     def post(self, request):
         try:
             # Create a fresh token with custom claims
-            refresh = CustomTokenObtainPairSerializer.get_token(user) 
+            refresh = CustomTokenObtainPairSerializer.get_token(request.user) 
             access = refresh.access_token
 
             return Response({
-                "access_token": access 
+                "access_token": access_token
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
