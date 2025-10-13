@@ -518,7 +518,7 @@ class AccessTokenValidation(APIView):
             access = refresh.access_token
 
             return Response({
-                "access_token": access
+                "access_token": str(access)
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
