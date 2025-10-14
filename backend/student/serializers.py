@@ -47,9 +47,10 @@ class SessionOptionSerializer(serializers.ModelSerializer):
             return user.profile_pic.url
         return None
 
+
 class RatingReviewSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.user.full_name', read_only=True)
-    student_username = serializers.CharField(source='student.user.username', read_only=True)
+    student_name = serializers.SerializerMethodField()
+    student_username = serializers.SerializerMethodField()
 
     class Meta:
         model = RatingReview
@@ -62,6 +63,17 @@ class RatingReviewSerializer(serializers.ModelSerializer):
             'created_at'
         ]
 
+    def get_student_name(self, obj):
+        student = obj.student
+        if student and hasattr(student, "user"):
+            return student.user.full_name
+        return None
+
+    def get_student_username(self, obj):
+        student = obj.student
+        if student and hasattr(student, "user"):
+            return student.user.username
+        return None
 
 class TrainerDetailsSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')
@@ -70,7 +82,6 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
     institute_name = serializers.CharField(source='teacher.institute_name')
     coach_type = serializers.SerializerMethodField()
 
-    # New boolean fields
     virtual = serializers.SerializerMethodField()
     mindset = serializers.SerializerMethodField()
     in_person = serializers.SerializerMethodField()
@@ -114,12 +125,9 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
 
     def get_ratings(self, obj):
         teacher = obj.teacher
-
-        # Handle the case where teacher or relation might not exist
         if not hasattr(teacher, 'ratings'):
-            return []  # return empty list instead of breaking
-
-        reviews = teacher.ratings.all()  # related_name='ratings' on RatingReview model
+            return []
+        reviews = teacher.ratings.all()
         return RatingReviewSerializer(reviews, many=True).data
 
 
