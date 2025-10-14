@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Avg, Count
 
 from teacher.session.models import SessionOption, AvailableDay, AvailableTimeSlot, BookedSession
 from teacher.models import RatingReview
@@ -85,7 +86,12 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
     virtual = serializers.SerializerMethodField()
     mindset = serializers.SerializerMethodField()
     in_person = serializers.SerializerMethodField()
+
     ratings = serializers.SerializerMethodField()
+
+    average_rating = serializers.SerializerMethodField()
+    total_reviews = serializers.SerializerMethodField()
+    student_count = serializers.SerializerMethodField()
     
     class Meta:
         model = SessionOption
@@ -101,9 +107,32 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             'virtual',
             'mindset',
             'in_person',
-            'ratings'
+            'ratings',
+            'average_rating',
+            'total_reviews',
+            'student_count'
         ]
     
+    def get_average_rating(self, obj):
+        teacher = obj.teacher
+        if not hasattr(teacher, 'ratings'):
+            return 0
+        avg = teacher.ratings.aggregate(avg_rating=Avg('rating'))['avg_rating']
+        return round(avg, 1) if avg else 0
+
+    def get_total_reviews(self, obj):
+        teacher = obj.teacher
+        if not hasattr(teacher, 'ratings'):
+            return 0
+        return teacher.ratings.count()
+
+    def get_student_count(self, obj):
+        teacher = obj.teacher
+        if not hasattr(teacher, 'booked_sessions_as_teacher'):
+            return 0
+        return teacher.booked_sessions_as_teacher.values('student').distinct().count()
+
+
     def get_coach_type(self, obj):
         return [sport.name for sport in obj.teacher.coach_type.all()]
     
