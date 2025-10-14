@@ -165,12 +165,13 @@ class SessionDetailsSerializer(serializers.ModelSerializer):
 
 class BookedSessionSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.user.full_name')
+    teacher_id = serializers.CharField(source='teacher.user.id')
     session_type = serializers.CharField(source='session.training_type')
     status = serializers.SerializerMethodField()
 
     class Meta:
         model = BookedSession
-        fields = ['id', 'teacher_name', 'session_time', 'session_type', 'status']
+        fields = ['id', 'teacher_name', 'teacher_id', 'session_time', 'session_type', 'status']
 
     def get_status(self, obj):
         now = timezone.localtime(timezone.now())        # Current time in BD
