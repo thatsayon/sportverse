@@ -644,6 +644,31 @@ class FindNearestTeacherView(APIView):
         
         logger.info(f"Created lookup dictionaries: {len(FindNearestTeacherView._cities_dict)} cities, {len(FindNearestTeacherView._zips_dict)} zips")
     
+    def _add_location_variance(self, lat: float, lon: float, city: str, postal: str) -> Tuple[float, float]:
+        """Add small random variance to coordinates for teachers in the same area
+        This spreads teachers within approximately 2-5 km radius of the base location
+        """
+        # Create a deterministic but unique seed based on city and postal
+        # This ensures same city/postal combo gets consistent but different offsets
+        seed_str = f"{city}_{postal}_{np.random.randint(0, 1000000)}"
+        seed_value = hash(seed_str) % (2**32)
+        np.random.seed(seed_value)
+        
+        # Add random offset within ~2-5 km radius
+        # 1 degree latitude ≈ 111 km
+        # 1 degree longitude ≈ 111 km * cos(latitude)
+        
+        lat_offset = np.random.uniform(-0.025, 0.025)  # ~2.8 km variance
+        lon_offset = np.random.uniform(-0.025, 0.025) / np.cos(np.radians(lat))  # Adjust for latitude
+        
+        new_lat = lat + lat_offset
+        new_lon = lon + lon_offset
+        
+        # Reset random seed to avoid affecting other random operations
+        np.random.seed(None)
+        
+        return round(new_lat, 6), round(new_lon, 6)
+    
     def _load_teachers_from_db(self):
         """Load all teachers from database with location data"""
         # Query all teachers with their document (location data)
@@ -664,10 +689,14 @@ class FindNearestTeacherView(APIView):
             if not city and not postal:
                 continue  # Skip teachers without location data
             
-            # Resolve coordinates
-            lat, lon, _ = self._resolve_location_cached(city, postal)
-            if lat is None or lon is None:
+            # Resolve base coordinates for the area
+            base_lat, base_lon, _ = self._resolve_location_cached(city, postal, 'BD')
+            if base_lat is None or base_lon is None:
+                logger.warning(f"Could not resolve location for teacher {teacher.user.username}: city={city}, postal={postal}")
                 continue  # Skip if we can't resolve location
+            
+            # Add variance to spread teachers within the city/area
+            lat, lon = self._add_location_variance(base_lat, base_lon, city, postal)
             
             # Get coach types (sports)
             coach_types = list(teacher.coach_type.values_list('name', flat=True))
@@ -685,7 +714,9 @@ class FindNearestTeacherView(APIView):
                 'city': city or '',
                 'postal_code': postal or '',
                 'latitude': lat,
-                'longitude': lon
+                'longitude': lon,
+                'base_latitude': base_lat,  # Store original for reference
+                'base_longitude': base_lon
             })
         
         if not teachers_data:
@@ -695,6 +726,8 @@ class FindNearestTeacherView(APIView):
         df = pd.DataFrame(teachers_data)
         df['latitude_array'] = df['latitude'].astype(np.float32)
         df['longitude_array'] = df['longitude'].astype(np.float32)
+        
+        logger.info(f"Loaded {len(df)} teachers with locations. Sample locations: {df[['username', 'city', 'postal_code', 'latitude', 'longitude']].head().to_dict('records')}")
         
         return df
 
