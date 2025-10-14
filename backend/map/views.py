@@ -591,6 +591,10 @@ class FindNearestTeacherView(APIView):
         cities_df = cities_df.dropna(subset=['Latitude', 'Longitude'])
         cities_df['city_normalized'] = cities_df['City'].str.lower().str.strip()
         
+        # Store country info if available
+        if 'Country' in cities_df.columns:
+            cities_df['country_normalized'] = cities_df['Country'].str.lower().str.strip()
+        
         return cities_df
     
     def _load_zips_csv(self, zips_path):
@@ -610,19 +614,33 @@ class FindNearestTeacherView(APIView):
         zips_df = zips_df.dropna(subset=['latitude', 'longitude'])
         zips_df['postal_normalized'] = zips_df['postal_code'].str.upper().str.strip()
         
+        # Store country info if available
+        if 'country_code' in zips_df.columns:
+            zips_df['country_normalized'] = zips_df['country_code'].str.upper().str.strip()
+        
         return zips_df
     
     def _create_lookup_dictionaries(self):
-        """Create O(1) lookup dictionaries for ultra-fast location resolution"""
+        """Create O(1) lookup dictionaries for ultra-fast location resolution
+        Handles duplicate city names by storing all matches with country info
+        """
+        # Cities dictionary: normalized_name -> list of (lat, lon, country)
         FindNearestTeacherView._cities_dict = {}
         for _, row in FindNearestTeacherView._cities_df.iterrows():
             key = row['city_normalized']
-            FindNearestTeacherView._cities_dict[key] = (float(row['Latitude']), float(row['Longitude']))
+            country = row.get('country_normalized', '')
+            coords = (float(row['Latitude']), float(row['Longitude']), country)
+            
+            if key not in FindNearestTeacherView._cities_dict:
+                FindNearestTeacherView._cities_dict[key] = []
+            FindNearestTeacherView._cities_dict[key].append(coords)
         
+        # Zips dictionary: normalized_postal -> (lat, lon, country)
         FindNearestTeacherView._zips_dict = {}
         for _, row in FindNearestTeacherView._zips_df.iterrows():
             key = row['postal_normalized']
-            FindNearestTeacherView._zips_dict[key] = (float(row['latitude']), float(row['longitude']))
+            country = row.get('country_normalized', '')
+            FindNearestTeacherView._zips_dict[key] = (float(row['latitude']), float(row['longitude']), country)
         
         logger.info(f"Created lookup dictionaries: {len(FindNearestTeacherView._cities_dict)} cities, {len(FindNearestTeacherView._zips_dict)} zips")
     
@@ -681,20 +699,39 @@ class FindNearestTeacherView(APIView):
         return df
 
     @lru_cache(maxsize=1000)
-    def _resolve_location_cached(self, city: Optional[str], postal: Optional[str]) -> Tuple[Optional[float], Optional[float], Optional[str]]:
-        """Ultra-fast cached location resolution using O(1) dictionary lookups"""
-        if postal:
-            postal_key = postal.strip().upper()
-            if postal_key in FindNearestTeacherView._zips_dict:
-                lat, lon = FindNearestTeacherView._zips_dict[postal_key]
-                return lat, lon, "postal_code"
-        
+    def _resolve_location_cached(self, city: Optional[str], postal: Optional[str], country: Optional[str] = 'BD') -> Tuple[Optional[float], Optional[float], Optional[str]]:
+        """Ultra-fast cached location resolution using O(1) dictionary lookups
+        Priority: city first, then postal code as fallback
+        Handles duplicate city names by preferring matches in the specified country
+        """
+        # Try city first (higher priority)
         if city:
             city_key = city.strip().lower()
             if city_key in FindNearestTeacherView._cities_dict:
-                lat, lon = FindNearestTeacherView._cities_dict[city_key]
+                matches = FindNearestTeacherView._cities_dict[city_key]
+                
+                # If there are multiple matches, prefer the specified country
+                if len(matches) > 1 and country:
+                    country_key = country.strip().upper()
+                    for lat, lon, ctry in matches:
+                        if ctry.upper() == country_key:
+                            logger.info(f"Location resolved from city with country filter: {city}, {country} -> ({lat}, {lon})")
+                            return lat, lon, "city"
+                
+                # Use first match if no country preference or only one match
+                lat, lon, ctry = matches[0]
+                logger.info(f"Location resolved from city: {city} -> ({lat}, {lon}, {ctry})")
                 return lat, lon, "city"
         
+        # Fallback to postal code if city not found
+        if postal:
+            postal_key = postal.strip().upper()
+            if postal_key in FindNearestTeacherView._zips_dict:
+                lat, lon, ctry = FindNearestTeacherView._zips_dict[postal_key]
+                logger.info(f"Location resolved from postal: {postal} -> ({lat}, {lon}, {ctry})")
+                return lat, lon, "postal_code"
+        
+        logger.warning(f"Could not resolve location for city: {city}, postal: {postal}, country: {country}")
         return None, None, None
 
     def _calculate_distances_optimized(self, lat: float, lon: float, teachers_df: pd.DataFrame) -> np.ndarray:
@@ -735,6 +772,7 @@ class FindNearestTeacherView(APIView):
             # Fast parameter extraction
             city = request.query_params.get('city', '').strip()
             postal = request.query_params.get('postal', '').strip()
+            country = request.query_params.get('country', 'BD').strip()  # Default to Bangladesh
             
             # Fast limit validation
             limit = min(max(int(request.query_params.get('limit', '5')), 1), 50)
@@ -748,17 +786,18 @@ class FindNearestTeacherView(APIView):
                     "details": validation_errors
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Ultra-fast cached location resolution
+            # Ultra-fast cached location resolution with country preference
             lat, lon, found_source = self._resolve_location_cached(
                 city if city else None,
-                postal if postal else None
+                postal if postal else None,
+                country
             )
             
             if lat is None:
                 return Response({
                     "success": False,
                     "error": "Location not found",
-                    "message": f"Could not resolve coordinates for city: '{city}', postal: '{postal}'"
+                    "message": f"Could not resolve coordinates for city: '{city}', postal: '{postal}', country: '{country}'"
                 }, status=status.HTTP_404_NOT_FOUND)
             
             # Load teachers from database
@@ -780,7 +819,7 @@ class FindNearestTeacherView(APIView):
             # Optimized result formatting
             teachers_list = []
             for idx in sorted_indices:
-                teacher = teachers_df.iloc[idx]
+                teacher = teachers_df.iloc[int(idx)]  # Ensure integer index
                 distance_km = float(distances[idx])
                 
                 teachers_list.append({
@@ -809,6 +848,7 @@ class FindNearestTeacherView(APIView):
                 "query": {
                     "city": city if city else None,
                     "postal": postal if postal else None,
+                    "country": country,
                     "limit": limit
                 },
                 "location": {
@@ -841,6 +881,7 @@ class FindNearestTeacherView(APIView):
             
             city = data.get('city', '').strip()
             postal = data.get('postal', '').strip()
+            country = data.get('country', 'BD').strip()  # Default to Bangladesh
             limit = min(max(int(data.get('limit', 5)), 1), 50)
             filters = data.get('filters', {})
             
@@ -853,10 +894,11 @@ class FindNearestTeacherView(APIView):
                     "details": validation_errors
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Fast location resolution
+            # Fast location resolution with country preference
             lat, lon, found_source = self._resolve_location_cached(
                 city if city else None,
-                postal if postal else None
+                postal if postal else None,
+                country
             )
             
             if lat is None:
@@ -901,6 +943,9 @@ class FindNearestTeacherView(APIView):
                     "error": "No teachers found matching filters"
                 }, status=status.HTTP_404_NOT_FOUND)
             
+            # Reset index to avoid indexing issues
+            filtered_df = filtered_df.reset_index(drop=True)
+            
             # Fast distance calculation for filtered data
             teacher_lats = filtered_df['latitude_array'].values
             teacher_lons = filtered_df['longitude_array'].values
@@ -916,7 +961,7 @@ class FindNearestTeacherView(APIView):
                             "success": False,
                             "error": "No teachers within specified distance"
                         }, status=status.HTTP_404_NOT_FOUND)
-                    filtered_df = filtered_df[valid_indices]
+                    filtered_df = filtered_df[valid_indices].reset_index(drop=True)
                     distances = distances[valid_indices]
                 except (ValueError, TypeError):
                     pass
@@ -927,7 +972,7 @@ class FindNearestTeacherView(APIView):
             # Build response
             teachers_list = []
             for idx in sorted_indices:
-                teacher = filtered_df.iloc[idx]
+                teacher = filtered_df.iloc[int(idx)]  # Ensure integer index
                 distance_km = float(distances[idx])
                 
                 teachers_list.append({
@@ -954,6 +999,7 @@ class FindNearestTeacherView(APIView):
                 "query": {
                     "city": city if city else None,
                     "postal": postal if postal else None,
+                    "country": country,
                     "limit": limit,
                     "filters": filters
                 },
