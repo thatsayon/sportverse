@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useGetBookingsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import ErrorLoadingPage from "../Element/ErrorLoadingPage";
+import NoDataFound from "../Element/NoDataFound";
+import Loading from "../Element/Loading";
 
 function BookingPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -24,19 +26,13 @@ function BookingPage() {
     }
   };
 
-  const { data } = useGetBookingsQuery();
+  const { data, isLoading, isError } = useGetBookingsQuery();
 
   //console.log("booking data:", data)
 
   const trainerBookingData = data?.results ?? [];
 
-  if (trainerBookingData?.length === 0) {
-    return (
-      <>
-        <ErrorLoadingPage/>
-      </>
-    );
-  }
+  
   // Filter logic
   const filteredData =
     statusFilter === "all"
@@ -49,6 +45,24 @@ function BookingPage() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  if(isLoading) return(
+    <div className="min-h-screen flex items-center justify-center">
+      <Loading/>
+    </div>
+  )
+  if(isError) return(
+    <div className="min-h-screen flex items-center justify-center">
+      <ErrorLoadingPage/>
+    </div>
+  )
+  if (trainerBookingData?.length === 0) {
+    return (
+      <>
+        <NoDataFound subtitle="No Session Booked yet."/>
+      </>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto my-8 min-h-screen">

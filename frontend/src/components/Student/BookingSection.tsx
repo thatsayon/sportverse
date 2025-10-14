@@ -3,11 +3,11 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Star, MapPin, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, MapPin, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useBookSessionMutation, useGetSessionDetailsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import { toast } from "sonner";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface Timeslot {
   id: string;
@@ -20,12 +20,19 @@ interface BookingSectionProps {
   id: string;
 }
 
+interface CheckoutResponse {
+  checkout_url: string;
+  booked_session_id: string;
+  error?: string;
+}
+
 const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<Timeslot | null>(null);
-  const [bookSecction] = useBookSessionMutation()
+  const [bookSession, { isLoading: isBooking }] = useBookSessionMutation();
   const { data: trainer, isLoading, isError } = useGetSessionDetailsQuery(id);
+  const router = useRouter();
 
   // Get current month and year
   const currentMonth = currentDate.getMonth();
@@ -41,6 +48,10 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
   // Get first day of month and number of days
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  // Get today's date without time for comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   // Create calendar days array
   const calendarDays = useMemo(() => {
@@ -61,8 +72,17 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
     day.day.toLowerCase()
   );
 
+  // Check if a date is in the past
+  const isPastDate = (day: number) => {
+    const date = new Date(currentYear, currentMonth, day);
+    date.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
   // Check if a date is available
   const isDateAvailable = (day: number) => {
+    if (isPastDate(day)) return false;
+    
     const date = new Date(currentYear, currentMonth, day);
     const dayName = date
       .toLocaleDateString("en-US", { weekday: "long" })
@@ -144,31 +164,54 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
     }
   };
 
-  const handleCheckout = async ()=>{
-    const dateString = new Intl.DateTimeFormat("en-CA").format(selectedDate);
-    const response = await bookSecction({
-      id: trainer?.id,
-      available_time_slot_id: selectedTimeSlot?.id,
-      session_date: dateString
-    }).unwrap()
-
-    if(response.booked_session_id){
-      redirect(response.checkout_url)
+  const handleCheckout = async () => {
+    if (!selectedDate || !selectedTimeSlot) {
+      toast.error("Please select a date and time slot");
+      return;
     }
-  }
+
+    try {
+      const dateString = new Intl.DateTimeFormat("en-CA").format(selectedDate);
+      const response = await bookSession({
+        id: trainer?.id,
+        available_time_slot_id: selectedTimeSlot?.id,
+        session_date: dateString
+      }).unwrap() as CheckoutResponse;
+
+      if (response.error) {
+        toast.error(response.error);
+      } else if (response.checkout_url && response.booked_session_id) {
+        toast.success("Session booked successfully! Redirecting to checkout...");
+        router.push(response.checkout_url);
+      } else {
+        toast.error(response.error);
+      }
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err?.message || "Failed to book session");
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="w-full p-4 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      <div className="w-full p-4 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <p className="text-gray-600">Loading trainer information...</p>
+        </div>
       </div>
     );
   }
 
   if (isError || !trainer) {
     return (
-      <div className="w-full p-4 text-center">
-        <p className="text-red-500">Failed to load trainer information</p>
+      <div className="w-full p-4 text-center min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-lg font-medium mb-2">Failed to load trainer information</p>
+          <Link href="/student/virtual-training">
+            <Button variant="outline">Go Back</Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -268,30 +311,37 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
 
                   {/* Calendar Grid */}
                   <div className="grid grid-cols-7 gap-1 mb-6">
-                    {calendarDays.map((day, index) => (
-                      <Button
-                        key={index}
-                        variant={
-                          selectedDate?.getDate() === day ? "default" : "ghost"
-                        }
-                        size="sm"
-                        disabled={!day || !isDateAvailable(day)}
-                        onClick={() => day && handleDateSelect(day)}
-                        className={`h-12 w-full text-sm ${
-                          !day
-                            ? "invisible"
-                            : isDateAvailable(day)
-                            ? "hover:bg-orange-50"
-                            : "text-gray-300 cursor-not-allowed"
-                        } ${
-                          selectedDate?.getDate() === day
-                            ? "bg-orange-500 text-white hover:bg-orange-600"
-                            : ""
-                        }`}
-                      >
-                        {day}
-                      </Button>
-                    ))}
+                    {calendarDays.map((day, index) => {
+                      const isPast = day ? isPastDate(day) : false;
+                      const isAvailable = day ? isDateAvailable(day) : false;
+                      
+                      return (
+                        <Button
+                          key={index}
+                          variant={
+                            selectedDate?.getDate() === day ? "default" : "ghost"
+                          }
+                          size="sm"
+                          disabled={!day || !isAvailable || isPast}
+                          onClick={() => day && handleDateSelect(day)}
+                          className={`h-12 w-full text-sm ${
+                            !day
+                              ? "invisible"
+                              : isPast
+                              ? "text-gray-300 cursor-not-allowed line-through"
+                              : isAvailable
+                              ? "hover:bg-orange-50"
+                              : "text-gray-300 cursor-not-allowed"
+                          } ${
+                            selectedDate?.getDate() === day
+                              ? "bg-orange-500 text-white hover:bg-orange-600"
+                              : ""
+                          }`}
+                        >
+                          {day}
+                        </Button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -414,14 +464,21 @@ const BookingSection: React.FC<BookingSectionProps> = ({ id }) => {
               {/* Action Buttons */}
               <div className="space-y-3 pt-4">
                 <Button
-                onClick={handleCheckout}
+                  onClick={handleCheckout}
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white h-12 text-base font-medium"
-                  disabled={!selectedDate || !selectedTimeSlot}
+                  disabled={!selectedDate || !selectedTimeSlot || isBooking}
                 >
-                  Confirm & Pay
+                  {isBooking ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Confirm & Pay"
+                  )}
                 </Button>
                 <Link href={"/student/virtual-training"}>
-                  <Button variant="outline" className="w-full h-10 text-sm">
+                  <Button variant="outline" className="w-full h-10 text-sm" disabled={isBooking}>
                     Cancel
                   </Button>
                 </Link>

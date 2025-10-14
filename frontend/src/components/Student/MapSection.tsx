@@ -4,12 +4,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Star, Clock, Phone, Mail, Users } from "lucide-react";
+import { MapPin, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useJwt } from "@/hooks/useJwt";
 import Link from "next/link";
 
-// Types based on your API response
+// Updated Types based on new API response
 interface Location {
   city: string;
   postal_code: string;
@@ -23,11 +23,14 @@ interface Distance {
 }
 
 interface Teacher {
-  id: number;
-  name: string;
-  subject: string;
-  experience_years: number;
-  rating: number;
+  id: string; // Changed from number to string (UUID)
+  user_id: string; // Added user_id
+  username: string; // Changed from name
+  full_name: string; // Added full_name
+  profile_pic: string | null; // Added profile_pic
+  institute_name: string; // Added institute_name
+  coach_types: string[]; // Changed from subject to coach_types array
+  description: string; // Added description
   location: Location;
   distance: Distance;
 }
@@ -36,7 +39,8 @@ interface ApiResponse {
   success: boolean;
   query: {
     city: string;
-    postal: string | null;
+    postal: string;
+    country?: string;
     limit: number;
   };
   location: {
@@ -58,23 +62,22 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const teacherListRef = useRef<HTMLDivElement>(null);
-  const teacherCardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const teacherCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const { decoded } = useJwt();
 
   // Function to scroll selected teacher card to top
-  const scrollToTeacher = (teacherId: number) => {
+  const scrollToTeacher = (teacherId: string) => {
     const teacherCard = teacherCardRefs.current[teacherId];
     const teacherListContainer = teacherListRef.current;
 
     if (teacherCard && teacherListContainer) {
-      // Calculate the position to scroll to (teacher card position minus container offset)
       const containerRect = teacherListContainer.getBoundingClientRect();
       const cardRect = teacherCard.getBoundingClientRect();
       const scrollTop = teacherListContainer.scrollTop;
       const targetScrollTop =
-        scrollTop + (cardRect.top - containerRect.top) - 20; // 20px padding from top
+        scrollTop + (cardRect.top - containerRect.top) - 20;
 
       teacherListContainer.scrollTo({
         top: targetScrollTop,
@@ -196,48 +199,56 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
           { icon }
         ).addTo(map);
 
+        // Build coach types display
+        const coachTypesDisplay = teacher.coach_types.length > 0 
+          ? teacher.coach_types.join(", ") 
+          : "No specialization listed";
+
+        // Build institute display
+        const instituteDisplay = teacher.institute_name 
+          ? `<div class="text-sm text-gray-600">🏫 ${teacher.institute_name}</div>`
+          : '';
+
         marker.bindPopup(`
           <div class="p-3 min-w-[200px]">
-  <div class="flex justify-between">
-    <!-- Left section -->
-    <div class="flex items-start gap-4">
-      <!-- Avatar -->
-      <div class="w-16 h-16 rounded-full overflow-hidden">
-        <img
-          src="https://github.com/shadcn.png"
-          alt="Avatar"
-          class="w-16 h-16 object-cover"
-        />
-      </div>
+            <div class="flex justify-between">
+              <!-- Left section -->
+              <div class="flex items-start gap-4">
+                <!-- Avatar -->
+                <div class="w-16 h-16 rounded-full overflow-hidden">
+                  <img
+                    src="${teacher.profile_pic || 'https://github.com/shadcn.png'}"
+                    alt="${teacher.full_name}"
+                    class="w-16 h-16 object-cover"
+                  />
+                </div>
 
-      <!-- Teacher Info -->
-      <div>
-        <!-- Name -->
-        <h3 class="font-semibold text-lg text-gray-900">${teacher.name}</h3>
+                <!-- Teacher Info -->
+                <div>
+                  <!-- Name -->
+                  <h3 class="font-semibold text-lg text-gray-900">${teacher.full_name}</h3>
+                  
+                  <!-- Coach Types -->
+                  <div class="text-sm text-blue-600 font-medium">${coachTypesDisplay}</div>
 
-        <!-- Rating, Experience & Distance -->
-        <div class="flex flex-wrap gap-2 items-center mt-1">
-          <div class="flex items-center gap-1 text-sm text-gray-600">
-            ⏰ ${teacher.experience_years} years exp
+                  ${instituteDisplay}
+
+                  <!-- Distance -->
+                  <div class="flex flex-wrap gap-2 items-center mt-1">
+                    <div class="flex items-center gap-1 text-sm text-gray-600">
+                      📍 ${teacher.distance.km.toFixed(1)} km
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right section -->
+              <div class="text-right flex-shrink-0">
+                <div class="text-xl font-bold text-gray-900">$70</div>
+                <div class="text-sm text-gray-500">/session</div>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-1 text-sm text-yellow-500">
-            ⭐ ${teacher.rating}
-          </div>
-          <div class="flex items-center gap-1 text-sm text-gray-600">
-            📍 ${teacher.distance.km} miles
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right section -->
-    <div class="text-right flex-shrink-0">
-      <div class="text-xl font-bold text-gray-900">$70</div>
-      <div class="text-sm text-gray-500">/session</div>
-    </div>
-  </div>
-</div>
-
         `);
 
         marker.on("click", () => {
@@ -271,19 +282,15 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
 
   const getDistanceColor = (category: string) => {
     switch (category) {
-      case "near":
+      case "very_close":
         return "bg-green-100 text-green-800";
-      case "moderate":
-        return "bg-yellow-100 text-yellow-800";
+      case "nearby":
+        return "bg-blue-100 text-blue-800";
       case "far":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
-  };
-
-  const getRatingStars = (rating: number) => {
-    return "⭐".repeat(Math.floor(rating)) + (rating % 1 ? "⭐" : "");
   };
 
   return (
@@ -333,7 +340,7 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
               ref={teacherListRef}
               className="p-4 space-y-4 max-h-[490px] overflow-y-auto"
             >
-              {data.results.teachers.map((teacher, index) => (
+              {data.results.teachers.map((teacher) => (
                 <div
                   key={teacher.id}
                   ref={(el) => (teacherCardRefs.current[teacher.id] = el)}
@@ -347,67 +354,80 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
                   <div className="">
                     <div className="flex justify-between">
                       <div className="flex items-start gap-4">
-                        {/* Teacher Name and Subject */}
+                        {/* Teacher Avatar */}
                         <Avatar className="size-16">
-                          <AvatarImage src="https://github.com/shadcn.png" />
-                          <AvatarFallback>CN</AvatarFallback>
+                          <AvatarImage 
+                            src={teacher.profile_pic || "https://github.com/shadcn.png"} 
+                            alt={teacher.full_name}
+                          />
+                          <AvatarFallback>
+                            {teacher.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </AvatarFallback>
                         </Avatar>
+                        
                         <div>
+                          {/* Name */}
                           <div>
                             <h3 className="font-semibold text-lg text-gray-900">
-                              {teacher.name}
+                              {teacher.full_name}
                             </h3>
                           </div>
 
-                          {/* Rating and Experience */}
-                          <div className="flex flex-wrap gap-2 items-center">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-600">
-                                {teacher.experience_years} year exp
-                              </span>
+                          {/* Coach Types */}
+                          {teacher.coach_types.length > 0 && (
+                            <div className="text-sm text-blue-600 font-medium">
+                              {teacher.coach_types.join(", ")}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                              <span className="text-sm font-medium">
-                                {teacher.rating}
-                              </span>
+                          )}
+
+                          {/* Institute Name */}
+                          {teacher.institute_name && (
+                            <div className="text-sm text-gray-600">
+                              🏫 {teacher.institute_name}
                             </div>
-                          </div>
+                          )}
 
                           {/* Location and Distance */}
-                          <div className="space-y-2">
+                          <div className="space-y-2 mt-1">
                             <div className="flex items-center gap-1">
                               <MapPin className="h-4 w-4 text-gray-500" />
                               <span className="text-sm text-gray-600">
-                                {teacher.distance.km.toFixed(1)} miles
+                                {teacher.distance.km.toFixed(1)} km
                               </span>
+                              <Badge 
+                                className={`ml-2 ${getDistanceColor(teacher.distance.category)}`}
+                                variant="secondary"
+                              >
+                                {teacher.distance.category.replace('_', ' ')}
+                              </Badge>
                             </div>
                           </div>
                         </div>
                       </div>
+                      
                       {/* Right side - Price */}
                       <div className="text-right flex-shrink-0">
-                        {/* <div className="text-xl font-bold text-gray-900">
-                          ${teacher.price || "70"}
-                        </div> */}
                         <div className="text-sm text-gray-500">/session</div>
                       </div>
                     </div>
 
-                    {/* Action Buttons and Price */}
-                    <div className="mt-2">
-                      {/* Left side - Buttons */}
+                    {/* Action Buttons */}
+                    <div className="mt-3">
                       <div className="flex flex-row gap-2 justify-between">
-                        <Button className="w-1/2 py-3">View Profile</Button>
+                        <Link 
+                          href={`/profile/${teacher.username}`}
+                          className="w-1/2"
+                        >
+                          <Button className="w-full py-3">View Profile</Button>
+                        </Link>
                         {decoded?.role === "student" && (
-
-                          // have to make it dynamic ------------------------------------------------------------------------------
-
-                          <Link href={`/student/session-booking/3e31b8fd-c836-4cda-bb8c-7e84ca4d180f`}>
-                          <Button className=" py-3" variant="outline">
-                            Quick Book
-                          </Button>
+                          <Link 
+                            href={`/student/session-booking/${teacher.user_id}`}
+                            className="w-1/2"
+                          >
+                            <Button className="w-full py-3" variant="outline">
+                              Quick Book
+                            </Button>
                           </Link>
                         )}
                       </div>
@@ -429,28 +449,39 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-xl font-bold">{selectedTeacher.name}</h3>
-                  <p className="text-blue-600 font-medium">
-                    {selectedTeacher.subject}
-                  </p>
+                <div className="flex items-center gap-4">
+                  <Avatar className="size-20">
+                    <AvatarImage 
+                      src={selectedTeacher.profile_pic || "https://github.com/shadcn.png"} 
+                      alt={selectedTeacher.full_name}
+                    />
+                    <AvatarFallback>
+                      {selectedTeacher.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-xl font-bold">{selectedTeacher.full_name}</h3>
+                    {selectedTeacher.coach_types.length > 0 && (
+                      <p className="text-blue-600 font-medium">
+                        {selectedTeacher.coach_types.join(", ")}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {selectedTeacher.institute_name && (
                   <div>
-                    <p className="text-sm text-gray-600">Rating</p>
-                    <p className="font-semibold">
-                      {getRatingStars(selectedTeacher.rating)}{" "}
-                      {selectedTeacher.rating}
-                    </p>
+                    <p className="text-sm text-gray-600">Institute</p>
+                    <p className="font-semibold">🏫 {selectedTeacher.institute_name}</p>
                   </div>
+                )}
+
+                {selectedTeacher.description && (
                   <div>
-                    <p className="text-sm text-gray-600">Experience</p>
-                    <p className="font-semibold">
-                      {selectedTeacher.experience_years} years
-                    </p>
+                    <p className="text-sm text-gray-600">Description</p>
+                    <p className="text-sm">{selectedTeacher.description}</p>
                   </div>
-                </div>
+                )}
 
                 <div>
                   <p className="text-sm text-gray-600">Location</p>
@@ -461,22 +492,28 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
                 </div>
 
                 <Badge
-                  className={getDistanceColor(
-                    selectedTeacher.distance.category
-                  )}
+                  className={getDistanceColor(selectedTeacher.distance.category)}
                 >
                   {selectedTeacher.distance.km.toFixed(1)} km away
                 </Badge>
 
                 <div className="flex gap-2">
-                  <Button className="flex-1">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Contact
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
+                  <Link 
+                    href={`/profile/${selectedTeacher.username}`}
+                    className="flex-1"
+                  >
+                    <Button className="w-full">View Profile</Button>
+                  </Link>
+                  {decoded?.role === "student" && (
+                    <Link 
+                      href={`/student/session-booking/${selectedTeacher.user_id}`}
+                      className="flex-1"
+                    >
+                      <Button variant="outline" className="w-full">
+                        Quick Book
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </CardContent>

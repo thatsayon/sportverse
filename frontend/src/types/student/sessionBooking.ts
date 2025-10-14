@@ -32,6 +32,7 @@ export interface TeacherInfo {
 export interface CheckoutResponse {
   checkout_url: string;
   booked_session_id: string;
+  error?: string;
 }
 
 export interface CheckoutRequest {

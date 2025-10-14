@@ -17,7 +17,7 @@ const searchSchema = z.object({
   zipCode: z
     .string()
     .min(1, "ZIP code is required")
-    .regex(/^\d{4,6}$/, "ZIP code must be 4-6 digits"),
+    .regex(/^\d{3,6}$/, "ZIP code must be 3-6 digits"),
   cityName: z
     .string()
     .min(2, "City name must be at least 2 characters")
@@ -30,7 +30,7 @@ const searchSchema = z.object({
 
 type SearchFormData = z.infer<typeof searchSchema>;
 
-// Types for API response (same as MapSection)
+// Updated Types for new API response structure
 interface Location {
   city: string;
   postal_code: string;
@@ -44,20 +44,25 @@ interface Distance {
 }
 
 interface Teacher {
-  id: number;
-  name: string;
-  subject: string;
-  experience_years: number;
-  rating: number;
+  id: string; // Changed from number to string (UUID)
+  user_id: string; // Added user_id
+  username: string; // Changed from name
+  full_name: string; // Added full_name
+  profile_pic: string | null; // Added profile_pic
+  institute_name: string; // Added institute_name
+  coach_types: string[]; // Changed from subject to coach_types array
+  description: string; // Added description
   location: Location;
   distance: Distance;
+  // Removed: experience_years, rating (not in new structure)
 }
 
 interface ApiResponse {
   success: boolean;
   query: {
     city: string;
-    postal: string | null;
+    postal: string;
+    country?: string; // Added optional country
     limit: number;
   };
   location: {
@@ -71,7 +76,7 @@ interface ApiResponse {
   };
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 const MapSearch: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -104,12 +109,12 @@ const MapSearch: React.FC = () => {
       const access_token = getCookie("access_token");
 
       const response = await fetch(
-        `${BASE_URL}/map/nearest-teacher/?${params.toString()}`,
+        `${BASE_URL}map/nearest-teacher/?${params.toString()}`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${access_token}`, // ✅ attach token
+            Authorization: `Bearer ${access_token}`,
           },
         }
       );
@@ -126,7 +131,6 @@ const MapSearch: React.FC = () => {
 
       setSearchResults(result);
     } catch (err) {
-      //console.error("Search error:", err);
       setError(
         err instanceof Error
           ? err.message
@@ -292,7 +296,6 @@ const MapSearch: React.FC = () => {
       {/* Search Results */}
       {searchResults && !isLoading && (
         <div className="space-y-4 px-4 lg:px-0">
-
           {/* Map Section */}
           <MapSection data={searchResults} />
         </div>

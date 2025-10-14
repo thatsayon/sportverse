@@ -59,7 +59,7 @@ export const studentApiSlice = apiSlice.injectEndpoints({
     }),
     postRating: builder.mutation<TeacherRatingResponse, TeacherRatingRequest>({
       query: (body)=>({
-        url:`/student/rating-review/${body.id}`,
+        url:`/teacher/rate-review/`,
         method: "POST",
         body,
         credentials: "include"
