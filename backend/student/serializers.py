@@ -83,22 +83,23 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
     profile_pic_url = serializers.SerializerMethodField(read_only=True)
     institute_name = serializers.CharField(source='teacher.institute_name')
     coach_type = serializers.SerializerMethodField()
-    virtual = serializers.SerializerMethodField()
-    mindset = serializers.SerializerMethodField()
-    in_person = serializers.SerializerMethodField()
 
     ratings = serializers.SerializerMethodField()
 
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     student_count = serializers.SerializerMethodField()
-    
+
+    virtual = serializers.SerializerMethodField()
+    mindset = serializers.SerializerMethodField()
+    in_person = serializers.SerializerMethodField()
+
     class Meta:
         model = SessionOption
         fields = [
-            'id', 
-            'training_type', 
-            'price', 
+            'id',
+            'training_type',
+            'price',
             'full_name',
             'username',
             'profile_pic_url',
@@ -112,7 +113,30 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             'total_reviews',
             'student_count'
         ]
-    
+
+    def _get_session_type_data(self, obj, training_type):
+        session = obj.teacher.session.filter(training_type=training_type).first()
+        if session:
+            return {
+                "exists": True,
+                "id": session.id,
+                "price": session.price
+            }
+        return {
+            "exists": False,
+            "id": None,
+            "price": None
+        }
+
+    def get_virtual(self, obj):
+        return self._get_session_type_data(obj, 'virtual')
+
+    def get_mindset(self, obj):
+        return self._get_session_type_data(obj, 'mindset')
+
+    def get_in_person(self, obj):
+        return self._get_session_type_data(obj, 'in_person')
+
     def get_average_rating(self, obj):
         teacher = obj.teacher
         if not hasattr(teacher, 'ratings'):
@@ -132,30 +156,19 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             return 0
         return teacher.booked_sessions_as_teacher.values('student').distinct().count()
 
-
     def get_coach_type(self, obj):
         return [sport.name for sport in obj.teacher.coach_type.all()]
-    
+
     def get_profile_pic_url(self, obj):
         user = obj.teacher.user
         if user.profile_pic and hasattr(user.profile_pic, 'url'):
             return user.profile_pic.url
         return None
-    
-    def get_virtual(self, obj):
-        return obj.teacher.session.filter(training_type='virtual').exists()
-    
-    def get_mindset(self, obj):
-        return obj.teacher.session.filter(training_type='mindset').exists()
-    
-    def get_in_person(self, obj):
-        return obj.teacher.session.filter(training_type='in_person').exists()
-    
+
     def get_ratings(self, obj):
         teacher = obj.teacher
         if not hasattr(teacher, 'ratings'):
             return []
-        # Add select_related to load student and user data
         reviews = teacher.ratings.all()
         return RatingReviewSerializerHI(reviews, many=True).data
 
