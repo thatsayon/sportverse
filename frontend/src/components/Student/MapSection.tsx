@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Users } from "lucide-react";
+import { MapPin, Users, Phone, Mail } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useJwt } from "@/hooks/useJwt";
 import Link from "next/link";
@@ -155,29 +155,24 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
         });
       };
 
-      // Add search location marker
+      // Add search location marker with map pin icon
       const searchIcon = L.divIcon({
         className: "search-location-icon",
         html: `
           <div style="
-            background-color: #ef4444;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 10px;
+            position: relative;
+            width: 32px;
+            height: 40px;
           ">
-            📍
+            <svg width="32" height="40" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 0C7.03 0 3 4.03 3 9C3 15.75 12 28 12 28C12 28 21 15.75 21 9C21 4.03 16.97 0 12 0Z" fill="#ef4444" stroke="white" stroke-width="1.5"/>
+              <circle cx="12" cy="9" r="3" fill="white"/>
+            </svg>
           </div>
         `,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+        iconSize: [32, 40],
+        iconAnchor: [16, 40],
+        popupAnchor: [0, -40],
       });
 
       L.marker([data.location.latitude, data.location.longitude], {
