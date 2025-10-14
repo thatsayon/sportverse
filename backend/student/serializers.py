@@ -64,16 +64,15 @@ class RatingReviewSerializer(serializers.ModelSerializer):
         ]
 
     def get_student_name(self, obj):
-        student = obj.student
-        if student and hasattr(student, "user"):
-            return student.user.full_name
+        if obj.student and hasattr(obj.student, "user"):
+            return obj.student.user.full_name
         return None
 
     def get_student_username(self, obj):
-        student = obj.student
-        if student and hasattr(student, "user"):
-            return student.user.username
+        if obj.student and hasattr(obj.student, "user"):
+            return obj.student.user.username
         return None
+
 
 class TrainerDetailsSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')
