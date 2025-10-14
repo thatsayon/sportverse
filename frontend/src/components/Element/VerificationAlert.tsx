@@ -155,7 +155,6 @@ const VerificationAlert = () => {
           isOpen ? 'rounded-l-lg rounded-r-none border-r-0' : 'rounded-l-lg rounded-r-none'
         } flex items-center justify-center`}
       >
-        <AlertCircle className="size-6" />
       </Button>
 
       {/* Slide Panel */}
@@ -183,7 +182,6 @@ const VerificationAlert = () => {
               <div className="space-y-2">
                 {/* Icon and Title */}
                 <div className="flex items-start gap-3">
-                  <AlertCircle className={`h-6 w-6 ${statusInfo.color} flex-shrink-0 mt-0.5`} />
                   <div>
                     <h3 className={`font-semibold text-xs ${statusInfo.color}`}>
                       {statusInfo.title}

@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setCallConfig } from "@/store/Slices/stateSlices/studentSlice";
 import { useJwt } from "@/hooks/useJwt";
-import { useLazyGenerateStudentTokenQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import { useLazyGenerateStudentTokenQuery, usePostRatingMutation } from "@/store/Slices/apiSlices/studentApiSlice";
 interface TrainerBookingCardProps {
   id: string;
   teacher_name: string;
@@ -33,6 +33,7 @@ const TrainerBookingCard: React.FC<TrainerBookingCardProps> = ({
   const [getToken] = useLazyGetGeneratedTokenQuery();
   const [getStudentToken] = useLazyGenerateStudentTokenQuery()
   const router = useRouter();
+  const [postRating] = usePostRatingMutation()
   const { decoded } = useJwt();
   const dispatch = useDispatch();
   const getStatusColor = (status: string) => {

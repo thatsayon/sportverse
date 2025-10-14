@@ -200,7 +200,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                     src={
                       data?.profile_pic_url
                         ? data?.profile_pic_url
-                        : "/trainer/trainerImage.jpg"
+                        : "https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"
                     }
                     alt="Football Trainer"
                     className="object-cover object-top w-[490px] h-[402px] rounded-lg"
@@ -311,7 +311,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
             >
               <div className="aspect-square w-full flex items-center justify-center  lg:w-[500px] lg:h-[750px] rounded-2xl overflow-hidden relative">
                 <Image
-                  src="/trainer/whyImage.jpg"
+                  src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760403220/whyImage_bpzn65.jpg"
                   alt="Training session"
                   width={491}
                   height={341}
@@ -367,7 +367,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                   <div className="flex-shrink-0">
                     <div className="w-16 h-16 mb-3 rounded-full overflow-hidden bg-gray-200 relative">
                       <Image
-                        src={`/trainer/inPersonTraining.jpg`}
+                        src={`https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760403285/profileImage_phdt7j.png`}
                         alt="Student"
                         fill
                         className="object-cover"

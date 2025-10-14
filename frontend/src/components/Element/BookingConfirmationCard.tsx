@@ -167,13 +167,6 @@ const BookingConfirmationCard: React.FC<BookingConfirmationProps> = ({
               View Bookings
             </Button>
           </div>
-
-          {/* Help Text */}
-          <div className="text-center">
-            <p className="text-sm text-gray-500">
-              Need help or want to make change?
-            </p>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

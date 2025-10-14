@@ -396,7 +396,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                       >
                         <div className="flex items-start space-x-3 w-full">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src="/avatars/01.png" />
+                            <AvatarImage src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg" />
                             <AvatarFallback>
                               {item.other_user?.charAt(0)?.toUpperCase() || "U"}
                             </AvatarFallback>
@@ -493,7 +493,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                 className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full"
               >
                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                  <AvatarImage src="/avatars/user.png" alt="User" />
+                  <AvatarImage src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg" alt="User" />
                   <AvatarFallback className="bg-[#F15A24] text-white">
                     <User className="h-4 w-4 sm:h-5 sm:w-5" />
                   </AvatarFallback>

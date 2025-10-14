@@ -20,37 +20,49 @@ interface DocPopupProps {
   documentId: string;
 }
 
-
-
-
 const DocPopup: React.FC<DocPopupProps> = ({ isOpen, setViewDialog, documentId }) => {
   const { data, isLoading, isError } = useGetDocumentDetailsQuery(documentId);
-  const [updateStatus] = useUpdateVerificationMutation()
+  const [updateStatus, { isLoading: isUpdating }] = useUpdateVerificationMutation();
   
   const handleApprove = async () => {
-    // Implement approval functionality
     try {
-        const respones = await updateStatus({
-            id: documentId,
-            status: "verified"
-        }).unwrap()
+      const response = await updateStatus({
+        id: documentId,
+        status: "verified"
+      }).unwrap();
 
-        if(respones.status === "verified"){
-            toast.success("Document Status Updated")
-        }
+      if (response.status === "verified") {
+        toast.success("Document Approved Successfully");
+      }
+      setViewDialog(false);
     } catch (error) {
-        const err = error as Error
-        toast.error(`The error is: ${err.message}`)
-        setViewDialog(false)
+      const err = error as Error;
+      toast.error(`Error approving document: ${err.message}`);
     }
-    //console.log("Approving document:", documentId);
   };
 
-  const getStatusStyles = (status: "verified" | "unverfied") => {
+  const handleReject = async () => {
+    try {
+      const response = await updateStatus({
+        id: documentId,
+        status: "rejected"
+      }).unwrap();
+
+      if (response.status === "rejected") {
+        toast.success("Document Reject Successfully");
+      }
+      setViewDialog(false);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(`Error rejecting document: ${err.message}`);
+    }
+  };
+
+  const getStatusStyles = (status: "verified" | "rejected") => {
     switch (status) {
       case "verified":
         return "bg-green-100 text-green-700 hover:bg-green-100 border-green-200";
-      case "unverfied":
+      case "rejected":
         return "bg-red-100 text-red-700 hover:bg-red-100 border-red-200";
       default:
         return "bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200";
@@ -58,7 +70,7 @@ const DocPopup: React.FC<DocPopupProps> = ({ isOpen, setViewDialog, documentId }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(value)=>setViewDialog(value)}>
+    <Dialog open={isOpen} onOpenChange={(value) => setViewDialog(value)}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Trainer Verification Details</DialogTitle>
@@ -162,16 +174,31 @@ const DocPopup: React.FC<DocPopupProps> = ({ isOpen, setViewDialog, documentId }
         )}
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={()=> setViewDialog(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => setViewDialog(false)}
+            disabled={isUpdating}
+          >
             Cancel
           </Button>
           {data && (
-            <Button
-              onClick={handleApprove}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Approve
-            </Button>
+            <>
+              <Button
+                onClick={handleReject}
+                variant="destructive"
+                disabled={isUpdating}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isUpdating ? "Processing..." : "rejected"}
+              </Button>
+              <Button
+                onClick={handleApprove}
+                disabled={isUpdating}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isUpdating ? "Processing..." : "Approve"}
+              </Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>

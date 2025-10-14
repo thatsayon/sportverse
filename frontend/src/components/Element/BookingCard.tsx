@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, Calendar, Clock, MapPin, Laptop } from "lucide-react";
+import {Calendar, Clock, Laptop } from "lucide-react";
 import Image from "next/image";
 import { BookingCardProps } from "@/data/BookingPageData";
 import { getCookie } from "@/hooks/cookie";
-import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { setCallConfig } from "@/store/Slices/stateSlices/studentSlice";
-import { useRouter } from "next/navigation";
+import { usePostRatingMutation } from "@/store/Slices/apiSlices/studentApiSlice";
 
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
@@ -22,11 +20,12 @@ const BookingCard: React.FC<BookingCardProps> = ({
   sessionDate,
   sessionType,
   trainerImage,
-  rating = 5,
 }) => {
   // Get session type styling
   const dispatch = useDispatch();
-  const router = useRouter();
+
+  const [postRating, {isLoading}] = usePostRatingMutation()
+
   const getSessionTypeColor = (type: string) => {
     switch (type) {
       case "Virtual Session":

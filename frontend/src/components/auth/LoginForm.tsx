@@ -6,8 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-import Image from "next/image";
 import { useLazyGoogleLoginQuery, useLoginMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

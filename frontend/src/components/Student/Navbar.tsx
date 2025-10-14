@@ -439,7 +439,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     >
                       <div className="flex items-start space-x-3 w-full">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src="/avatars/01.png" />
+                          <AvatarImage src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg" />
                           <AvatarFallback>
                             {item.other_user?.charAt(0)?.toUpperCase() || "T"}
                           </AvatarFallback>
@@ -531,7 +531,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               <DropdownMenuTrigger asChild>
                 <span className="flex items-center gap-1 cursor-pointer">
                   <Avatar>
-                    <AvatarImage src={"/avatars/01.png"} />
+                    <AvatarImage src={"https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"} />
                     <AvatarFallback>User</AvatarFallback>
                   </Avatar>
                   <ChevronDown />
@@ -650,7 +650,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                           >
                             <div className="flex items-start space-x-3 w-full">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src="/avatars/01.png" />
+                                <AvatarImage src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg" />
                                 <AvatarFallback>
                                   {item.other_user?.charAt(0)?.toUpperCase() || "T"}
                                 </AvatarFallback>

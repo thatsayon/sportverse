@@ -104,7 +104,7 @@ const MapSearch: React.FC = () => {
       const access_token = getCookie("access_token");
 
       const response = await fetch(
-        `${BASE_URL}map/nearest-teacher/?${params.toString()}`,
+        `${BASE_URL}/map/nearest-teacher/?${params.toString()}`,
         {
           method: "GET",
           headers: {

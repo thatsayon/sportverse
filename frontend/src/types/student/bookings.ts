@@ -12,3 +12,15 @@ export interface StudentBooking {
   session_type: string;   // e.g. "virtual", "mindset"
   status: "Upcoming" | "Completed"; // restrict to known values
 }
+
+
+export interface TeacherRatingRequest {
+  id: string;
+  teacher_name: string;
+  rating: number;
+}
+
+export interface TeacherRatingResponse {
+  message: string;
+}
+

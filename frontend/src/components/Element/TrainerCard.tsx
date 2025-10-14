@@ -103,7 +103,7 @@ export default function TrainerCard({
       <CardContent>
         <div className="w-full h-[185px] lg:h-[300px] xl:h-[340px] relative overflow-hidden mb-6 rounded-xl border-2">
           <Image
-            src={profile_pic_url ? profile_pic_url : "/teacherImage/trainerImage.jpg"}
+            src={profile_pic_url ? profile_pic_url : "https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"}
             alt={`${name} profile image`}
             width={768}
             height={512}

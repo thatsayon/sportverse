@@ -460,7 +460,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                     >
                       <div className="flex items-start w-full space-x-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src="/avatars/01.png" />
+                          <AvatarImage src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg" />
                           <AvatarFallback>ST</AvatarFallback>
                         </Avatar>
                         <div className="flex items-center justify-between w-full">
@@ -557,7 +557,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               <DropdownMenuTrigger asChild>
                 <span className="flex items-center gap-1 cursor-pointer">
                   <Avatar>
-                    <AvatarImage src={"/trainer/profileImage.png"} />
+                    <AvatarImage src={"https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"} />
                     <AvatarFallback>User</AvatarFallback>
                   </Avatar>
                   <ChevronDown />
@@ -686,7 +686,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                           >
                             <div className="flex items-start space-x-3 w-full">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src="/avatars/01.png" />
+                                <AvatarImage src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg" />
                                 <AvatarFallback>ST</AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">

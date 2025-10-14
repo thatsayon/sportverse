@@ -5,7 +5,7 @@ import {
   CheckoutResponse,
   sessionBookingsResponse,
 } from "@/types/student/sessionBooking";
-import { StudentBookingResponse } from "@/types/student/bookings";
+import { StudentBookingResponse, TeacherRatingRequest, TeacherRatingResponse } from "@/types/student/bookings";
 import { VideoListResponse } from "@/types/admin/video";
 import { AgoraTokenResponse } from "@/types/teacher/dashboard";
 import { UserProfileReponse } from "@/types/student/profile";
@@ -56,7 +56,15 @@ export const studentApiSlice = apiSlice.injectEndpoints({
         url: `/student/trainer-detail/${id}`,
         credentials: "include"
       })
-    })
+    }),
+    postRating: builder.mutation<TeacherRatingResponse, TeacherRatingRequest>({
+      query: (body)=>({
+        url:`/student/rating-review/${body.id}`,
+        method: "POST",
+        body,
+        credentials: "include"
+      })
+    }),
   }),
   overrideExisting: true,
 });
@@ -74,5 +82,7 @@ export const {
   // profile
   useGetStudentProfieQuery,
   // trainer details
-  useGetTrainerDetailsQuery
+  useGetTrainerDetailsQuery,
+  // rating
+  usePostRatingMutation
 } = studentApiSlice;
