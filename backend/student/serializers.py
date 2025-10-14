@@ -113,8 +113,15 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
         return obj.teacher.session.filter(training_type='in_person').exists()
 
     def get_ratings(self, obj):
-        reviews = obj.teacher.ratings.all()   # related_name='ratings'
+        teacher = obj.teacher
+
+        # Handle the case where teacher or relation might not exist
+        if not hasattr(teacher, 'ratings'):
+            return []  # return empty list instead of breaking
+
+        reviews = teacher.ratings.all()  # related_name='ratings' on RatingReview model
         return RatingReviewSerializer(reviews, many=True).data
+
 
 
 class AvailableTimeSlotSerializer(serializers.ModelSerializer):
