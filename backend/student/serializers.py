@@ -4,6 +4,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from teacher.session.models import SessionOption, AvailableDay, AvailableTimeSlot, BookedSession
+from teacher.models import RatingReview
 from teacher.serializers import TeacherInfoSerializer
 from account.models import Teacher, Student
 from teacher.models import RatingReview
@@ -46,6 +47,22 @@ class SessionOptionSerializer(serializers.ModelSerializer):
             return user.profile_pic.url
         return None
 
+class RatingReviewSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.user.full_name', read_only=True)
+    student_username = serializers.CharField(source='student.user.username', read_only=True)
+
+    class Meta:
+        model = RatingReview
+        fields = [
+            'id',
+            'rating',
+            'review',
+            'student_name',
+            'student_username',
+            'created_at'
+        ]
+
+
 class TrainerDetailsSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='teacher.user.full_name')
     username = serializers.CharField(source='teacher.user.username')
@@ -57,6 +74,8 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
     virtual = serializers.SerializerMethodField()
     mindset = serializers.SerializerMethodField()
     in_person = serializers.SerializerMethodField()
+
+    ratings = serializers.SerializerMethodField()
 
     class Meta:
         model = SessionOption
@@ -71,7 +90,8 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
             'coach_type',
             'virtual',
             'mindset',
-            'in_person'
+            'in_person',
+            'ratings'
         ]
 
     def get_coach_type(self, obj):
@@ -91,6 +111,10 @@ class TrainerDetailsSerializer(serializers.ModelSerializer):
 
     def get_in_person(self, obj):
         return obj.teacher.session.filter(training_type='in_person').exists()
+
+    def get_ratings(self, obj):
+        reviews = obj.teacher.ratings.all()   # related_name='ratings'
+        return RatingReviewSerializer(reviews, many=True).data
 
 
 class AvailableTimeSlotSerializer(serializers.ModelSerializer):
