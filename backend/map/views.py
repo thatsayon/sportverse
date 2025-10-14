@@ -629,11 +629,8 @@ class FindNearestTeacherView(APIView):
     def _load_teachers_from_db(self):
         """Load active teachers from database with location data"""
         # Query teachers with complete profiles and active status
-        teachers = Teacher.objects.select_related('user').filter(
-            # is_profile_complete=True,
-            status='approved'  # Adjust based on your status choices
-        ).prefetch_related('coach_type')
 
+        teachers = Teacher.objects.select_related('user').prefetch_related('coach_type')
         
         teachers_data = []
         for teacher in teachers:
