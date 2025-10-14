@@ -32,6 +32,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://7m0vb4fq-3000.inc1.devtunnels.ms",
     "https://psrwv4awgq.loclx.io",
     "https://ballmastery.com",
+    "http://72.60.165.202:3000",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -44,6 +45,7 @@ CORS_ALLOW_METHODS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    "http://72.60.165.202:3000",
     "http://localhost:3000",
     "https://stingray-intimate-sincerely.ngrok-free.app",
     "https://7m0vb4fq-3000.inc1.devtunnels.ms",
