@@ -627,24 +627,21 @@ class FindNearestTeacherView(APIView):
         logger.info(f"Created lookup dictionaries: {len(FindNearestTeacherView._cities_dict)} cities, {len(FindNearestTeacherView._zips_dict)} zips")
     
     def _load_teachers_from_db(self):
-        """Load active teachers from database with location data"""
-        # Query teachers with complete profiles and active status
-
-        teachers = Teacher.objects.select_related('user').prefetch_related('coach_type')
+        """Load all teachers from database with location data"""
+        # Query all teachers with their document (location data)
+        teachers = Teacher.objects.select_related(
+            'user', 
+            'document'
+        ).prefetch_related('coach_type')
         
         teachers_data = []
         for teacher in teachers:
-            # You'll need to add location fields to your Teacher model
-            # For now, this assumes you have city/postal in Teacher or User model
-            # Adjust these field names based on your actual model structure
+            # Get location from Document model
+            if not hasattr(teacher, 'document'):
+                continue  # Skip teachers without document
             
-            # Option 1: If location is in Teacher model
-            city = getattr(teacher, 'city', None)
-            postal = getattr(teacher, 'postal_code', None)
-            
-            # Option 2: If location is in User/UserAccount model
-            # city = getattr(teacher.user, 'city', None)
-            # postal = getattr(teacher.user, 'postal_code', None)
+            city = teacher.document.city
+            postal = teacher.document.zip_code
             
             if not city and not postal:
                 continue  # Skip teachers without location data
