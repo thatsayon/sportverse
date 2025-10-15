@@ -1,62 +1,68 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Star, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { Interactive } from "@/SVG/TrainerSVG";
 import { useJwt } from "@/hooks/useJwt";
 import { useGetTrainerDetailsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import Loading from "../Element/Loading";
+import ErrorLoadingPage from "../Element/ErrorLoadingPage";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-// Sample review data with full text
-const reviewsData = [
-  {
-    id: 1,
-    name: "Judith Rodriguez",
-    role: "Student",
-    date: "August 16, 2025",
-    rating: 5,
-    shortText:
-      "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp.",
-    fullText:
-      "The way Coach breaks down complex techniques into small, clear steps has made basketball so much easier to grasp. I feel more confident on the court, and my performance has improved significantly since I started training with them. What I appreciate most is the personalized attention and how they adapt their teaching style to match my learning pace. The drills are challenging but never overwhelming, and I can see measurable progress in my game. Coach also focuses on mental preparation, which has been just as valuable as the physical training. I would highly recommend this training program to anyone looking to improve their basketball skills.",
-  },
-  {
-    id: 2,
-    name: "Marcus Johnson",
-    role: "Student",
-    date: "July 28, 2025",
-    rating: 5,
-    shortText:
-      "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically.",
-    fullText:
-      "Amazing coach with incredible patience and expertise. My fundamentals have improved dramatically since starting sessions three months ago. The structured approach to skill development is outstanding, and I've learned proper shooting form, defensive positioning, and court awareness. Coach creates a supportive environment where making mistakes is part of learning. The feedback is always constructive and specific, helping me understand exactly what to work on. I've gone from struggling with basic dribbling to confidently handling the ball under pressure. The training sessions are well-planned and progressive, building on previous lessons seamlessly.",
-  },
-  {
-    id: 3,
-    name: "Sarah Chen",
-    role: "Student",
-    date: "July 15, 2025",
-    rating: 4,
-    shortText:
-      "Great training program with excellent results. Coach really knows how to motivate and push you to excel.",
-    fullText:
-      "Great training program with excellent results. Coach really knows how to motivate and push you to excel while maintaining a positive atmosphere. The combination of technical skill work and game-situation practice has been perfect for my development. I particularly appreciate how Coach explains the 'why' behind each drill and technique, which helps me understand the game better. The progress tracking and regular feedback sessions keep me motivated and focused on improvement. While the training is intensive, it's never boring thanks to the variety of exercises and the coach's engaging teaching style. I've recommended this program to several friends.",
-  },
-];
+interface TrainingOption {
+  exists: boolean;
+  id: string | null;
+  price: number | null;
+}
+
+interface Rating {
+  id: string;
+  rating: string;
+  review: string;
+  student_name: string;
+  student_username: string;
+  created_at: string;
+}
+
+interface TeacherProfile {
+  id: string;
+  training_type: "virtual" | "mindset" | "in_person";
+  price: string;
+  full_name: string;
+  username: string;
+  profile_pic_url: string | null;
+  institute_name: string | null;
+  coach_type: string[];
+  virtual: TrainingOption;
+  mindset: TrainingOption;
+  in_person: TrainingOption;
+  ratings: Rating[];
+  average_rating: number;
+  total_reviews: number;
+  student_count: number;
+}
 
 interface TrainerProfileProps {
   id: string;
 }
 
 const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
+  const router = useRouter();
   const { decoded } = useJwt();
   const [expanded, setExpanded] = useState(false);
   const [expandedReviews, setExpandedReviews] = useState<{
     [key: number]: boolean;
   }>({});
-
-  // details of trainer
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
 
   const { data, isLoading, isError } = useGetTrainerDetailsQuery(id);
 
@@ -66,11 +72,73 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
     ? text
     : text.slice(0, 200) + (text.length > 200 ? "..." : "");
 
-  const toggleReviewExpansion = (reviewId: number) => {
+  // Get available sessions
+  const availableSessions = useMemo(() => {
+    if (!data) return [];
+    
+    const sessions = [];
+    if (data.virtual.exists) {
+      sessions.push({
+        type: "virtual",
+        name: "Virtual",
+        price: data.virtual.price,
+        id: data.virtual.id,
+      });
+    }
+    if (data.mindset.exists) {
+      sessions.push({
+        type: "mindset",
+        name: "Mindset",
+        price: data.mindset.price,
+        id: data.mindset.id,
+      });
+    }
+    if (data.in_person.exists) {
+      sessions.push({
+        type: "in_person",
+        name: "In-Person",
+        price: data.in_person.price,
+        id: data.in_person.id,
+      });
+    }
+    return sessions;
+  }, [data]);
+
+  // Get lowest price session for students
+  const lowestPriceSession = useMemo(() => {
+    if (availableSessions.length === 0) return null;
+    return availableSessions.reduce((lowest, session) => {
+      return (session.price || 0) < (lowest.price || Infinity) ? session : lowest;
+    });
+  }, [availableSessions]);
+
+  const toggleReviewExpansion = (reviewId: string) => {
     setExpandedReviews((prev) => ({
       ...prev,
       [reviewId]: !prev[reviewId],
     }));
+  };
+
+  const handleBookSession = (sessionId: string | null) => {
+    if (sessionId) {
+      router.push(`/student/session-booking/${sessionId}`);
+    }
+  };
+
+  const formatSessionName = (type: string) => {
+    return type
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join("-");
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   const fadeInUp = {
@@ -86,6 +154,19 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
       },
     },
   };
+
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <ErrorLoadingPage />
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,7 +198,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                   {...fadeInUp}
                   transition={{ delay: 0.1 }}
                 >
-                  {data?.coach_type}
+                  {data?.coach_type.join(", ") || "Coach"}
                 </motion.h2>
 
                 <motion.p
@@ -144,7 +225,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                         fill="#EDCC13"
                         className=""
                       />
-                      4.9
+                      {data?.average_rating.toFixed(1)}
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
                       average course rating
@@ -152,7 +233,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl md:text-3xl font-bold text-gray-900">
-                      123
+                      {data?.total_reviews}
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
                       reviews
@@ -160,7 +241,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl md:text-3xl font-bold text-gray-900">
-                      40
+                      {data?.student_count}
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
                       students
@@ -173,19 +254,45 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                   {...fadeInUp}
                   transition={{ delay: 0.4 }}
                 >
-                  {decoded?.role === "student" && (
-                    <motion.button
-                      className="bg-[#F15A24] hover:bg-[#D27656] text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300 "
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Get started
-                    </motion.button>
+                  {decoded?.role === "student" ? (
+                    <>
+                      <motion.button
+                        onClick={() => setShowSessionDialog(true)}
+                        className="bg-[#F15A24] hover:bg-[#D27656] text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Get started
+                      </motion.button>
+                      {lowestPriceSession && (
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <span className="text-sm">Starting from</span>
+                          <span className="text-2xl font-bold">
+                            ${lowestPriceSession.price}
+                          </span>
+                          <span className="text-sm">
+                            / {formatSessionName(lowestPriceSession.type)}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex flex-wrap gap-4">
+                      {availableSessions.map((session) => (
+                        <div
+                          key={session.type}
+                          className="flex items-center gap-2 text-gray-700 bg-gray-100 px-4 py-2 rounded-lg"
+                        >
+                          <span className="text-xl font-bold">
+                            ${session.price}
+                          </span>
+                          <span className="text-sm">
+                            / {formatSessionName(session.type)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <span className="text-2xl font-bold">${data?.price}</span>
-                    <span className="text-sm">/{data?.training_type}</span>
-                  </div>
                 </motion.div>
               </div>
 
@@ -198,11 +305,10 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
                 <div className="flex items-center justify-center lg:justify-end">
                   <Image
                     src={
-                      data?.profile_pic_url
-                        ? data?.profile_pic_url
-                        : "https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"
+                      data?.profile_pic_url ||
+                      "https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"
                     }
-                    alt="Football Trainer"
+                    alt="Trainer"
                     className="object-cover object-top w-[490px] h-[402px] rounded-lg"
                     width={400}
                     height={320}
@@ -217,77 +323,140 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
 
       <div className="px-6 md:px-8 lg:px-16 py-12 md:py-16 space-y-16">
         {/* Consultancy Plans */}
-        <motion.section
-          className="space-y-8"
-          variants={staggerContainer}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-        >
-          <motion.h2
-            className="text-3xl md:text-4xl font-bold text-gray-900"
-            variants={fadeInUp}
+        {availableSessions.length > 0 && (
+          <motion.section
+            className="space-y-8"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
           >
-            Consultancy plans
-          </motion.h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <motion.div
-  className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white p-10 h-[504px]"
-  variants={fadeInUp}
-  whileHover={{ scale: 1.02 }}
-  transition={{ duration: 0.3 }}
-  style={{
-    backgroundImage:
-      "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(/teacherImage/vartualTraning.jpg)",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  }}
->
-  {/* <div className="absolute inset-0 bg-black/20"></div> */}
-  <div className="relative z-10 flex flex-col justify-between h-full">
-    <div className="w-full h-full flex items-center justify-center">
-      <Interactive size={138} />
-    </div>
-    <div>
-      <h3 className="text-3xl font-bold mb-2">Virtual Training</h3>
-      <p className="text-white/80">
-        Develop skills at home with guided{" "}
-        <br className="hidden md:block" />
-        online drills.
-      </p>
-    </div>
-  </div>
-</motion.div>
-
-            <motion.div
-              className="relative rounded-2xl overflow-hidden text-white p-10 h-[504px]"
+            <motion.h2
+              className="text-3xl md:text-4xl font-bold text-gray-900"
               variants={fadeInUp}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url(/teacherImage/inPersonTraining.jpg)",
-                backgroundSize: "cover",
-                backgroundPosition: "50% 20%",
-              }}
             >
-              <div className="relative z-10 flex flex-col justify-between h-full">
-                <div className="w-full h-full flex items-center justify-center">
-                  <Users size={138} />
-                </div>
-                <div>
-                  <h3 className="text-3xl font-bold mb-2">
-                    In-person Training
-                  </h3>
-                  <p className="text-white/90">
-                    Come and train with me in our facilities
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </motion.section>
+              Consultancy plans
+            </motion.h2>
+
+            <div className={`grid justify-start gap-6 ${
+              availableSessions.length === 1 
+                ? "md:grid-cols-1 max-w-2xl mx-auto" 
+                : availableSessions.length === 2 
+                ? "md:grid-cols-2" 
+                : "md:grid-cols-2 lg:grid-cols-3"
+            }`}>
+              {data?.virtual.exists && (
+                <motion.div
+                  className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white p-10 h-[504px]"
+                  variants={fadeInUp}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760490704/vartualTraning_wbhfvk.jpg)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div className="flex items-start justify-between">
+                      <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                        <span className="text-lg font-bold">${data.virtual.price}</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center">
+                      <Interactive size={138} />
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-bold mb-2">Virtual Training</h3>
+                      <p className="text-white/80">
+                        Develop skills at home with guided online drills.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {data?.mindset.exists && (
+                <motion.div
+                  className="relative rounded-2xl overflow-hidden text-white p-10 h-[504px]"
+                  variants={fadeInUp}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url(https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760490624/mindset_c0wox2.jpg)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div className="flex items-start justify-between">
+                      <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                        <span className="text-lg font-bold">${data.mindset.price}</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center">
+                      <svg
+                        width="138"
+                        height="138"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+                        <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-bold mb-2">Mindset Training</h3>
+                      <p className="text-white/90">
+                        Build mental strength and competitive mindset.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {data?.in_person.exists === true && (
+                <motion.div
+                  className="relative rounded-2xl overflow-hidden text-white p-10 h-[504px]"
+                  variants={fadeInUp}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url(https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760490684/inPersonTraining_z9gifr.jpg)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "50% 20%",
+                  }}
+                >
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div className="flex items-start justify-between">
+                      <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                        <span className="text-lg font-bold">${data.in_person.price}</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center">
+                      <Users size={138} />
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-bold mb-2">
+                        In-Person Training
+                      </h3>
+                      <p className="text-white/90">
+                        Come and train with me in our facilities.
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.section>
+        )}
 
         {/* Why Choose Me */}
         <motion.section
@@ -309,7 +478,7 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
               className="flex items-center justify-start lg:px-10"
               variants={fadeInUp}
             >
-              <div className="aspect-square w-full flex items-center justify-center  lg:w-[500px] lg:h-[750px] rounded-2xl overflow-hidden relative">
+              <div className="aspect-square w-full flex items-center justify-center lg:w-[500px] lg:h-[750px] rounded-2xl overflow-hidden relative">
                 <Image
                   src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760403220/whyImage_bpzn65.jpg"
                   alt="Training session"
@@ -341,107 +510,148 @@ const TrainerProfile: React.FC<TrainerProfileProps> = ({ id }) => {
         </motion.section>
 
         {/* Testimonials */}
-        <motion.section
-          className="space-y-8"
-          variants={staggerContainer}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-        >
-          <motion.h2
-            className="text-3xl md:text-4xl font-bold text-gray-900 mb-16"
-            variants={fadeInUp}
+        {data?.ratings && data.ratings.length > 0 && (
+          <motion.section
+            className="space-y-8"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
           >
-            What my students say
-          </motion.h2>
+            <motion.h2
+              className="text-3xl md:text-4xl font-bold text-gray-900 mb-16"
+              variants={fadeInUp}
+            >
+              What my students say
+            </motion.h2>
 
-          <div className="space-y-8 lg:px-16">
-            {reviewsData.map((review) => (
-              <motion.div
-                key={review.id}
-                className="bg-white rounded-2xl p-6 border border-gray-100"
-                variants={fadeInUp}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex flex-col md:flex-row gap-10 lg:gap-[123px]">
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-16 mb-3 rounded-full overflow-hidden bg-gray-200 relative">
-                      <Image
-                        src={`https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760403285/profileImage_phdt7j.png`}
-                        alt="Student"
-                        fill
-                        className="object-cover"
-                        sizes="64px"
-                      />
-                    </div>
-                    <h4 className="font-semibold text-gray-900">
-                      {review.name}
-                    </h4>
-                    <p className="text-gray-600 text-sm">{review.role}</p>
-                  </div>
-
-                  <div className="flex-1 space-y-4">
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                      <div></div>
-                      <div className="flex w-full justify-between items-start md:items-end gap-2">
-                        <div className="flex text-yellow-400">
-                          {Array.from({ length: 5 }, (_, index) => (
-                            <Star
-                              key={index}
-                              className={`w-4 h-4 ${
-                                index < review.rating
-                                  ? "fill-current"
-                                  : "stroke-current fill-transparent"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-gray-500 text-sm">
-                          {review.date}
+            <div className="space-y-8 lg:px-16">
+              {data.ratings.map((review) => (
+                <motion.div
+                  key={review.id}
+                  className="bg-white rounded-2xl p-6 border border-gray-100"
+                  variants={fadeInUp}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex flex-col md:flex-row gap-10 lg:gap-[123px]">
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 mb-3 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-gray-600">
+                          {review.student_name.charAt(0).toUpperCase()}
                         </span>
                       </div>
+                      <h4 className="font-semibold text-gray-900">
+                        {review.student_name}
+                      </h4>
+                      <p className="text-gray-600 text-sm">Student</p>
                     </div>
 
-                    <div className="space-y-3">
-                      <motion.div
-                        initial={false}
-                        animate={{
-                          height: expandedReviews[review.id] ? "auto" : "auto",
-                          opacity: 1,
-                        }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <p className="text-gray-700 leading-relaxed">
-                          {expandedReviews[review.id]
-                            ? review.fullText
-                            : review.shortText}
-                        </p>
-                      </motion.div>
+                    <div className="flex-1 space-y-4">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                        <div></div>
+                        <div className="flex w-full justify-between items-start md:items-end gap-2">
+                          <div className="flex text-yellow-400">
+                            {Array.from({ length: 5 }, (_, index) => (
+                              <Star
+                                key={index}
+                                className={`w-4 h-4 ${
+                                  index < parseFloat(review.rating)
+                                    ? "fill-current"
+                                    : "stroke-current fill-transparent"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-gray-500 text-sm">
+                            {formatDate(review.created_at)}
+                          </span>
+                        </div>
+                      </div>
 
-                      <motion.button
-                        onClick={() => toggleReviewExpansion(review.id)}
-                        className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
-                        whileHover={{ x: 5 }}
-                      >
-                        <span className="text-sm">
-                          {expandedReviews[review.id]
-                            ? "Show less"
-                            : "Show more"}
-                        </span>
-                        {expandedReviews[review.id] ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
+                      <div className="space-y-3">
+                        <motion.div
+                          initial={false}
+                          animate={{
+                            height: "auto",
+                            opacity: 1,
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <p className="text-gray-700 leading-relaxed">
+                            {expandedReviews[review.id]
+                              ? review.review
+                              : review.review.length > 200
+                              ? review.review.slice(0, 200) + "..."
+                              : review.review}
+                          </p>
+                        </motion.div>
+
+                        {review.review.length > 200 && (
+                          <motion.button
+                            onClick={() => toggleReviewExpansion(review.id)}
+                            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
+                            whileHover={{ x: 5 }}
+                          >
+                            <span className="text-sm">
+                              {expandedReviews[review.id]
+                                ? "Show less"
+                                : "Show more"}
+                            </span>
+                            {expandedReviews[review.id] ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </motion.button>
                         )}
-                      </motion.button>
+                      </div>
                     </div>
                   </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+      </div>
+
+      {/* Session Booking Dialog */}
+      <Dialog open={showSessionDialog} onOpenChange={setShowSessionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              Choose Your Session
+            </DialogTitle>
+            <DialogDescription>
+              Select a training session that fits your needs
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {availableSessions.map((session) => (
+              <div
+                key={session.type}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-orange-500 transition-colors"
+              >
+                <div>
+                  <h3 className="font-semibold text-lg">
+                    {formatSessionName(session.type)}
+                  </h3>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${session.price}
+                  </p>
                 </div>
-              </motion.div>
+                <motion.button
+                  onClick={() => handleBookSession(session.id)}
+                  className="bg-[#F15A24] hover:bg-[#D27656] text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Book Now
+                </motion.button>
+              </div>
             ))}
           </div>
-        </motion.section>
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

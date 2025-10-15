@@ -155,6 +155,7 @@ const VerificationAlert = () => {
           isOpen ? 'rounded-l-lg rounded-r-none border-r-0' : 'rounded-l-lg rounded-r-none'
         } flex items-center justify-center`}
       >
+        <AlertCircle className="size-6"/>
       </Button>
 
       {/* Slide Panel */}

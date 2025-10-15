@@ -106,7 +106,7 @@ const HandleGoogleLogin = async()=>{
             Sign in to continue to your account
           </p>
         </CardTitle>
-        <Button disabled={googleLoading} onClick={HandleGoogleLogin} variant={"ghost"} className="bg-[#F3F4F6] font-medium">
+        <Button disabled={googleLoading} onClick={HandleGoogleLogin} variant={"ghost"} className="bg-[#F3F4F6] font-medium mt-4">
          
           {googleLoading ? <Loader/>:<>
            <GoogleIcon size={22} />

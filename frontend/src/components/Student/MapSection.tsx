@@ -410,7 +410,9 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
                     <div className="mt-3">
                       <div className="flex flex-row gap-2 justify-between">
                         <Link 
-                          href={`/profile/${teacher.username}`}
+                          href={
+                            decoded?.role === "teacher" ? `/trainer/in-person/${teacher.id}`:`/student/in-person/${teacher.id}`
+                          }
                           className="w-1/2"
                         >
                           <Button className="w-full py-3">View Profile</Button>
@@ -494,7 +496,9 @@ const MapSection: React.FC<MapSectionProps> = ({ data }) => {
 
                 <div className="flex gap-2">
                   <Link 
-                    href={`/profile/${selectedTeacher.username}`}
+                    href={
+                            decoded?.role === "teacher" ? `/trainer/in-person/${selectedTeacher.id}`:`/student/in-person/${selectedTeacher.id}`
+                          }
                     className="flex-1"
                   >
                     <Button className="w-full">View Profile</Button>
