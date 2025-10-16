@@ -272,7 +272,7 @@ class BookedSessionSerializer(serializers.ModelSerializer):
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()
-    full_name = serializers.CharField(source='student.full_name')
+    full_name = serializers.CharField(source='user.full_name')
     username = serializers.CharField(source="user.username")
     email = serializers.CharField(source="user.email")
     training_sessions = serializers.SerializerMethodField()
