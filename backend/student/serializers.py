@@ -277,6 +277,8 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     training_sessions = serializers.SerializerMethodField()
     coaches_booked = serializers.SerializerMethodField()
     hours_trained = serializers.SerializerMethodField()
+    current_plan = serializers.SerializerMethodField()
+    renewal_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Student
@@ -290,7 +292,9 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "training_sessions",
             "coaches_booked",
             "hours_trained",
-            "account_type"
+            "account_type",
+            "current_plan",
+            "renewal_date"
         ]
 
     def get_training_sessions(self, obj):
@@ -305,6 +309,20 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     def get_profile_pic(self, obj):
         if obj.profile_pic:
             return obj.profile_pic.url
+        return None
+    
+    def get_current_plan(self, obj):
+        now = timezone.now()
+        subscription = obj.student.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
+        if subscription:
+            return 'Pro Plan'
+        return 'Basic Plan'
+
+    def get_renewal_date(self, obj):
+        now = timezone.now()
+        subscription = obj.student.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
+        if subscription and subscription.end_date:
+            return subscription.end_date
         return None
 
 class StudentProfileUpdateSerializer(serializers.ModelSerializer):
