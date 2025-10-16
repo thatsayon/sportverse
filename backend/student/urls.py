@@ -9,7 +9,8 @@ from .views import (
     VideoLibraryView,
     ProfileView,
     ProfileGetOrUpdateView,
-    RatingReviewView
+    RatingReviewView,
+    VideoLibraryAccessView
 )
 
 urlpatterns = [
@@ -22,5 +23,6 @@ urlpatterns = [
     path('video-list/', VideoLibraryView.as_view(), name='Video Library'),
     path('profile/', ProfileView.as_view(), name='Profile View'),
     path('profile-update/', ProfileGetOrUpdateView.as_view(), name='Profile Update'),
-    path('rating-review/', RatingReviewView.as_view(), name='Rating Review')
+    path('rating-review/', RatingReviewView.as_view(), name='Rating Review'),
+    path('video-library-access/', VideoLibraryAccessView.as_view(), name='Video library access')
 ]

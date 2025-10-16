@@ -16,7 +16,7 @@ from teacher.dashboard.utils import increment_dashboard_visit
 from teacher.models import RatingReview
 from controlpanel.serializers import VideoListSerializer
 from controlpanel.models import AdminVideo
-from account.models import Student
+from account.models import Student, Subscription
 from authentication.tasks import send_session_booking_email_task
 
 from .serializers import (
@@ -319,3 +319,21 @@ class SubscriptionView(APIView):
     def post(self, request):
         pass
 
+class VideoLibraryAccessView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        student = getattr(request.user, 'student', None)
+        if not student:
+            return Response({"detail": "Student profile not found."}, status=404)
+
+        # Check for active subscription
+        now = timezone.now()
+        active_subscription = Subscription.objects.filter(
+            user=student,
+            start_date__lte=now,
+            end_date__gte=now
+        ).first()
+
+        can_access = bool(active_subscription)
+        return Response({"can_access": can_access})
