@@ -271,14 +271,15 @@ class BookedSessionSerializer(serializers.ModelSerializer):
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     profile_pic = serializers.SerializerMethodField()
-    full_name = serializers.CharField(source='student.user.full_name')
-    username = serializers.CharField(source="student.user.username")
-    email = serializers.CharField(source="student.user.email")
+    full_name = serializers.CharField(source='user.full_name')
+    username = serializers.CharField(source="user.username")
+    email = serializers.CharField(source="user.email")
     training_sessions = serializers.SerializerMethodField()
     coaches_booked = serializers.SerializerMethodField()
     hours_trained = serializers.SerializerMethodField()
     current_plan = serializers.SerializerMethodField()
     renewal_date = serializers.SerializerMethodField()
+    favorite_sports = serializers.SerializerMethodField()
 
     class Meta:
         model = Student
@@ -294,7 +295,8 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "hours_trained",
             "account_type",
             "current_plan",
-            "renewal_date"
+            "renewal_date",
+            "favorite_sports",
         ]
 
     def get_training_sessions(self, obj):
@@ -307,23 +309,30 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         return BookedSession.objects.filter(student=obj).count() * 60
 
     def get_profile_pic(self, obj):
-        if obj.profile_pic:
-            return obj.profile_pic.url
+        if obj.user.profile_pic:
+            return obj.user.profile_pic.url
         return None
     
     def get_current_plan(self, obj):
         now = timezone.now()
-        subscription = obj.student.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
+        subscription = obj.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
         if subscription:
             return 'Pro Plan'
         return 'Basic Plan'
 
     def get_renewal_date(self, obj):
         now = timezone.now()
-        subscription = obj.student.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
+        subscription = obj.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
         if subscription and subscription.end_date:
             return subscription.end_date
         return None
+
+    def get_favorite_sports(self, obj):
+        return [
+            {"id": sport.id, "name": sport.name} 
+            for sport in obj.favorite_sports.all()
+        ]
+
 
 class StudentProfileUpdateSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(source="user.profile_pic", required=False)
@@ -331,6 +340,11 @@ class StudentProfileUpdateSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source="user.full_name", required=False)
     username = serializers.CharField(source="user.username", required=False)
     email = serializers.EmailField(source="user.email", required=False)
+    favorite_sports = serializers.PrimaryKeyRelatedField(
+        queryset=Sport.objects.all(),
+        many=True,
+        required=False
+    )
 
     class Meta:
         model = Student
@@ -342,6 +356,7 @@ class StudentProfileUpdateSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "about",
+            "favorite_sports",
         ]
 
     def get_profile_pic_url(self, obj):
@@ -358,6 +373,11 @@ class StudentProfileUpdateSerializer(serializers.ModelSerializer):
         for attr, value in user_data.items():
             setattr(user, attr, value)
         user.save()
+
+        # Update favorite_sports if present
+        if "favorite_sports" in validated_data:
+            sports = validated_data.pop("favorite_sports")
+            instance.favorite_sports.set(sports)
 
         # Update Student fields
         return super().update(instance, validated_data)
