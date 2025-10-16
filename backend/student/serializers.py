@@ -9,6 +9,7 @@ from teacher.models import RatingReview
 from teacher.serializers import TeacherInfoSerializer
 from account.models import Teacher, Student
 from teacher.models import RatingReview
+from controlpanel.models import Sport
 
 class TrainingInfoSerializer(serializers.ModelSerializer):
     class Meta:
