@@ -163,11 +163,11 @@ class SubscriptionCheckoutSessionView(APIView):
             name="pro",
             metadata={
                 "type": "subscription",
-                "user_id": str(request.user.id)
+                "student_id": str(request.user.student.id)  # ✅ Use Student.id
             }
         )
 
-        print(session)
+
         if session:
             subscription = Subscription.objects.filter(user=request.user.student).first()
             if subscription:
