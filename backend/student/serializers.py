@@ -310,10 +310,10 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         return BookedSession.objects.filter(student=obj).count() * 60
 
     def get_profile_pic(self, obj):
-        if obj.user.profile_pic:
+        if hasattr(obj, 'user') and obj.user.profile_pic:
             return obj.user.profile_pic.url
         return None
-    
+
     def get_current_plan(self, obj):
         now = timezone.now()
         subscription = obj.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
