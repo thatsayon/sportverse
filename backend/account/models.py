@@ -43,6 +43,11 @@ class Teacher(models.Model):
         related_name='teacher',
         blank=True
     )
+    account_type = models.CharField(
+        choices=ACC_TYPE,
+        max_length=12,
+        default='basic'
+    )
     description = models.CharField(
         max_length=240,
         blank=True,

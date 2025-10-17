@@ -142,6 +142,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 class AccountDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.full_name')
+    profile_pic = serializers.ImageField(source='user.profile_pic')
     profile_pic_url = serializers.SerializerMethodField()
     username = serializers.CharField(source='user.username')
     city = serializers.CharField(source='user.teacher.document.city')
@@ -149,7 +150,7 @@ class AccountDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
-        fields = ['id', 'full_name', 'username', 'profile_pic_url', 'city', 'zip_code', 'institute_name', 'coach_type', 'description', 'status', 'is_profile_complete']
+        fields = ['id', 'full_name', 'username', 'profile_pic', 'profile_pic_url', 'city', 'zip_code', 'institute_name', 'coach_type', 'description', 'status', 'is_profile_complete']
 
     def get_profile_pic_url(self, obj):
         if obj.user.profile_pic:
