@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Pencil, Upload, X, Video } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge"; // optional, if you have it
+import { Badge } from "@/components/ui/badge";
+import imageCompression from "browser-image-compression";
 
 import {
   useGetTrainerProfileQuery,
@@ -22,7 +23,6 @@ import {
 import { useGetSignatureMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { toast } from "sonner";
 
-// Updated Zod schema - coach_type is now an array of strings (IDs)
 const accountSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
   username: z.string().min(2, "Surname must be at least 2 characters"),
@@ -31,7 +31,7 @@ const accountSchema = z.object({
   institutionName: z
     .string()
     .min(2, "Institution name must be at least 2 characters"),
-  coach_type: z.array(z.string()).default([]), // Now array of string IDs
+  coach_type: z.array(z.string()).default([]),
   description: z.string().optional(),
 });
 
@@ -50,11 +50,14 @@ interface SignatureResponse {
 const AccountForm = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState("/api/placeholder/120/120");
+  const [originalProfileImage, setOriginalProfileImage] = useState("/api/placeholder/120/120");
+  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
 
   const [postVideo] = usePostTrainerVideoMutation();
   const [getSignature] = useGetSignatureMutation();
@@ -75,22 +78,26 @@ const AccountForm = () => {
       city: "",
       zipCode: "",
       institutionName: "",
-      coach_type: [], // Array of string IDs
+      coach_type: [],
       description: "",
     },
   });
 
   useEffect(() => {
     if (trainerProfile) {
+      if (trainerProfile.profile_pic_url) {
+        setProfileImage(trainerProfile.profile_pic_url);
+        setOriginalProfileImage(trainerProfile.profile_pic_url);
+      }
+
       reset({
         full_name: trainerProfile.full_name || "",
         username: trainerProfile.username || "",
         city: trainerProfile.city || "",
         zipCode: trainerProfile.zip_code || "",
         institutionName: trainerProfile.institute_name || "",
-        // Convert coach_type to array of string IDs
-        coach_type: Array.isArray(trainerProfile.coach_type) 
-          ? trainerProfile.coach_type.map(String) // Ensure all values are strings
+        coach_type: Array.isArray(trainerProfile.coach_type)
+          ? trainerProfile.coach_type.map(String)
           : [],
         description: trainerProfile.description || "",
       });
@@ -124,54 +131,100 @@ const AccountForm = () => {
   const handleCancel = () => {
     setIsEditing(false);
     reset();
+    setProfilePicFile(null);
     setUploadedFile(null);
     setUploadedVideoUrl(null);
     setUploadProgress(0);
+    setProfileImage(originalProfileImage);
   };
 
   const handleSave = async (data: AccountFormData) => {
     try {
-      // Transform form data to match API
-      const payload = {
-        full_name: data.full_name,
-        username: data.username,
-        city: data.city,
-        zip_code: data.zipCode,
-        institute_name: data.institutionName,
-        coach_type: data.coach_type, // Send array of string IDs
-        description: data.description,
-      };
+      const formData = new FormData();
 
-      const response = await updateTrainerProfile(payload).unwrap();
+      // Add form fields
+      formData.append("full_name", data.full_name);
+      formData.append("username", data.username);
+      formData.append("city", data.city);
+      formData.append("zip_code", data.zipCode);
+      formData.append("institute_name", data.institutionName);
+      
+      // Append each coach_type individually instead of JSON stringifying
+      data.coach_type.forEach((id) => {
+        formData.append("coach_type", id);
+      });
+      
+      formData.append("description", data.description || "");
+
+      // Add compressed profile picture if selected
+      if (profilePicFile) {
+        formData.append("profile_pic", profilePicFile);
+      }
+
+      const response = await updateTrainerProfile(formData).unwrap();
 
       toast.success("Profile updated successfully.");
+
+      if (response.profile_pic_url) {
+        setProfileImage(response.profile_pic_url);
+        setOriginalProfileImage(response.profile_pic_url);
+      }
+
       reset({
         full_name: response.full_name,
         username: response.username,
         city: response.city,
         zipCode: response.zip_code,
         institutionName: response.institute_name,
-        // Ensure coach_type is converted to string array
-        coach_type: Array.isArray(response.coach_type) 
+        coach_type: Array.isArray(response.coach_type)
           ? response.coach_type.map(String)
           : [],
         description: response.description,
       });
       setIsEditing(false);
+      setProfilePicFile(null);
     } catch (error) {
       const err = error as Error;
       toast.error(err?.message || "Failed to update profile.");
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+
+      try {
+        setIsCompressingImage(true);
+
+        // Compress the image
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        };
+
+        const compressedFile = await imageCompression(file, options);
+
+        // Store compressed file
+        setProfilePicFile(compressedFile);
+
+        // Preview the compressed image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setProfileImage(e.target?.result as string);
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error("Image compression error:", error);
+        toast.error("Failed to compress image. Please try again.");
+      } finally {
+        setIsCompressingImage(false);
+      }
     }
   };
 
@@ -182,7 +235,6 @@ const AccountForm = () => {
   ) => {
     const formData = new FormData();
 
-    // Add required Cloudinary parameters
     formData.append("file", file);
     formData.append("api_key", signatureData.api_key);
     formData.append("timestamp", signatureData.timestamp.toString());
@@ -206,7 +258,6 @@ const AccountForm = () => {
       const result = await response.json();
       return result;
     } catch (error) {
-      //console.error("Cloudinary upload error:", error);
       throw error;
     }
   };
@@ -218,14 +269,12 @@ const AccountForm = () => {
 
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ["video/mp4", "video/webm", "video/quicktime"];
     if (!allowedTypes.includes(file.type)) {
       toast.error("Only MP4, WebM, and MOV video files are supported");
       return;
     }
 
-    // Validate file size (100MB limit)
     if (file.size > 100 * 1024 * 1024) {
       toast.error("Video file must be less than 100MB");
       return;
@@ -236,16 +285,12 @@ const AccountForm = () => {
       setUploadProgress(0);
       setUploadedFile(file);
 
-      // Get signature from backend
       const signatureResponse = await postVideo().unwrap();
 
       if (!signatureResponse) {
         throw new Error("Failed to get upload signature");
       }
 
-      //console.log("Getting the signature response:", signatureResponse);
-
-      // Simulate progress for UI
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
@@ -256,27 +301,20 @@ const AccountForm = () => {
         });
       }, 200);
 
-      // Upload video to Cloudinary
       const cloudinaryResponse = await uploadToCloudinary(
         file,
         signatureResponse
       );
 
-      // Clear progress interval and set to 100%
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      //console.log("Cloudinary upload response:", cloudinaryResponse);
-
-      // Store the uploaded video URL
       setUploadedVideoUrl(
         cloudinaryResponse.secure_url || cloudinaryResponse.url
       );
 
-      // Show success toast
       toast.success("Video has been uploaded successfully.");
     } catch (error) {
-      //console.error("Upload failed:", error);
       toast.error("Failed to upload video. Please try again.");
       setUploadedFile(null);
     } finally {
@@ -304,7 +342,6 @@ const AccountForm = () => {
     const files = e.dataTransfer.files;
     if (files && files[0]) {
       const file = files[0];
-      // Create a synthetic event to reuse the handleFileUpload logic
       const syntheticEvent = {
         target: { files: [file] },
       } as React.ChangeEvent<HTMLInputElement>;
@@ -353,6 +390,7 @@ const AccountForm = () => {
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
+                        disabled={isCompressingImage}
                         className="hidden"
                       />
                     </div>
@@ -604,9 +642,9 @@ const AccountForm = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  {/* Institution Name - Full Width */}
-                  <div className="space-y-2">
+                <div className="flex flex-col lg:flex-row items-start gap-6">
+                  {/* Institution Name */}
+                  <div className="space-y-2 flex-1">
                     <Label htmlFor="institutionName">Institution name</Label>
                     <div className="relative">
                       <Input
@@ -634,10 +672,10 @@ const AccountForm = () => {
                   </div>
 
                   {/* Coach Type (multi-select from API) */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-1">
                     <Label>Coach type</Label>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
                       {trainerProfile?.available_sports?.map((sport) => (
                         <label
                           key={sport.id}
@@ -645,7 +683,7 @@ const AccountForm = () => {
                         >
                           <Checkbox
                             checked={selectedCoachTypes.includes(String(sport.id))}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               toggleCoach(String(sport.id), checked)
                             }
                             disabled={!isEditing}
@@ -657,7 +695,6 @@ const AccountForm = () => {
                       ))}
                     </div>
 
-                    {/* Optional: show selections as badges */}
                     {selectedCoachTypes.length > 0 && (
                       <div className="flex flex-wrap gap-2 pt-1">
                         {selectedCoachTypes.map((id) => {
@@ -719,16 +756,16 @@ const AccountForm = () => {
                         type="submit"
                         onClick={handleSubmit(handleSave)}
                         className="bg-orange-500 hover:bg-orange-600 text-white px-8"
-                        disabled={isUploading}
+                        disabled={isUploading || isCompressingImage}
                       >
-                        {isUploading ? "Uploading..." : "Save"}
+                        {isUploading ? "Uploading..." : isCompressingImage ? "Compressing..." : "Save"}
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleCancel}
                         className="px-8"
-                        disabled={isUploading}
+                        disabled={isUploading || isCompressingImage}
                       >
                         Cancel
                       </Button>

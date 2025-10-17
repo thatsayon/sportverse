@@ -289,20 +289,6 @@ const GoogleSignUp: React.FC = () => {
             Select your role to proceed with the registration
           </p>
         </motion.div>
-
-        {/* Debug Info (Remove in production) */}
-        {code && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-center mt-4 p-4 bg-blue-50 rounded-lg"
-          >
-            <p className="text-xs text-blue-600">
-              Code detected: {code.substring(0, 20)}...
-            </p>
-          </motion.div>
-        )}
       </div>
     </div>
   );
