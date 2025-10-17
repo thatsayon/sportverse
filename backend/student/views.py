@@ -18,6 +18,7 @@ from controlpanel.serializers import VideoListSerializer
 from controlpanel.models import AdminVideo
 from account.models import Student, Subscription
 from authentication.tasks import send_session_booking_email_task
+from communication.messaging.models import Conversation, Message
 
 from .serializers import (
     SessionOptionSerializer,
@@ -86,6 +87,7 @@ class SessionDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 from asgiref.sync import async_to_sync
+
 class BookedSessionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -205,6 +207,19 @@ class BookedSessionView(APIView):
         except Exception as e:
             print(f"Failed to send real-time notification: {e}")
             # Notification is still saved in database even if Socket.IO fails 
+        conversation, _ = Conversation.objects.get_or_create(
+            teacher=session_option.teacher.user,
+            student=request.user
+        )
+
+        default_message = f"Hi {session_option.teacher.user.username}, I just booked a session for {session_datetime.strftime('%B %d, %Y at %I:%M %p')}."
+
+        Message.objects.create(
+            conversation=conversation,
+            sender=request.user,
+            recipient=session_option.teacher.user,
+            content=default_message
+        )
         return Response({"checkout_url": checkout_url.url, "booked_session_id": str(booked_session.id)}, status=201)
 
 class BookedSessionList(generics.ListAPIView):
