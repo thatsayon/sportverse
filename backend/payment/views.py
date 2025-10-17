@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from rest_framework.views import APIView
 
-from account.models import Subscription, Student
+from account.models import Subscription, Student, SubscriptionTeacher
 from teacher.session.models import BookedSession
 from teacher.dashboard.models import IncomeHistory
 from controlpanel.models import TeacherDeduction, AdminIncome
@@ -176,8 +176,37 @@ class StripeWebhookView(APIView):
         return HttpResponse(status=200)
 
     def handle_teacher_subscription(self, metadata, session):
+        teacher_id = metadata.get("teacher_id")
+        try:
+            teacher = Teacher.object.get(id=teacher_id)
+        except Teacher.DoesNotExist:
+            print(f"❌ No Student found with id: {student_id}")
+            return
+
         print("working")
-        pass
+        stripe_id = session.get("payment_intent")
+
+        subscription, created = SubscriptionTeacher.objects.get_or_create(
+            stripe_id=stripe_id,
+            defaults={
+                "user": teacher,
+                "amount_paid": session.get("amount_total", 0) / 100,
+                "start_date": timezone.now(),
+                "end_date": timezone.now() + timezone.timedelta(days=30),
+            }
+        )
+
+        if not created:
+            subscription.amount_paid = session.get("amount_total", 0) / 100
+            subscription.start_date = timezone.now()
+            subscription.end_date = timezone.now() + timezone.timedelta(days=30)
+            subscription.save()
+
+        # Upgrade student account
+        teacher.account_type = "pro"
+        teacher.save()
+
+        print(f"✅ Subscription saved & account upgraded for student {student.id}")
 
     def handle_subscription(self, metadata, session):
         student_id = metadata.get("student_id")
