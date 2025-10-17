@@ -204,6 +204,7 @@ class StripeWebhookView(APIView):
 
         # Upgrade student account
         teacher.account_type = "pro"
+        teacher.can_access_schedule = True
         teacher.save()
 
         print(f"✅ Subscription saved & account upgraded for student {student.id}")
