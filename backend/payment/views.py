@@ -170,7 +170,14 @@ class StripeWebhookView(APIView):
             elif metadata.get("type") == "booked_session":
                 self.handle_booked_session(metadata, session)
 
+            elif metadata.get("type") == "teacher-subscription":
+                self.handle_teacher_subscription(metadata, session)
+
         return HttpResponse(status=200)
+
+    def handle_teacher_subscription(self, metadata, session):
+        print("working")
+        pass
 
     def handle_subscription(self, metadata, session):
         student_id = metadata.get("student_id")

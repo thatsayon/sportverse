@@ -1,11 +1,14 @@
 from rest_framework.response import Response
 from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
+from payment.utils import create_stripe_checkout_session
+
 
 from controlpanel.serializers import VideoListSerializer
 from controlpanel.models import AdminVideo
+from account.serializers import CheckoutSessionSerializer
 
-from account.models import Student
+from account.models import Student, SubscriptionTeacher
 from .serializers import (
     RatingReviewSerializer
 )
@@ -37,4 +40,38 @@ class VideoLibraryView(generics.ListAPIView):
     def get_queryset(self):
         return AdminVideo.objects.filter(consumer="teacher")
 
-# class ProTeacher()
+class ProTeacher(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = CheckoutSessionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+
+        subscription = SubscriptionTeacher.objects.filter(user=request.user.teacher).first()
+        if subscription:
+            return Response({"detail": "Already subscribed"}, status=status.HTTP_400_BAD_REQUEST)
+
+        session = create_stripe_checkout_session(
+            **serializer.validated_data,
+            name="pro",
+            metadata={
+                "type": "teacher-subscription",
+                "student_id": str(request.user.student.id)  # ✅ Use Student.id
+            }
+        )
+
+        if session:
+            subscription = SubscriptionTeacher.objects.filter(user=request.user.teacher).first()
+            if subscription:
+                subscription.stripe_id = session.id
+                subscription.save()
+            else:
+                SubscriptionTeacher.objects.create(
+                    user=request.user.teacher,
+                    stripe_id=session.id
+                )
+
+        return Response({"checkout_url": session.url}, status=status.HTTP_200_OK)
+        
+
