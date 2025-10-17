@@ -281,6 +281,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     current_plan = serializers.SerializerMethodField()
     renewal_date = serializers.SerializerMethodField()
     favorite_sports = serializers.SerializerMethodField()
+    all_sports = serializers.SerializerMethodField()
     
     class Meta:
         model = Student
@@ -298,6 +299,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "current_plan",
             "renewal_date",
             "favorite_sports",
+            "all_sports",
         ]
     
     def get_training_sessions(self, obj):
@@ -332,6 +334,19 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     def get_favorite_sports(self, obj):
         # return a list of dicts with id and name
         return [{"id": sport.id, "name": sport.name} for sport in obj.favorite_sports.all()]
+
+    def get_all_sports(self, obj):
+        # Get all sports with a flag indicating if they're favorited
+        favorite_sport_ids = set(obj.favorite_sports.values_list('id', flat=True))
+        all_sports = Sport.objects.all()
+        return [
+            {
+                "id": sport.id,
+                "name": sport.name,
+                "is_favorite": sport.id in favorite_sport_ids
+            }
+            for sport in all_sports
+        ]
 
 class StudentProfileUpdateSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(source="user.profile_pic", required=False)
