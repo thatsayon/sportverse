@@ -57,7 +57,7 @@ class ProTeacher(APIView):
             name="pro",
             metadata={
                 "type": "teacher-subscription",
-                "teacher_id": str(request.user.student.id)  # ✅ Use Student.id
+                "teacher_id": str(request.user.teacher.id)  # ✅ Use Student.id
             }
         )
 
