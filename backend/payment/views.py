@@ -178,7 +178,7 @@ class StripeWebhookView(APIView):
     def handle_teacher_subscription(self, metadata, session):
         teacher_id = metadata.get("teacher_id")
         try:
-            teacher = Teacher.object.get(id=teacher_id)
+            teacher = Teacher.objects.get(id=teacher_id)
         except Teacher.DoesNotExist:
             print(f"❌ No Student found with id: {student_id}")
             return
