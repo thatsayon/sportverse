@@ -1,12 +1,12 @@
-import Pricing from '@/components/Landing/Pricing'
-import React from 'react'
+import TrainerPricing from "@/components/Trainer/TrainerPricing";
+import React from "react";
 
 function page() {
   return (
     <div>
-      <Pricing/>
+      <TrainerPricing />
     </div>
-  )
+  );
 }
 
-export default page
+export default page;

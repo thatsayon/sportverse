@@ -7,25 +7,23 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Pencil, Upload, X, Video } from "lucide-react";
+import { Pencil, Upload, X, Video, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import imageCompression from "browser-image-compression";
 
 import {
   useGetTrainerProfileQuery,
   usePostTrainerVideoMutation,
-  useUpdateTrainerProfileMutation,
 } from "@/store/Slices/apiSlices/trainerApiSlice";
-import { useGetSignatureMutation } from "@/store/Slices/apiSlices/apiSlice";
+import { getCookie } from "@/hooks/cookie";
 import { toast } from "sonner";
 
 const accountSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
-  username: z.string().min(2, "Surname must be at least 2 characters"),
+  username: z.string().min(2, "Username must be at least 2 characters"),
   city: z.string().min(2, "City must be at least 2 characters"),
   zipCode: z.string().min(3, "Zip code must be at least 3 characters"),
   institutionName: z
@@ -33,6 +31,7 @@ const accountSchema = z.object({
     .min(2, "Institution name must be at least 2 characters"),
   coach_type: z.array(z.string()).default([]),
   description: z.string().optional(),
+  profileImage: z.any().optional(),
 });
 
 type AccountFormData = z.infer<typeof accountSchema>;
@@ -47,22 +46,27 @@ interface SignatureResponse {
   upload_id: string;
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const AccountForm = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState("/api/placeholder/120/120");
-  const [originalProfileImage, setOriginalProfileImage] = useState("/api/placeholder/120/120");
-  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
+  const [originalProfileImage, setOriginalProfileImage] = useState(
+    "/api/placeholder/120/120"
+  );
+  const [hasImageChanged, setHasImageChanged] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
-  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
-  const [isCompressingImage, setIsCompressingImage] = useState(false);
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(
+    null
+  );
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const [postVideo] = usePostTrainerVideoMutation();
-  const [getSignature] = useGetSignatureMutation();
-  const { data: trainerProfile } = useGetTrainerProfileQuery();
-  const [updateTrainerProfile] = useUpdateTrainerProfileMutation();
+  const { data: trainerProfile, refetch } = useGetTrainerProfileQuery();
+
   const {
     register,
     handleSubmit,
@@ -131,7 +135,8 @@ const AccountForm = () => {
   const handleCancel = () => {
     setIsEditing(false);
     reset();
-    setProfilePicFile(null);
+    setValue("profileImage", undefined);
+    setHasImageChanged(false);
     setUploadedFile(null);
     setUploadedVideoUrl(null);
     setUploadProgress(0);
@@ -139,6 +144,8 @@ const AccountForm = () => {
   };
 
   const handleSave = async (data: AccountFormData) => {
+    setProfileLoading(true);
+
     try {
       const formData = new FormData();
 
@@ -148,83 +155,93 @@ const AccountForm = () => {
       formData.append("city", data.city);
       formData.append("zip_code", data.zipCode);
       formData.append("institute_name", data.institutionName);
-      
-      // Append each coach_type individually instead of JSON stringifying
+
+      // Append each coach_type individually
       data.coach_type.forEach((id) => {
         formData.append("coach_type", id);
       });
-      
+
       formData.append("description", data.description || "");
 
-      // Add compressed profile picture if selected
-      if (profilePicFile) {
-        formData.append("profile_pic", profilePicFile);
+      // Add profile picture if changed
+      if (data.profileImage && hasImageChanged) {
+        const file = data.profileImage as File;
+        const fileName = file.name || `profile_${Date.now()}.jpg`;
+        formData.append("profile_pic", file, fileName);
       }
 
-      const response = await updateTrainerProfile(formData).unwrap();
+      const token = getCookie("access_token");
 
-      toast.success("Profile updated successfully.");
-
-      if (response.profile_pic_url) {
-        setProfileImage(response.profile_pic_url);
-        setOriginalProfileImage(response.profile_pic_url);
-      }
-
-      reset({
-        full_name: response.full_name,
-        username: response.username,
-        city: response.city,
-        zipCode: response.zip_code,
-        institutionName: response.institute_name,
-        coach_type: Array.isArray(response.coach_type)
-          ? response.coach_type.map(String)
-          : [],
-        description: response.description,
+      const response = await fetch(`${BASE_URL}/teacher/d/account/`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       });
-      setIsEditing(false);
-      setProfilePicFile(null);
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        toast.success("Profile updated successfully.");
+
+        if (result.profile_pic_url) {
+          setProfileImage(result.profile_pic_url);
+          setOriginalProfileImage(result.profile_pic_url);
+        }
+
+        // Refetch the profile data to get updated info
+        refetch();
+
+        reset({
+          full_name: result.full_name,
+          username: result.username,
+          city: result.city,
+          zipCode: result.zip_code,
+          institutionName: result.institute_name,
+          coach_type: Array.isArray(result.coach_type)
+            ? result.coach_type.map(String)
+            : [],
+          description: result.description,
+        });
+
+        setIsEditing(false);
+        setHasImageChanged(false);
+        setValue("profileImage", undefined);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update profile");
+      }
     } catch (error) {
       const err = error as Error;
       toast.error(err?.message || "Failed to update profile.");
+    } finally {
+      setProfileLoading(false);
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please select a valid image file");
-        return;
-      }
+    if (!file) return;
 
-      try {
-        setIsCompressingImage(true);
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
 
-        // Compress the image
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1024,
-          useWebWorker: true,
-        };
+    try {
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setProfileImage(previewUrl);
+      setHasImageChanged(true);
 
-        const compressedFile = await imageCompression(file, options);
-
-        // Store compressed file
-        setProfilePicFile(compressedFile);
-
-        // Preview the compressed image
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setProfileImage(e.target?.result as string);
-        };
-        reader.readAsDataURL(compressedFile);
-      } catch (error) {
-        console.error("Image compression error:", error);
-        toast.error("Failed to compress image. Please try again.");
-      } finally {
-        setIsCompressingImage(false);
-      }
+      // Set the file to form
+      setValue("profileImage", file);
+    } catch (error) {
+      toast.error("Failed to process image");
     }
   };
 
@@ -356,6 +373,17 @@ const AccountForm = () => {
     setUploadProgress(0);
   };
 
+  const getInitials = (name: string) => {
+    return (
+      name
+        .split(" ")
+        .map((word) => word.charAt(0))
+        .join("")
+        .toUpperCase()
+        .slice(0, 2) || "NA"
+    );
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-center mb-4">
@@ -363,7 +391,7 @@ const AccountForm = () => {
       </h1>
       <Card className="border-none shadow-none">
         <CardContent className="p-6">
-          <div className="space-y-8" onSubmit={handleSubmit(handleSave)}>
+          <div className="space-y-8">
             {/* Profile Section */}
             <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-12">
               {/* Left Column - Profile Image and File Upload */}
@@ -373,9 +401,7 @@ const AccountForm = () => {
                   <Avatar className="w-32 h-32">
                     <AvatarImage src={profileImage} alt="Profile" />
                     <AvatarFallback className="bg-orange-100 text-orange-600 text-lg font-semibold">
-                      {trainerProfile?.full_name
-                        ? trainerProfile.full_name.slice(0, 2).toUpperCase()
-                        : "NA"}
+                      {getInitials(trainerProfile?.full_name || "")}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -390,7 +416,6 @@ const AccountForm = () => {
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
-                        disabled={isCompressingImage}
                         className="hidden"
                       />
                     </div>
@@ -560,7 +585,7 @@ const AccountForm = () => {
                     </div>
                   </div>
 
-                  {/* Surname */}
+                  {/* Username */}
                   <div className="space-y-2">
                     <Label htmlFor="username">User Name</Label>
                     <div className="relative">
@@ -682,7 +707,9 @@ const AccountForm = () => {
                           className="flex items-center gap-2"
                         >
                           <Checkbox
-                            checked={selectedCoachTypes.includes(String(sport.id))}
+                            checked={selectedCoachTypes.includes(
+                              String(sport.id)
+                            )}
                             onCheckedChange={(checked) =>
                               toggleCoach(String(sport.id), checked)
                             }
@@ -698,9 +725,10 @@ const AccountForm = () => {
                     {selectedCoachTypes.length > 0 && (
                       <div className="flex flex-wrap gap-2 pt-1">
                         {selectedCoachTypes.map((id) => {
-                          const sport = trainerProfile?.available_sports?.find(
-                            (s) => String(s.id) === id
-                          );
+                          const sport =
+                            trainerProfile?.available_sports?.find(
+                              (s) => String(s.id) === id
+                            );
                           return (
                             <Badge key={id} variant="secondary">
                               {sport?.name || id}
@@ -753,19 +781,26 @@ const AccountForm = () => {
                   {isEditing ? (
                     <>
                       <Button
-                        type="submit"
+                        type="button"
                         onClick={handleSubmit(handleSave)}
                         className="bg-orange-500 hover:bg-orange-600 text-white px-8"
-                        disabled={isUploading || isCompressingImage}
+                        disabled={profileLoading || isUploading}
                       >
-                        {isUploading ? "Uploading..." : isCompressingImage ? "Compressing..." : "Save"}
+                        {profileLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          "Save"
+                        )}
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={handleCancel}
                         className="px-8"
-                        disabled={isUploading || isCompressingImage}
+                        disabled={profileLoading || isUploading}
                       >
                         Cancel
                       </Button>

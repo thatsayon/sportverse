@@ -36,6 +36,10 @@ import {
 import build from "next/dist/build";
 import { TeacherMessageListResponse } from "@/types/teacher/messaging";
 import { VideoListResponse } from "@/types/admin/video";
+import {
+  subscriptionRequest,
+  subscriptionResponse,
+} from "@/types/student/profile";
 
 export const trainerApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -269,6 +273,20 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    // Subscription Plan
+
+    getTrainerProPlan: builder.mutation<
+      subscriptionResponse,
+      subscriptionRequest
+    >({
+      query: (body) => ({
+        url: "/teacher/pro/",
+        method: "POST",
+        body,
+        credentials: "include",
+      }),
+    }),
+
     // Messaging APIs
 
     getTrainerChatList: builder.query<TeacherMessageListResponse, void>({
@@ -314,6 +332,8 @@ export const {
   useUpdateTrainerProfileMutation,
   usePostTrainerVideoMutation,
   useUpdateTrainerPasswordMutation,
+  // Subscription
+  useGetTrainerProPlanMutation,
   //Messaging
   useGetTrainerChatListQuery,
   useGetVideosQuery,
