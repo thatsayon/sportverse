@@ -67,6 +67,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             try:
                 teacher_profile = Teacher.objects.get(user=user)
                 token['verification_status'] = teacher_profile.status
+                token['can_access_schedule'] = teacher_profile.can_access_schedule
             except Teacher.DoesNotExist:
                 token['verification_status'] = "unverified"  
 

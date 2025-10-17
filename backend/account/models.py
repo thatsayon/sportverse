@@ -48,6 +48,7 @@ class Teacher(models.Model):
         max_length=12,
         default='basic'
     )
+    can_access_schedule = models.BooleanField(default=False)
     description = models.CharField(
         max_length=240,
         blank=True,
