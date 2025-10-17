@@ -545,18 +545,22 @@ class AccountUploadWebhookView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
+
 class AccountDetailView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request):
-        teacher = request.user.teacher  # each user has one teacher profile
+        teacher = request.user.teacher
         serializer = AccountDetailSerializer(teacher)
+        
         # Include available sports
         sports_qs = Sport.objects.all()
         sports_data = [{"id": str(s.id), "name": s.name} for s in sports_qs]
+        
         response_data = serializer.data
         response_data["available_sports"] = sports_data
+        
         return Response(response_data, status=status.HTTP_200_OK)
     
     def patch(self, request):
@@ -564,17 +568,29 @@ class AccountDetailView(APIView):
         document = getattr(teacher, "document", None)
         user = teacher.user
         
-        # Allowed Teacher fields (excluding coach_type)
+        # Allowed Teacher fields
         teacher_fields = ['institute_name', 'description', 'status', 'is_profile_complete']
-        teacher_data = {field: request.data.get(field) for field in teacher_fields if field in request.data}
+        teacher_data = {
+            field: request.data.get(field) 
+            for field in teacher_fields 
+            if field in request.data and request.data.get(field) is not None
+        }
         
         # Allowed Document fields
         document_fields = ['city', 'zip_code']
-        document_data = {field: request.data.get(field) for field in document_fields if field in request.data}
+        document_data = {
+            field: request.data.get(field) 
+            for field in document_fields 
+            if field in request.data and request.data.get(field) is not None
+        }
         
-        # Allowed User fields (including profile_pic from FILES)
+        # Allowed User fields
         user_fields = ['full_name', 'username']
-        user_data = {field: request.data.get(field) for field in user_fields if field in request.data}
+        user_data = {
+            field: request.data.get(field) 
+            for field in user_fields 
+            if field in request.data and request.data.get(field) is not None
+        }
         
         # Handle profile_pic from FILES
         if 'profile_pic' in request.FILES:
@@ -583,22 +599,30 @@ class AccountDetailView(APIView):
         # Update Teacher fields
         for field, value in teacher_data.items():
             setattr(teacher, field, value)
-        teacher.save()
+        if teacher_data:
+            teacher.save()
         
         # Update ManyToManyField coach_type using sport IDs
         if 'coach_type' in request.data:
-            coach_type_data = request.data.get('coach_type', [])
-            # Handle both single value and list
-            if isinstance(coach_type_data, str):
-                sport_ids = [coach_type_data]
-            else:
-                sport_ids = list(coach_type_data)
+            coach_type_data = request.data.getlist('coach_type')  # Use getlist for multiple values
             
-            # Convert strings to UUID objects if needed
-            from uuid import UUID
-            sport_ids = [UUID(s) if isinstance(s, str) else s for s in sport_ids]
-            sports = Sport.objects.filter(id__in=sport_ids)
-            teacher.coach_type.set(sports)
+            if not coach_type_data:
+                # Fallback for single value
+                single_value = request.data.get('coach_type')
+                if single_value:
+                    coach_type_data = [single_value] if isinstance(single_value, str) else single_value
+            
+            if coach_type_data:
+                # Convert strings to UUID objects
+                try:
+                    sport_ids = [UUID(s) if isinstance(s, str) else s for s in coach_type_data]
+                    sports = Sport.objects.filter(id__in=sport_ids)
+                    teacher.coach_type.set(sports)
+                except (ValueError, AttributeError) as e:
+                    return Response(
+                        {"error": f"Invalid coach_type format: {str(e)}"}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
         
         # Update Document (create if it doesn't exist)
         if document_data:
@@ -610,14 +634,20 @@ class AccountDetailView(APIView):
                 document = Document.objects.create(teacher=teacher, **document_data)
         
         # Update User fields
-        for field, value in user_data.items():
-            if field == "username":
+        if user_data:
+            if 'username' in user_data:
                 # Check if the new username already exists for another user
-                if UserAccount.objects.filter(username=value).exclude(id=user.id).exists():
-                    return Response({"error": "Username already taken"}, status=400)
-            setattr(user, field, value)
-        user.save() 
+                if UserAccount.objects.filter(username=user_data['username']).exclude(id=user.id).exists():
+                    return Response(
+                        {"error": "Username already taken"}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            for field, value in user_data.items():
+                setattr(user, field, value)
+            user.save()
         
+        # Return updated data
         serializer = AccountDetailSerializer(teacher)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -140,19 +140,36 @@ class DocumentSerializer(serializers.ModelSerializer):
     def get_id_back_url(self, obj):
         return obj.id_back.url if obj.id_back else None
 
+
 class AccountDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='user.full_name', required=False)
-    profile_pic = serializers.ImageField(source='user.profile_pic', required=False)
+    profile_pic = serializers.ImageField(source='user.profile_pic', required=False, allow_null=True)
     profile_pic_url = serializers.SerializerMethodField()
     username = serializers.CharField(source='user.username', required=False)
-    city = serializers.CharField(source='user.teacher.document.city', required=False)
-    zip_code = serializers.CharField(source='user.teacher.document.zip_code', required=False)
+    city = serializers.CharField(source='user.teacher.document.city', required=False, allow_blank=True)
+    zip_code = serializers.CharField(source='user.teacher.document.zip_code', required=False, allow_blank=True)
     
     class Meta:
         model = Teacher
-        fields = ['id', 'full_name', 'username', 'profile_pic', 'profile_pic_url', 'city', 'zip_code', 'institute_name', 'coach_type', 'description', 'status', 'is_profile_complete']
+        fields = [
+            'id', 
+            'full_name', 
+            'username', 
+            'profile_pic', 
+            'profile_pic_url', 
+            'city', 
+            'zip_code', 
+            'institute_name', 
+            'coach_type', 
+            'description', 
+            'status', 
+            'is_profile_complete'
+        ]
     
     def get_profile_pic_url(self, obj):
         if obj.user.profile_pic:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.user.profile_pic.url)
             return obj.user.profile_pic.url
         return None

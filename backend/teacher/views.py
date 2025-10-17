@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import generics, status, permissions
+from rest_framework.views import APIView
 
 from controlpanel.serializers import VideoListSerializer
 from controlpanel.models import AdminVideo
@@ -36,3 +37,4 @@ class VideoLibraryView(generics.ListAPIView):
     def get_queryset(self):
         return AdminVideo.objects.filter(consumer="teacher")
 
+# class ProTeacher()
