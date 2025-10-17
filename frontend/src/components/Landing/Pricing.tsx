@@ -50,8 +50,8 @@ const Pricing: React.FC = () => {
     try {
       const response = await getProPlan({
         amount: "29",
-        cancel_url: "http://localhost:3000/payment-failed",
-        success_url: "http://localhost:3000/payment-success",
+        cancel_url: "https://ballmastery.com/payment-failed",
+        success_url: "https://ballmastery.com/payment-success",
       }).unwrap();
       if (response.checkout_url) {
         console.log(`redirecting to: ${response.checkout_url}`)
