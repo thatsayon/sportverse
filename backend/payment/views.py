@@ -207,7 +207,7 @@ class StripeWebhookView(APIView):
         teacher.can_access_schedule = True
         teacher.save()
 
-        print(f"✅ Subscription saved & account upgraded for student {student.id}")
+        print(f"✅ Subscription saved & account upgraded for student {teacher.id}")
 
     def handle_subscription(self, metadata, session):
         student_id = metadata.get("student_id")
