@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from rest_framework.views import APIView
 
-from account.models import Subscription, Student, SubscriptionTeacher
+from account.models import Subscription, Student, SubscriptionTeacher, Teacher
 from teacher.session.models import BookedSession
 from teacher.dashboard.models import IncomeHistory
 from controlpanel.models import TeacherDeduction, AdminIncome
