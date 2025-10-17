@@ -75,3 +75,22 @@ class ProTeacher(APIView):
         return Response({"checkout_url": session.url}, status=status.HTTP_200_OK)
         
 
+class CanAccessSchedule(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        teacher = request.user.teacher
+
+        can_access_schedule = teacher.can_access_schedule
+
+        if not can_access_schedule:
+            return Response(
+                {"error": "can access not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {"can_access_schedule": can_access_schedule},
+            status=status.HTTP_200_OK
+        )
+
