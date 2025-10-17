@@ -79,18 +79,21 @@ class CanAccessSchedule(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        teacher = request.user.teacher
-
-        can_access_schedule = teacher.can_access_schedule
-
-        if not can_access_schedule:
+        try:
+            teacher = request.user.teacher
+        except ObjectDoesNotExist:
             return Response(
-                {"error": "can access not found"},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Teacher profile not found for this user."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not teacher.can_access_schedule:
+            return Response(
+                {"can_access_schedule": False},
+                status=status.HTTP_200_OK
             )
 
         return Response(
-            {"can_access_schedule": can_access_schedule},
+            {"can_access_schedule": True},
             status=status.HTTP_200_OK
         )
-
