@@ -106,7 +106,10 @@ class Student(models.Model):
     about = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.favorite_sports}"
+        sports = ", ".join([sport.name for sport in self.favorite_sports.all()])
+        return f"{self.user.username} - {sports}"
+
+
 
 class Subscription(models.Model):
     id = models.UUIDField(

@@ -281,7 +281,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     current_plan = serializers.SerializerMethodField()
     renewal_date = serializers.SerializerMethodField()
     favorite_sports = serializers.SerializerMethodField()
-
+    
     class Meta:
         model = Student
         fields = [
@@ -299,47 +299,39 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "renewal_date",
             "favorite_sports",
         ]
-
+    
     def get_training_sessions(self, obj):
-        return BookedSession.objects.filter(student=obj).count()
-
+        return BookedSession.objects.filter(student=obj.user).count()
+    
     def get_coaches_booked(self, obj):
-        return BookedSession.objects.filter(student=obj).values('teacher').distinct().count()
-
+        return BookedSession.objects.filter(student=obj.user).values('teacher').distinct().count()
+    
     def get_hours_trained(self, obj):
-        return BookedSession.objects.filter(student=obj).count() * 60
-
+        # assuming each session counts as 60 minutes
+        return BookedSession.objects.filter(student=obj.user).count() * 60
+    
     def get_profile_pic(self, obj):
-        # If obj is a Student, use obj.user
-        if hasattr(obj, 'user') and hasattr(obj.user, 'profile_pic') and obj.user.profile_pic:
+        if hasattr(obj.user, 'profile_pic') and obj.user.profile_pic:
             return obj.user.profile_pic.url
-        # If obj is a UserAccount itself
-        if hasattr(obj, 'profile_pic') and obj.profile_pic:
-            return obj.profile_pic.url
         return None
-
-
+    
     def get_current_plan(self, obj):
         now = timezone.now()
         subscription = obj.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
         if subscription:
             return 'Pro Plan'
         return 'Basic Plan'
-
+    
     def get_renewal_date(self, obj):
         now = timezone.now()
         subscription = obj.subscriptions.filter(start_date__lte=now, end_date__gte=now).first()
         if subscription and subscription.end_date:
             return subscription.end_date
         return None
-
+    
     def get_favorite_sports(self, obj):
-        return [
-            {"id": sport.id, "name": sport.name} 
-            for sport in obj.favorite_sports.all()
-        ]
-
-
+        # return a list of dicts with id and name
+        return [{"id": sport.id, "name": sport.name} for sport in obj.favorite_sports.all()]
 class StudentProfileUpdateSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(source="user.profile_pic", required=False)
     profile_pic_url = serializers.SerializerMethodField()
