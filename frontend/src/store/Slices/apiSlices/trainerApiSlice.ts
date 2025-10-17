@@ -6,13 +6,36 @@ import { apiSlice } from "./apiSlice";
 import { BookedSessionResponse } from "@/types/teacher/bookings";
 import { TrainerRevenueResponse } from "@/types/teacher/revenue";
 import { CloudinaryUploadResponse } from "@/types/teacher/trainerVideoUpload";
-import { TrainerBankRequest, TrainerBankResponse, TrainerPaypalRequest, TrainerPaypalResponse, TrainerWalletTransactionRequest, TrainerWalletTransactionResponse, TrainerWithdrawResponse } from "@/types/teacher/wallet";
-import { CreateSessionRequest, CreateSessionResponse, deleteResponse, DeleteTimeSlotRequest, DeleteTimeSlotResponse, SessionResponse, TimeCheckRequest, TimeCheckResponse } from "@/types/teacher/session";
-import { TrainerPasswardResponse, TrainerPasswardResquest, TrainerProfileResponse, TrainerProfileUpdateRequset, TrainerProfileUpdateResponse } from "@/types/teacher/profile";
+import {
+  CurrentBalanceResponse,
+  TrainerBankRequest,
+  TrainerBankResponse,
+  TrainerPaypalRequest,
+  TrainerPaypalResponse,
+  TrainerWalletTransactionRequest,
+  TrainerWalletTransactionResponse,
+  TrainerWithdrawResponse,
+} from "@/types/teacher/wallet";
+import {
+  CreateSessionRequest,
+  CreateSessionResponse,
+  deleteResponse,
+  DeleteTimeSlotRequest,
+  DeleteTimeSlotResponse,
+  SessionResponse,
+  TimeCheckRequest,
+  TimeCheckResponse,
+} from "@/types/teacher/session";
+import {
+  TrainerPasswardResponse,
+  TrainerPasswardResquest,
+  TrainerProfileResponse,
+  TrainerProfileUpdateRequset,
+  TrainerProfileUpdateResponse,
+} from "@/types/teacher/profile";
 import build from "next/dist/build";
 import { TeacherMessageListResponse } from "@/types/teacher/messaging";
 import { VideoListResponse } from "@/types/admin/video";
-
 
 export const trainerApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -30,14 +53,14 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
     }),
 
     getTrainerBookings: builder.query<BookedSessionResponse, void>({
-      query: ()=> "/teacher/d/booked-session/",
+      query: () => "/teacher/d/booked-session/",
       providesTags: ["TrainerBookings"],
     }),
 
     // Revenye API ---------------------------
 
     getTrainerRenenue: builder.query<TrainerRevenueResponse, string>({
-      query: (month)=> `/teacher/d/revenue-report?month=${month}`,
+      query: (month) => `/teacher/d/revenue-report?month=${month}`,
       providesTags: ["TrainerRevenue"],
     }),
 
@@ -54,12 +77,12 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["TrainerSessions", "TimeSlotAvailability"],
     }),
-    
+
     getSession: builder.query<SessionResponse, void>({
       query: () => "/teacher/session/get-session/",
       providesTags: ["TrainerSessions"],
     }),
-    
+
     updateSession: builder.mutation<
       CreateSessionResponse,
       CreateSessionRequest
@@ -72,7 +95,7 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["TrainerSessions", "TimeSlotAvailability"],
     }),
-    
+
     deleteSession: builder.mutation<deleteResponse, string>({
       query: (sessionId) => ({
         url: `/teacher/session/${sessionId}/delete-session/`, // Fixed endpoint
@@ -81,9 +104,12 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["TrainerSessions", "TimeSlotAvailability"],
     }),
-    
+
     // New endpoint for deleting individual time slots
-    deleteTimeSlot: builder.mutation<DeleteTimeSlotResponse, DeleteTimeSlotRequest>({
+    deleteTimeSlot: builder.mutation<
+      DeleteTimeSlotResponse,
+      DeleteTimeSlotRequest
+    >({
       query: (body) => ({
         url: `/teacher/session/${body.slot_id}/delete-timeslot/`,
         method: "DELETE",
@@ -91,7 +117,7 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["TimeSlotAvailability", "TrainerSessions"],
     }),
-    
+
     timeCheck: builder.mutation<TimeCheckResponse, TimeCheckRequest>({
       query: (data) => ({
         url: "/teacher/session/timeslot-availability/",
@@ -106,28 +132,34 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
 
     //GET
     getTrainerBank: builder.query<TrainerBankResponse, void>({
-      query: ()=> "/teacher/d/bank/",
+      query: () => "/teacher/d/bank/",
       providesTags: ["TrainerBank"],
     }),
 
     //POST
-    createTrainerBank: builder.mutation<TrainerBankResponse, TrainerBankRequest>({
-      query: (body)=>({
+    createTrainerBank: builder.mutation<
+      TrainerBankResponse,
+      TrainerBankRequest
+    >({
+      query: (body) => ({
         url: "/teacher/d/bank/",
         method: "POST",
         body: body,
-        credentials: "include"
+        credentials: "include",
       }),
       invalidatesTags: ["TrainerBank"],
     }),
 
     //PUT
-    updateTrainerBank: builder.mutation<TrainerBankResponse, TrainerBankRequest>({
-      query: (body)=>({
+    updateTrainerBank: builder.mutation<
+      TrainerBankResponse,
+      TrainerBankRequest
+    >({
+      query: (body) => ({
         url: "/teacher/d/bank/",
         method: "PUT",
         body: body,
-        credentials: "include"
+        credentials: "include",
       }),
       invalidatesTags: ["TrainerBank"],
     }),
@@ -136,28 +168,34 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
 
     //GET
     getTrainerPaypal: builder.query<TrainerPaypalResponse, void>({
-      query: ()=> "/teacher/d/paypal/",
+      query: () => "/teacher/d/paypal/",
       providesTags: ["TrainerPaypal"],
     }),
 
     //POST
-    createTrainerPaypal: builder.mutation<TrainerPaypalResponse, TrainerPaypalRequest>({
-      query: (body)=>({
+    createTrainerPaypal: builder.mutation<
+      TrainerPaypalResponse,
+      TrainerPaypalRequest
+    >({
+      query: (body) => ({
         url: "/teacher/d/paypal/",
         method: "POST",
         body: body,
-        credentials: "include"
+        credentials: "include",
       }),
       invalidatesTags: ["TrainerPaypal"],
     }),
 
     //PUT
-    updateTrainerPaypal: builder.mutation<TrainerPaypalResponse, TrainerPaypalRequest>({
-      query: (body)=>({
+    updateTrainerPaypal: builder.mutation<
+      TrainerPaypalResponse,
+      TrainerPaypalRequest
+    >({
+      query: (body) => ({
         url: "/teacher/d/paypal/",
         method: "PUT",
         body: body,
-        credentials: "include"
+        credentials: "include",
       }),
       invalidatesTags: ["TrainerPaypal"],
     }),
@@ -166,17 +204,20 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
 
     //GET
     getTainerWithdraw: builder.query<TrainerWithdrawResponse, void>({
-      query: ()=> "/teacher/d/withdraw/",
+      query: () => "/teacher/d/withdraw/",
       providesTags: ["TrainerWithdraw"],
     }),
 
     //POST
-    createTrainerWithdrawRequest: builder.mutation<TrainerWalletTransactionResponse, TrainerWalletTransactionRequest>({
-      query: (body)=>({
+    createTrainerWithdrawRequest: builder.mutation<
+      TrainerWalletTransactionResponse,
+      TrainerWalletTransactionRequest
+    >({
+      query: (body) => ({
         url: "/teacher/d/withdraw/",
         method: "POST",
         body,
-        credentials: "include"
+        credentials: "include",
       }),
       invalidatesTags: ["TrainerWithdraw"],
     }),
@@ -184,47 +225,59 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
     // Profile API
 
     getTrainerProfile: builder.query<TrainerProfileResponse, void>({
-      query: ()=> "/teacher/d/account/",
+      query: () => "/teacher/d/account/",
       providesTags: ["TrainerProfile"],
     }),
 
-    updateTrainerProfile: builder.mutation<TrainerProfileUpdateResponse, TrainerProfileUpdateRequset>({
-      query: (body)=>({
+    // Current Balance
+    getCurrentBalance: builder.query<CurrentBalanceResponse, void>({
+      query: () => "/teacher/d/current-balance/",
+    }),
+
+    // profile
+
+    updateTrainerProfile: builder.mutation<
+      TrainerProfileUpdateResponse,
+      TrainerProfileUpdateRequset
+    >({
+      query: (body) => ({
         url: "/teacher/d/account/",
         method: "PATCH",
         body,
-        credentials: "include"
+        credentials: "include",
       }),
       invalidatesTags: ["TrainerProfile"],
     }),
 
     postTrainerVideo: builder.mutation<CloudinaryUploadResponse, void>({
-      query: ()=>({
+      query: () => ({
         url: "/teacher/d/upload-video/",
         method: "POST",
-        credentials: "include"
+        credentials: "include",
       }),
       invalidatesTags: ["TrainerProfile"],
     }),
-    updateTrainerPassword: builder.mutation<TrainerPasswardResponse, TrainerPasswardResquest>({
-      query: (body)=>({
+    updateTrainerPassword: builder.mutation<
+      TrainerPasswardResponse,
+      TrainerPasswardResquest
+    >({
+      query: (body) => ({
         url: "/teacher/d/update-password/",
         method: "POST",
         body,
-        credentials: "include"
-      })
+        credentials: "include",
+      }),
     }),
 
     // Messaging APIs
 
     getTrainerChatList: builder.query<TeacherMessageListResponse, void>({
-      query: ()=>"/communication/msg/list/"
+      query: () => "/communication/msg/list/",
     }),
     // videos
     getVideos: builder.query<VideoListResponse, void>({
-          query: () => "/teacher/video-library/",
-        }),
-
+      query: () => "/teacher/video-library/",
+    }),
   }),
   overrideExisting: true,
 });
@@ -247,6 +300,8 @@ export const {
   // withdraw
   useGetTainerWithdrawQuery,
   useCreateTrainerWithdrawRequestMutation,
+  // Current balance
+  useGetCurrentBalanceQuery,
   // session management
   useCreateSessionMutation,
   useGetSessionQuery,

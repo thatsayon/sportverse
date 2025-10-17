@@ -2,6 +2,7 @@ export interface AdminResponse {
   id: string;
   full_name: string;
   profile_pic: string | null;
+  profile_pic_url: string | null;
 }
 
 

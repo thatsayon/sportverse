@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,13 +16,13 @@ import { toast } from "sonner";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { useGetAdminSportsQuery } from "@/store/Slices/apiSlices/adminApiSlice";
 import imageCompression from "browser-image-compression";
 import { getCookie } from "@/hooks/cookie";
+import { useGetStudentProfieQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -50,10 +50,8 @@ const accountSchema = z.object({
     .max(500, "About must not exceed 500 characters")
     .optional()
     .or(z.literal("")),
-  sports: z
-    .array(z.string())
-    .min(1, "Please select at least one sport")
-    .max(10, "You can select up to 10 sports"),
+  favorite_sports: z
+    .array(z.string()).optional(),
   username: z.string(),
   email: z.string().email(),
 });
@@ -72,6 +70,7 @@ const AccountSettingForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { data } = useGetAdminSportsQuery();
+  const { data: studentProfile, refetch } = useGetStudentProfieQuery()
 
   const {
     register,
@@ -83,16 +82,35 @@ const AccountSettingForm = () => {
   } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
-      full_name: "Bradley Lawlor",
-      username: "bradley123",
-      email: "bradley@example.com",
-      sports: [],
+      full_name: "",
+      username: "",
+      email: "",
+      favorite_sports: [],
       about: "",
       profile_pic: null,
     },
   });
 
-  const selectedSports = watch("sports") || [];
+  // Populate form with student profile data
+  useEffect(() => {
+    if (studentProfile) {
+      setValue("full_name", studentProfile.full_name || "");
+      setValue("username", studentProfile.username || "");
+      setValue("email", studentProfile.email || "");
+      setValue("about", studentProfile.about || "");
+
+      // Set pre-selected sports based on favorite_sports from response
+      const favoriteIds = studentProfile.favorite_sports?.map((sport) => sport.id) || [];
+      setValue("favorite_sports", favoriteIds);
+
+      // Set profile image
+      if (studentProfile.profile_pic) {
+        setProfileImage(studentProfile.profile_pic);
+      }
+    }
+  }, [studentProfile, setValue]);
+
+  const selectedSports = watch("favorite_sports") || [];
 
   const handleCancel = () => {
     router.push("/student/profile");
@@ -107,8 +125,8 @@ const AccountSettingForm = () => {
       formDataToSend.append("about", formData.about || "");
 
       // Append sports as JSON array
-      formData.sports.forEach((sportId) => {
-        formDataToSend.append("sports", sportId);
+      formData.favorite_sports.forEach((sportId) => {
+        formDataToSend.append("favorite_sports", sportId);
       });
 
       // Compress and append profile picture if it exists
@@ -119,20 +137,11 @@ const AccountSettingForm = () => {
           useWebWorker: true,
         };
 
-        //console.log(
-        //   "Original Image Size:",
-        //   formData.profile_pic.size / 1024,
-        //   "KB"
-        // );
-
         const compressedImage = await imageCompression(
           formData.profile_pic,
           options
         );
 
-        //console.log("Compressed Image Size:", compressedImage.size / 1024, "KB");
-
-        // Create a new File object with the original filename to preserve extension
         const compressedFile = new File(
           [compressedImage],
           formData.profile_pic.name,
@@ -163,9 +172,9 @@ const AccountSettingForm = () => {
       }
 
       toast.success("Profile updated successfully!");
+      refetch()
       router.push("/student/profile");
     } catch (error) {
-      //console.error("Update error:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to update profile"
       );
@@ -206,7 +215,7 @@ const AccountSettingForm = () => {
       ? currentSports.filter((id) => id !== sportId)
       : [...currentSports, sportId];
 
-    setValue("sports", newSports, { shouldValidate: true });
+    setValue("favorite_sports", newSports, { shouldValidate: true });
   };
 
   return (
@@ -225,7 +234,11 @@ const AccountSettingForm = () => {
                   <Avatar className="w-32 h-32">
                     <AvatarImage src={profileImage} alt="Profile" />
                     <AvatarFallback className="bg-orange-100 text-orange-600 text-lg font-semibold">
-                      BL
+                      {studentProfile?.full_name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase() || "SP"}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -298,7 +311,7 @@ const AccountSettingForm = () => {
                   <div className="space-y-2">
                     <Label htmlFor="sports">Interested Sports</Label>
                     <Controller
-                      name="sports"
+                      name="favorite_sports"
                       control={control}
                       render={({ field }) => (
                         <div className="relative">
@@ -335,9 +348,9 @@ const AccountSettingForm = () => {
                         </div>
                       )}
                     />
-                    {errors.sports && (
+                    {errors.favorite_sports && (
                       <p className="text-sm text-red-500">
-                        {errors.sports.message}
+                        {errors.favorite_sports.message}
                       </p>
                     )}
                   </div>

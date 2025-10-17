@@ -32,7 +32,6 @@ export interface TrainerPaypalRequest {
   country: string;
 }
 
-
 // withdraw
 
 export interface TrainerWithdraw {
@@ -63,4 +62,10 @@ export interface TrainerWalletTransactionResponse {
 export interface TrainerWalletTransactionRequest {
   wallet_type: string;// adjust other types if needed
   amount: number;
+}
+
+// Current Balance
+
+export interface CurrentBalanceResponse {
+  balance: number;
 }

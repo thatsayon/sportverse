@@ -83,6 +83,7 @@ export const adminApiSlice = apiSlice.injectEndpoints({
     // Sports
     getAdminSports: builder.query<SportCategoryResponse, void>({
       query: () => "/control/get-or-create-sport/",
+      providesTags: ["studentProfile"]
     }),
     getAdminSportById: builder.query<SportCategory, string>({
       query: (id) => `/control/update-sport/${id}`,

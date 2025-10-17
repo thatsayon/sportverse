@@ -1,17 +1,16 @@
 "use client";
 import React, { ReactNode, useState } from "react";
 import { Mail, Calendar, Clock } from "lucide-react";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import BookingPage from "./BookingPage";
 import Link from "next/link";
 import ManageSubscriptionPopUp from "../Element/ManageSubscriptionPopUp";
 import ProfileBookings from "./ProfileBookings";
 import { useGetStudentProfieQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import Loading from "../Element/Loading";
 import ErrorLoadingPage from "../Element/ErrorLoadingPage";
+import moment from "moment";
 
 interface StatCard {
   id: number;
@@ -21,56 +20,54 @@ interface StatCard {
   bgColor: string;
 }
 
-
-
 const Profile = () => {
   const [open, setOpen] = useState<boolean>(false);
   const { data, isLoading, isError } = useGetStudentProfieQuery();
 
-  if (isLoading) return (
-    <div className="min-h-screen">
-      <Loading />
-    </div>
-  )
-  if (isError) return (
-    <div className="min-h-screen">
-      <ErrorLoadingPage />
-    </div>
-  )
-  
-
-
   const stats: StatCard[] = [
-  {
-    id: 1,
-    value: data?.training_sessions,
-    label: "Training Sessions",
-    icon: <Calendar className="w-6 h-6 text-blue-600" />,
-    bgColor: "bg-blue-100",
-  },
-  {
-    id: 2,
-    value: data?.coaches_booked,
-    label: "Coaches Booked",
-    icon: (
-      <svg
-        className="w-6 h-6 text-green-600"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-      >
-        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4.5C14.4 4.2 13.6 4.2 13 4.5L7 7V9H21ZM21 10H3V15H21V10Z" />
-      </svg>
-    ),
-    bgColor: "bg-green-100",
-  },
-  {
-    id: 3,
-    value: data?.hours_trained,
-    label: "Minutes Trained",
-    icon: <Clock className="w-6 h-6 text-purple-600" />,
-    bgColor: "bg-purple-100",
-  },
-];
+    {
+      id: 1,
+      value: data?.training_sessions,
+      label: "Training Sessions",
+      icon: <Calendar className="w-6 h-6 text-blue-600" />,
+      bgColor: "bg-blue-100",
+    },
+    {
+      id: 2,
+      value: data?.coaches_booked,
+      label: "Coaches Booked",
+      icon: (
+        <svg
+          className="w-6 h-6 text-green-600"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 4.5C14.4 4.2 13.6 4.2 13 4.5L7 7V9H21ZM21 10H3V15H21V10Z" />
+        </svg>
+      ),
+      bgColor: "bg-green-100",
+    },
+    {
+      id: 3,
+      value: data?.hours_trained,
+      label: "Minutes Trained",
+      icon: <Clock className="w-6 h-6 text-purple-600" />,
+      bgColor: "bg-purple-100",
+    },
+  ];
+
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <ErrorLoadingPage />
+      </div>
+    );
 
   return (
     <div className=" bg-gray-50 p-4 md:p-6 lg:p-8 min-h-screen">
@@ -101,10 +98,7 @@ const Profile = () => {
                 <div className="text-center">
                   <div className="relative inline-block mb-4">
                     <Avatar className="w-36 h-36">
-                      <AvatarImage
-                        src="/api/placeholder/120/120"
-                        alt="Alex Johnson"
-                      />
+                      <AvatarImage src={data?.profile_pic} alt="Alex Johnson" />
                       <AvatarFallback className="text-2xl font-semibold">
                         AJ
                       </AvatarFallback>
@@ -125,12 +119,25 @@ const Profile = () => {
                       Sport Interests
                     </h3>
                     <div className="flex flex-wrap gap-2 justify-center">
-                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
-                        Football
-                      </span>
-                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                      {/* {data?.favorite_sports.map((item, index) => {
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm"
+                        >
+                          {item.name}
+                        </span>;
+                      })} */}
+                      {data?.favorite_sports.map((item, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm"
+                        >
+                          {item.name}
+                        </span>
+                      ))}
+                      {/* <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
                         Basketball
-                      </span>
+                      </span> */}
                     </div>
                   </div>
                 </div>
@@ -148,23 +155,24 @@ const Profile = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Current Plan</span>
                   <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    Pro
+                    {data?.current_plan}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center mb-10">
                   <span className="text-gray-600">Renewal Date</span>
                   <span className="text-gray-900 font-medium">
-                    March 15, 2025
+                    {moment(data?.renewal_date).format("MMM Do, YYYY")}
                   </span>
                 </div>
 
-                <Button
-                  onClick={() => setOpen(true)}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                >
-                  Manage Subscription
-                </Button>
+                {data?.current_plan !== "Pro Plan" && (
+                  <Link href={"/student/pricing"}>
+                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                      Manage Subscription
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           </div>

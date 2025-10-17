@@ -31,6 +31,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
   useCreateTrainerWithdrawRequestMutation,
+  useGetCurrentBalanceQuery,
 } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { toast } from "sonner";
 

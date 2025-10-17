@@ -20,12 +20,12 @@ import Link from "next/link";
 import { removeCookie, getCookie } from "@/hooks/cookie";
 import { usePathname, useRouter } from "next/navigation";
 import ChatConversation from "../Element/ChatConversation";
-import { useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { useGetCurrentBalanceQuery, useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { getSocket } from "@/lib/socket";
 import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
 const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL;
 
 interface NavbarProps {
@@ -64,7 +64,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const [localMessageList, setLocalMessageList] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
-
+  const {data: currentBalance} = useGetCurrentBalanceQuery()
   const router = useRouter();
   const pathname = usePathname();
   const { data: messageList } = useGetTrainerChatListQuery();
@@ -85,7 +85,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   // Socket integration for real-time messaging
   useEffect(() => {
     const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
-    
+
     const handleNewMessage = (msg: any) => {
       setLocalMessageList((prev) => {
         const index = prev.findIndex(
@@ -132,13 +132,16 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
         return;
       }
       try {
-        const response = await fetch(`${NOTIFICATION_SOCKET_URL}notifications/`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetch(
+          `${NOTIFICATION_SOCKET_URL}notifications/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -148,13 +151,15 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
         console.log("📥 Fetched notifications:", data);
 
         // Transform API response to match our Notification interface
-        const transformedNotifications: Notification[] = data.results.map((notif) => ({
-          id: notif.id,
-          title: notif.title,
-          message: notif.message,
-          timestamp: notif.created_at,
-          read: notif.is_read,
-        }));
+        const transformedNotifications: Notification[] = data.results.map(
+          (notif) => ({
+            id: notif.id,
+            title: notif.title,
+            message: notif.message,
+            timestamp: notif.created_at,
+            read: notif.is_read,
+          })
+        );
 
         setNotifications(transformedNotifications);
       } catch (error) {
@@ -216,7 +221,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
         id: data.id || Date.now().toString(),
         title: data.title || "New Notification",
         message: data.message || data.content || "",
-        timestamp: data.timestamp || data.created_at || new Date().toISOString(),
+        timestamp:
+          data.timestamp || data.created_at || new Date().toISOString(),
         read: false,
       };
 
@@ -276,13 +282,16 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
       const accessToken = getCookie("access_token");
       if (!accessToken) return;
 
-      await fetch(`${NOTIFICATION_SOCKET_URL}notifications/${notificationId}/read/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      });
+      await fetch(
+        `${NOTIFICATION_SOCKET_URL}notifications/${notificationId}/read/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       console.log("✅ Notification marked as read on server:", notificationId);
     } catch (error) {
@@ -295,7 +304,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     const notifTime = new Date(timestamp);
     const diffMs = now.getTime() - notifTime.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return "just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
@@ -314,15 +323,17 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   // Function to get the page title based on pathname
   const getPageTitle = () => {
     // Check if the current path matches the chat conversation pattern
-    const chatConversationPattern = /^\/dashboard\/chat\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
-    const mediaPattern = /^\/dashboard\/media\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
-    
+    const chatConversationPattern =
+      /^\/dashboard\/chat\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+    const mediaPattern =
+      /^\/dashboard\/media\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+
     if (chatConversationPattern.test(pathname)) {
       return "Chat Conversation";
     }
 
-    if(mediaPattern.test(pathname)){
-      return "Media Player"
+    if (mediaPattern.test(pathname)) {
+      return "Media Player";
     }
 
     // Default behavior for other routes
@@ -332,7 +343,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     // Convert dashed words into capitalized words
     return lastSegment
       .split("-")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
@@ -403,7 +414,9 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                           </Avatar>
                           <div className="flex items-center justify-between w-full">
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium">{item.other_user}</p>
+                              <p className="text-sm font-medium">
+                                {item.other_user}
+                              </p>
                               <p className="text-xs text-gray-500 truncate">
                                 {item.last_message || "No messages yet"}
                               </p>
@@ -445,32 +458,45 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 sm:w-80 max-h-96 overflow-y-auto">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-72 sm:w-80 max-h-96 overflow-y-auto"
+                >
                   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {isLoadingNotifications ? (
                     <DropdownMenuItem disabled>
-                      <p className="text-sm text-gray-500">Loading notifications...</p>
+                      <p className="text-sm text-gray-500">
+                        Loading notifications...
+                      </p>
                     </DropdownMenuItem>
                   ) : notifications.length === 0 ? (
                     <DropdownMenuItem disabled>
-                      <p className="text-sm text-gray-500">No notifications yet</p>
+                      <p className="text-sm text-gray-500">
+                        No notifications yet
+                      </p>
                     </DropdownMenuItem>
                   ) : (
                     notifications.map((notification) => (
                       <React.Fragment key={notification.id}>
                         <DropdownMenuItem
-                          onClick={() => handleNotificationClick(notification.id)}
+                          onClick={() =>
+                            handleNotificationClick(notification.id)
+                          }
                           className={notification.read ? "opacity-60" : ""}
                         >
                           <div className="flex flex-col space-y-1 w-full">
                             <div className="flex items-start justify-between">
-                              <p className="text-sm font-medium">{notification.title}</p>
+                              <p className="text-sm font-medium">
+                                {notification.title}
+                              </p>
                               {!notification.read && (
                                 <span className="h-2 w-2 bg-blue-500 rounded-full mt-1 ml-2 flex-shrink-0"></span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500">{notification.message}</p>
+                            <p className="text-xs text-gray-500">
+                              {notification.message}
+                            </p>
                             <span className="text-xs text-gray-400">
                               {getTimeAgo(notification.timestamp)}
                             </span>
@@ -493,7 +519,15 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                 className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full"
               >
                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                  <AvatarImage src="https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg" alt="User" />
+                  <AvatarImage
+                    src={
+                      decoded?.profile_pic
+                        ? decoded?.profile_pic
+                        : "https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"
+                    }
+                    alt="profile image"
+                  />
+
                   <AvatarFallback className="bg-[#F15A24] text-white">
                     <User className="h-4 w-4 sm:h-5 sm:w-5" />
                   </AvatarFallback>
@@ -501,11 +535,17 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 sm:w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <h1 className="font-montserrat font-medium">
+                  {decoded?.full_name}
+                </h1>
+                <p className="text-[#5E5E5E] text-xs">{decoded?.username}</p>
+                {decoded?.role === "teacher" && <p>Balance: ${currentBalance?.balance}</p>}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {decoded?.role === "admin" ? (
                 <>
-                  <Link href={'/dashboard/settings'}>
+                  <Link href={"/dashboard/settings"}>
                     <DropdownMenuItem>Settings</DropdownMenuItem>
                   </Link>
                 </>

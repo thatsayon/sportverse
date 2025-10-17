@@ -8,7 +8,7 @@ import {
 import { StudentBookingResponse, TeacherRatingRequest, TeacherRatingResponse } from "@/types/student/bookings";
 import { VideoListResponse } from "@/types/admin/video";
 import { AgoraTokenResponse } from "@/types/teacher/dashboard";
-import { UserProfileReponse } from "@/types/student/profile";
+import { subscriptionRequest, subscriptionResponse, UserProfileResponse, videoAccessResponse } from "@/types/student/profile";
 import { TrainerDetailsResponse } from "@/types/student/trainerDetails";
 
 export const studentApiSlice = apiSlice.injectEndpoints({
@@ -41,15 +41,28 @@ export const studentApiSlice = apiSlice.injectEndpoints({
       query: () => "/student/booked-sessions/",
     }),
     // video
-    getVideos: builder.query<VideoListResponse, void>({
+    getStudentVideos: builder.query<VideoListResponse, void>({
       query: () => "/student/video-list/",
     }),
     generateStudentToken: builder.query<AgoraTokenResponse, string>({
       query: (id) => `/student/generate-video-token/${id}/`,
     }),
     // profile
-    getStudentProfie: builder.query<UserProfileReponse, void>({
+    getStudentProfie: builder.query<UserProfileResponse, void>({
       query: ()=> "/student/profile/"
+    }),
+    // subscription
+    getProPlan: builder.mutation<subscriptionResponse, subscriptionRequest>({
+      query: (body)=>({
+        url: "/account/pro/",
+        method: "POST",
+        body,
+        credentials: "include"
+      })
+    }),
+    // video access
+    checkVideoAccess: builder.query<videoAccessResponse, void>({
+      query: ()=> "/student/video-library-access/"
     }),
     getTrainerDetails: builder.query<TrainerDetailsResponse, string>({
       query: (id)=>({
@@ -77,10 +90,14 @@ export const {
   // bookings
   useGetBookingsQuery,
   // video
-  useGetVideosQuery,
+  useGetStudentVideosQuery,
   useLazyGenerateStudentTokenQuery,
   // profile
   useGetStudentProfieQuery,
+  // subscription
+  useGetProPlanMutation,
+  // video access
+  useCheckVideoAccessQuery,
   // trainer details
   useGetTrainerDetailsQuery,
   // rating

@@ -26,7 +26,7 @@ import {
   Plus,
 } from "lucide-react";
 import WithdrawRequest from "./WithdrawRequest";
-import { useGetTainerWithdrawQuery, useGetTeacherDashboardQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { useGetCurrentBalanceQuery, useGetTainerWithdrawQuery, useGetTeacherDashboardQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 import Loading from "@/components/Element/Loading";
 import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 
@@ -89,7 +89,7 @@ const WithdrawTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data, isLoading, isError } = useGetTainerWithdrawQuery();
-  const { data:currentBal } = useGetTeacherDashboardQuery();
+  const { data:currentBalance } = useGetCurrentBalanceQuery();
 
   const invoices = data?.results || [];
 
@@ -141,7 +141,7 @@ const WithdrawTable = () => {
 
   return (
     <div className="">
-      <WithdrawRequest open={open} setOpen={setOpen} currentBalance={Number(currentBal?.total_revenue)}/>
+      <WithdrawRequest open={open} setOpen={setOpen} currentBalance={Number(currentBalance?.balance)}/>
       <Card className="bg-white shadow-none border-none">
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

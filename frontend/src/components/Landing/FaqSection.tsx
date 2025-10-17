@@ -51,7 +51,7 @@ const FaqSection = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.7)), url('/Landing/faq2.jpg')`,
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.7)), url('https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760122916/faq2_kxh1av.jpg')`,
         }}
       />
 

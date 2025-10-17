@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Star, X } from "lucide-react";
 import { useJwt } from "@/hooks/useJwt";
-import { Span } from "next/dist/trace";
+import { useGetProPlanMutation } from "@/store/Slices/apiSlices/studentApiSlice";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const Pricing: React.FC = () => {
   const { decoded } = useJwt();
+  const router = useRouter()
+  const [getProPlan] = useGetProPlanMutation();
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
     animate: { opacity: 1, y: 0 },
@@ -42,6 +46,25 @@ const Pricing: React.FC = () => {
     { text: "Priority booking support", included: true },
   ];
 
+  const handleSubscription = async () => {
+    try {
+      const response = await getProPlan({
+        amount: "29",
+        cancel_url: "http://localhost:3000/payment-failed",
+        success_url: "http://localhost:3000/payment-success",
+      }).unwrap();
+      if (response.checkout_url) {
+        console.log(`redirecting to: ${response.checkout_url}`)
+         router.push(response.checkout_url)
+      } else {
+        toast.error("something went wrong");
+      }
+    } catch (error) {
+      const err = error as Error;
+      console.log(`${err.message}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-6 sm:px-6 lg:px-8">
       <div className="">
@@ -53,23 +76,34 @@ const Pricing: React.FC = () => {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Choose Your {decoded?.role === "student" ? "Traning":"Trainer"} Plan
+            Choose Your {decoded?.role === "student" ? "Traning" : "Trainer"}{" "}
+            Plan
           </h1>
           <p className="text-base md:text-lg text-gray-600 leading-relaxed">
             Unlock your potential with our flexible subscription plans.
-            {decoded?.role === "student" && <span> Start
-            with Basic or <br className="hidden md:block" />
-            upgrade to Pro for enhanced features and exclusive resources.</span>}
+            {decoded?.role === "student" && (
+              <span>
+                {" "}
+                Start with Basic or <br className="hidden md:block" />
+                upgrade to Pro for enhanced features and exclusive resources.
+              </span>
+            )}
           </p>
           <p className="text-xs md:text-sm text-[#F15A24] flex items-center gap-2 bg-[#FFF2F2] w-fit px-4 rounded-full py-2.5 md:font-medium mt-4">
             <Star stroke="#D3A900" fill="#D3A900" />
-             {decoded?.role === "student" ? "Most athletes choose Pro for complete Traning access":"Trainer must choose pro plan to receive session booking requsts."} 
+            {decoded?.role === "student"
+              ? "Most athletes choose Pro for complete Traning access"
+              : "Trainer must choose pro plan to receive session booking requsts."}
           </p>
         </motion.div>
 
         {/* Pricing Cards */}
         <motion.div
-          className={`grid ${decoded?.role === "student" ? "md:grid-cols-2 max-w-5xl":"md:grid-cols-1 max-w-lg"} gap-8  mx-auto`}
+          className={`grid ${
+            decoded?.role === "student"
+              ? "md:grid-cols-2 max-w-5xl"
+              : "md:grid-cols-1 max-w-lg"
+          } gap-8  mx-auto`}
           variants={staggerContainer}
           initial="initial"
           animate="animate"
@@ -182,24 +216,14 @@ const Pricing: React.FC = () => {
             </div>
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-base font-semibold rounded-lg shadow-lg">
+              <Button
+                onClick={handleSubscription}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-base font-semibold rounded-lg shadow-lg"
+              >
                 Upgrade to Pro
               </Button>
             </motion.div>
           </motion.div>
-        </motion.div>
-
-        {/* Additional Info */}
-        <motion.div
-          className="text-center mt-12"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-        >
-          <p className="text-sm text-gray-500">
-            All plans include a 7-day free trial. No credit card required to
-            start.
-          </p>
         </motion.div>
       </div>
     </div>

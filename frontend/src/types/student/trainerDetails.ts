@@ -13,7 +13,7 @@ export interface Rating {
   created_at: string; // ISO date string
 }
 
-export interface TeacherProfile {
+export interface TrainerDetailsResponse {
   id: string;
   training_type: 'virtual' | 'mindset' | 'in_person';
   price: string; // API returns this as string (e.g., "200.00")

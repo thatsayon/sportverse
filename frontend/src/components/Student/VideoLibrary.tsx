@@ -15,6 +15,9 @@ import MediaCard from "@/components/Element/MediaCard";
 import Loading from "../Element/Loading";
 import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 import { useGetVideosQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import SubscriptionAlert from "../Element/SubscriptionAlert";
+import { useCheckVideoAccessQuery, useGetStudentVideosQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import { useJwt } from "@/hooks/useJwt";
 
 // Updated interfaces based on your backend data
 export interface VideoItem {
@@ -39,14 +42,25 @@ const VideoLibrary: React.FC = () => {
   const [sportsFilter, setSportsFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const { decoded } = useJwt();
+  const { data, isLoading, isError } = useGetVideosQuery(undefined, {
+      skip: decoded?.role !== "teacher", // ✅ Skip query if role is not "teacher"
+    });
+  const {data: studentData, isLoading: studentLoading, isError: studentError} = useGetStudentVideosQuery(undefined, {
+      skip: decoded?.role !== "student", // ✅ Skip query if role is not "teacher"
+    })
+  const { data: videoAccess, isLoading: accessLoading } =
+    useCheckVideoAccessQuery(undefined, {
+      skip: decoded?.role === "teacher", // ✅ Skip query if role is not "teacher"
+    });
 
-  const { data, isLoading, isError } = useGetVideosQuery();
+  const videos = useMemo(() => decoded?.role === "teacher" ?  data?.results || [] : studentData?.results || [], [data, studentData]);
 
-  const videos = data?.results || [];
-  
   // Get unique sports for the filter dropdown
   const uniqueSports = useMemo(() => {
-    const sportsSet = new Set(videos.map(video => video.sport_name.toLowerCase()));
+    const sportsSet = new Set(
+      videos.map((video) => video.sport_name.toLowerCase())
+    );
     return Array.from(sportsSet);
   }, [videos]);
 
@@ -57,7 +71,8 @@ const VideoLibrary: React.FC = () => {
         video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         video.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesSports =
-        sportsFilter === "all" || video.sport_name.toLowerCase() === sportsFilter;
+        sportsFilter === "all" ||
+        video.sport_name.toLowerCase() === sportsFilter;
 
       return matchesSearch && matchesSports;
     });
@@ -86,12 +101,19 @@ const VideoLibrary: React.FC = () => {
     setCurrentPage(1);
   };
 
-  if(isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loading/>
-    </div>
-  )
-  if(isError) return <ErrorLoadingPage/>
+  if (isLoading || accessLoading || studentLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  if (videoAccess?.can_access === false && decoded?.role === "student")
+    return (
+      <div className="min-h-screen flex items-center justify-center max-w-2xl mx-auto">
+        <SubscriptionAlert />
+      </div>
+    );
+  if (isError || studentError) return <ErrorLoadingPage />;
 
   return (
     <div className="md:px-8 my-8">
@@ -174,7 +196,7 @@ const VideoLibrary: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 px-4 md:px-0">
           {paginatedVideos.map((video) => (
-            <Link key={video.id} href={`/trainer/video-library/${video.id}`}>
+            <Link key={video.id} href={`/${decoded?.role === "student" ? "student":"trainer"}/video-library/${video.id}`}>
               <MediaCard
                 id={video.id}
                 title={video.title}

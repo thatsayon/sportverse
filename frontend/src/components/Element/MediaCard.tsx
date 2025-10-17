@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import { useJwt } from "@/hooks/useJwt";
 
 interface MediaCardProps {
   id: string;
@@ -34,6 +35,7 @@ const MediaCard: React.FC<MediaCardProps> = ({
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
   const router = useRouter();
+  const {decoded} = useJwt()
 
   //console.log("Receiving Consumer:", consumer);
 
@@ -120,8 +122,10 @@ const MediaCard: React.FC<MediaCardProps> = ({
   const handleRoute = () => {
     if (isAdmin) {
       router.push(`/dashboard/media/${id}`);
-    } else {
+    } else if(decoded?.role === "student") {
       router.push(`/student/video-library/${id}`);
+    }else if(decoded?.role === "teacher"){
+      router.push(`/trainer/video-library/${id}`)
     }
   };
 

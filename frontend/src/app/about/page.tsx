@@ -1,28 +1,17 @@
-"use client"
 import AboutUs from '@/components/Landing/AboutUs'
 import React from 'react'
-import io from "socket.io-client";
 
 function page() {
-const socket = io("http://localhost:8000", {
-  auth: { user_id: "uuid-of-user" }
-});
-
-socket.on("connect", () => {
-  // //console.log("🔌 Connected to notifications service");
-});
- 
-socket.on("new_notification", () => {
-  // //console.log("🔔 New notification:");
-});
- 
-socket.on("notification_read", () => {
-  // //console.log("✅ Notification marked as read:");
-});
-
   return (
-    <div>
-      <AboutUs/>
+    <div
+      className="min-h-screen bg-cover bg-center bg-fixed"
+      style={{
+        backgroundImage: 'url(https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760122914/about_xyonk4.jpg)',
+      }}
+    >
+      <div className="min-h-screen bg-black/40">
+        <AboutUs />
+      </div>
     </div>
   )
 }

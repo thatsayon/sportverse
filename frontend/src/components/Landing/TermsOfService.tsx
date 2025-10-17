@@ -55,7 +55,7 @@ const TermsOfService = () => {
   };
 
   return (
-    <section className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <section className="min-h-screen bg-gradient-to-b from-gray-50/80 to-white/80">
       {/* Mobile Sidebar Toggle */}
       <button
         onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}

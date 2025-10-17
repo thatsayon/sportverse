@@ -180,7 +180,9 @@ export const apiSlice = createApi({
     "Withdraw",
     "AdminProfile",
     "Video",
-    "Documents"
+    "Documents",
+    // student
+    "studentProfile"
   ], // Define cache tags for invalidation
   endpoints: (builder) => ({
     // Auth endpoints

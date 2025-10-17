@@ -30,13 +30,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Logo from "../Element/Logo";
 import { removeCookie, getCookie, setCookie } from "@/hooks/cookie";
 import ChatConversation from "../Element/ChatConversation";
-import { useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
+import { useGetCurrentBalanceQuery, useGetTrainerChatListQuery } from "@/store/Slices/apiSlices/trainerApiSlice";
 import { getSocket } from "@/lib/socket";
 import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 import { useGetTrainerTokenMutation } from "@/store/Slices/apiSlices/apiSlice";
 import { decodeToken } from "@/hooks/decodeToken";
 import WarningAlert from "../Element/WarningAlart";
+import { useJwt } from "@/hooks/useJwt";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
 const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL;
@@ -78,11 +79,12 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
   const [getToken, { isLoading }] = useGetTrainerTokenMutation();
+  const {data: currentBalance} = useGetCurrentBalanceQuery()
   const router = useRouter();
   const pathname = usePathname();
   const { data: messageList } = useGetTrainerChatListQuery();
   const [open, isOpen] = useState<boolean>(false);
-
+  const { decoded } = useJwt();
   // Initialize local message list from API data
   useEffect(() => {
     if (messageList?.results) setLocalMessageList(messageList.results);
@@ -354,7 +356,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const unreadNotificationCount = notifications.filter((n) => !n.read).length;
 
   const handleCheckingMobile = async () => {
-    console.log("clicked mobile")
+    console.log("clicked mobile");
     const response = await getToken().unwrap();
 
     // console.log("User status:",response)
@@ -375,16 +377,15 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     }
   };
   const handleChecking = async () => {
-    console.log("clicked")
-    const response = await getToken().unwrap()
-    console.log("Response status:",response)
-
+    console.log("clicked");
+    const response = await getToken().unwrap();
+    console.log("Response status:", response);
 
     if (response.access_token) {
       removeCookie("access_token");
       setCookie("access_token", response.access_token, 7);
       const user = decodeToken(response.access_token);
-      console.log("User status:",user)
+      console.log("User status:", user);
 
       if (user?.verification_status === "verified") {
         router.push("/dashboard");
@@ -557,13 +558,29 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
               <DropdownMenuTrigger asChild>
                 <span className="flex items-center gap-1 cursor-pointer">
                   <Avatar>
-                    <AvatarImage src={"https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"} />
+                    <AvatarImage
+                      alt="profile image"
+                      src={
+                        decoded?.profile_pic
+                          ? decoded?.profile_pic
+                          : "https://res.cloudinary.com/dn4ygnsfg/image/upload/v1760208782/6e599501252c23bcf02658617b29c894_cbgerm.jpg"
+                      }
+                    />
+
                     <AvatarFallback>User</AvatarFallback>
                   </Avatar>
                   <ChevronDown />
                 </span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>
+                  <h1 className="font-montserrat font-medium">
+                    {decoded?.full_name}
+                  </h1>
+                  <p className="text-[#5E5E5E] text-xs">{decoded?.username}</p>
+                  <p>Balance: ${currentBalance?.balance}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleChecking}>
                   {isLoading ? (
                     <Loader className="animate-spin" />

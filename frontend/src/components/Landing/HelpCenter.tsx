@@ -156,7 +156,7 @@ const HelpCenter = () => {
   };
 
   return (
-    <section className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-orange-50">
+    <section className="min-h-screen bg-gradient-to-b from-blue-50/80 via-white/80 to-orange-50/80">
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-16">
