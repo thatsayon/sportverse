@@ -332,6 +332,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     def get_favorite_sports(self, obj):
         # return a list of dicts with id and name
         return [{"id": sport.id, "name": sport.name} for sport in obj.favorite_sports.all()]
+
 class StudentProfileUpdateSerializer(serializers.ModelSerializer):
     profile_pic = serializers.ImageField(source="user.profile_pic", required=False)
     profile_pic_url = serializers.SerializerMethodField()
@@ -343,7 +344,8 @@ class StudentProfileUpdateSerializer(serializers.ModelSerializer):
         many=True,
         required=False
     )
-
+    all_sports = serializers.SerializerMethodField()
+    
     class Meta:
         model = Student
         fields = [
@@ -355,28 +357,42 @@ class StudentProfileUpdateSerializer(serializers.ModelSerializer):
             "email",
             "about",
             "favorite_sports",
+            "all_sports",
         ]
-
+    
     def get_profile_pic_url(self, obj):
         if obj.user.profile_pic:
             return obj.user.profile_pic.url
         return None
-
+    
+    def get_all_sports(self, obj):
+        # Get all sports with a flag indicating if they're favorited
+        favorite_sport_ids = set(obj.favorite_sports.values_list('id', flat=True))
+        all_sports = Sport.objects.all()
+        return [
+            {
+                "id": sport.id,
+                "name": sport.name,
+                "is_favorite": sport.id in favorite_sport_ids
+            }
+            for sport in all_sports
+        ]
+    
     def update(self, instance, validated_data):
         # Extract nested user data if present
         user_data = validated_data.pop("user", {})
-
+        
         # Update UserAccount fields
         user = instance.user
         for attr, value in user_data.items():
             setattr(user, attr, value)
         user.save()
-
+        
         # Update favorite_sports if present
         if "favorite_sports" in validated_data:
             sports = validated_data.pop("favorite_sports")
             instance.favorite_sports.set(sports)
-
+        
         # Update Student fields
         return super().update(instance, validated_data)
 
