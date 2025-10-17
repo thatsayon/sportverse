@@ -37,6 +37,7 @@ import build from "next/dist/build";
 import { TeacherMessageListResponse } from "@/types/teacher/messaging";
 import { VideoListResponse } from "@/types/admin/video";
 import {
+  CanAccessResponse,
   subscriptionRequest,
   subscriptionResponse,
 } from "@/types/student/profile";
@@ -287,6 +288,12 @@ export const trainerApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    //Can Access Session
+
+    canAccessSession: builder.query<CanAccessResponse, void>({
+      query: ()=> "/teacher/can-access-schedule/",
+    }),
+
     // Messaging APIs
 
     getTrainerChatList: builder.query<TeacherMessageListResponse, void>({
@@ -334,6 +341,8 @@ export const {
   useUpdateTrainerPasswordMutation,
   // Subscription
   useGetTrainerProPlanMutation,
+  // can access session
+  useCanAccessSessionQuery,
   //Messaging
   useGetTrainerChatListQuery,
   useGetVideosQuery,

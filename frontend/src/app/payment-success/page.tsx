@@ -2,6 +2,8 @@ import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PaymentSuccessButton from "@/components/Element/PaymentSuccessButton";
+import PaymentSuccessText from "@/components/Element/PaymentSuccessText";
 
 function page() {
   return (
@@ -21,18 +23,11 @@ function page() {
         <CardContent className="text-center space-y-6">
           <div>
             <p className="text-gray-600 mb-2">Welcome to Pro! 🎉</p>
-            <p className="text-gray-600">
-              You now have access to our exclusive video library with premium
-              educational content.
-            </p>
+            <PaymentSuccessText/>
           </div>
 
           <div className="flex items-center justify-between gap-6">
-            <Link href="/student/video-library" className="w-full">
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium h-12">
-                Access Video Library
-              </Button>
-            </Link>
+            <PaymentSuccessButton/>
 
             <Link href="/student" className="w-full">
               <Button

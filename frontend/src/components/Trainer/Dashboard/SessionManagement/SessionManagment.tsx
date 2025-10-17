@@ -17,16 +17,15 @@ import {
 } from "@/types/teacher/session";
 import { toast } from "sonner";
 import {
+  useCanAccessSessionQuery,
   useCreateSessionMutation,
   useDeleteTimeSlotMutation,
   useGetSessionQuery,
   useTimeCheckMutation,
   useUpdateSessionMutation,
 } from "@/store/Slices/apiSlices/trainerApiSlice";
-import { useGetTrainerTokenMutation } from "@/store/Slices/apiSlices/apiSlice";
-import { useJwt } from "@/hooks/useJwt";
-import { decodeToken } from "@/hooks/decodeToken";
 import SubscriptionAlert from "@/components/Element/SubscriptionAlert";
+import Loading from "@/components/Element/Loading";
 
 const sessionSchema = z.object({
   price: z.string().min(1, "Price is required"),
@@ -98,13 +97,12 @@ const SessionManagement: React.FC = () => {
   );
   const [newTimeSlot, setNewTimeSlot] = useState<string>("");
   const [activeDay, setActiveDay] = useState<string>("");
-
+  const {data: canAccess, isLoading: accessLoading} = useCanAccessSessionQuery()
   const { data: sessionsData, isLoading, refetch } = useGetSessionQuery();
   const [createSession] = useCreateSessionMutation();
   const [updateSession] = useUpdateSessionMutation();
   const [deleteTimeSlot] = useDeleteTimeSlotMutation();
   const [timeCheck] = useTimeCheckMutation();
-  const [isPro, setIsPro] = useState<boolean>(false);
   const {
     register,
     handleSubmit,
@@ -120,9 +118,7 @@ const SessionManagement: React.FC = () => {
       available_days: [],
     },
   });
-  const [getToken] = useGetTrainerTokenMutation();
   const watchedCloseBeforeTime = watch("close_before");
-  const { decoded } = useJwt();
   // Get current sessions based on session type
   const currentSessions =
     sessionsData?.results?.filter(
@@ -136,23 +132,6 @@ const SessionManagement: React.FC = () => {
   const daysWithTimeSlots = Object.keys(timeSlots).filter(
     (day) => timeSlots[day].length > 0
   );
-
-  const getUpdatedToken = async () => {
-    if (decoded?.subscription_type === "pro") return;
-    const response = await getToken();
-    if (response.data?.access_token) {
-      const user = decodeToken(response.data.access_token);
-      if (user?.subscription_type === "pro") {
-        setIsPro(true);
-      } else {
-        setIsPro(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    getUpdatedToken();
-  }, []);
 
   // Load existing session data into form when sessionType changes
   useEffect(() => {
@@ -506,9 +485,16 @@ const SessionManagement: React.FC = () => {
     }
   };
 
-  const isCurrentServiceEnabled = serviceEnabled[sessionType];
+  console.log("can user access:",canAccess)
 
-  if (isPro === false)
+  const isCurrentServiceEnabled = serviceEnabled[sessionType];
+  if(accessLoading)return(
+    <div className="min-h-screen flex items-center justify-center">
+      <Loading/>
+    </div>
+  )
+
+  if (canAccess?.can_access_schedule === false)
     return (
       <div className="min-h-[calc(100vh-120px)] flex items-center justify-center max-w-2xl mx-auto">
         <SubscriptionAlert
@@ -517,6 +503,7 @@ const SessionManagement: React.FC = () => {
         />
       </div>
     );
+
 
   return (
     <div className="w-full max-w-6xl mx-auto p-4 space-y-6">

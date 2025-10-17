@@ -36,3 +36,8 @@ export interface subscriptionRequest{
 export interface videoAccessResponse{
     can_access: boolean;
 }
+
+
+export interface CanAccessResponse{
+  can_access_schedule: boolean;
+}
