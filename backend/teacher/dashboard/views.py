@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework import status, generics
 
 from django.views.decorators.csrf import csrf_exempt
@@ -546,6 +547,7 @@ class AccountUploadWebhookView(APIView):
 
 class AccountDetailView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request):
         teacher = request.user.teacher  # each user has one teacher profile
