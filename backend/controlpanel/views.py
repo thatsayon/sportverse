@@ -456,6 +456,7 @@ class CloudinaryWebhookView(APIView):
     
     
     def post(self, request, *args, **kwargs):
+        print("RAW DATA:", request.data)
         data = request.data
         public_id = data.get("public_id")  # e.g., "secure_videos/657e7c92-08e4-4f51-9937-5d8c38c8343a"
         format_ = data.get("format")
