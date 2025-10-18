@@ -454,28 +454,26 @@ class CloudinaryWebhookView(APIView):
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
     
-    
     def post(self, request, *args, **kwargs):
         data = request.data
         print("RAW DATA:", data)
 
-        resource_type = data.get("resource_type")
-        notification_type = data.get("notification_type")
         public_id = data.get("public_id")
+        resource_type = data.get("resource_type")
         format_ = data.get("format")
         duration = data.get("duration")
 
-        # ✅ Ignore image uploads (like thumbnails or previews)
+        if not public_id:
+            return Response({"error": "Missing public_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Ignore image uploads (e.g., thumbnails)
         if resource_type != "video":
             return Response(
                 {"message": "Ignored non-video resource", "resource_type": resource_type},
                 status=status.HTTP_200_OK
             )
 
-        # ✅ Extract UUID from public_id
-        if not public_id:
-            return Response({"error": "Missing public_id"}, status=status.HTTP_400_BAD_REQUEST)
-
+        # ✅ Extract UUID from the end of public_id
         uuid_str = public_id.split("/")[-1]
 
         try:
@@ -501,6 +499,7 @@ class CloudinaryWebhookView(APIView):
 
         return Response({"success": True}, status=status.HTTP_200_OK)
 
+    
 
 class VideoListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
