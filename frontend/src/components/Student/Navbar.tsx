@@ -692,7 +692,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                           >
                             <div className="flex items-start space-x-3 w-full">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={deco} />
+                                <AvatarImage src={decoded?.profile_pic} />
                                 <AvatarFallback>
                                   {item.other_user?.charAt(0)?.toUpperCase() ||
                                     "T"}
