@@ -456,39 +456,51 @@ class CloudinaryWebhookView(APIView):
     
     
     def post(self, request, *args, **kwargs):
-        print("RAW DATA:", request.data)
         data = request.data
-        public_id = data.get("public_id")  # e.g., "secure_videos/657e7c92-08e4-4f51-9937-5d8c38c8343a"
+        print("RAW DATA:", data)
+
+        resource_type = data.get("resource_type")
+        notification_type = data.get("notification_type")
+        public_id = data.get("public_id")
         format_ = data.get("format")
         duration = data.get("duration")
-        status_ = "ready" if data.get("resource_type") == "video" else "failed"
 
-        # Extract UUID from public_id
-        if "/" in public_id:
-            uuid_str = public_id.split("/")[-1]
-        else:
-            uuid_str = public_id
+        # ✅ Ignore image uploads (like thumbnails or previews)
+        if resource_type != "video":
+            return Response(
+                {"message": "Ignored non-video resource", "resource_type": resource_type},
+                status=status.HTTP_200_OK
+            )
+
+        # ✅ Extract UUID from public_id
+        if not public_id:
+            return Response({"error": "Missing public_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        uuid_str = public_id.split("/")[-1]
 
         try:
-            video_id = UUID(uuid_str)  # validate UUID format
+            video_id = UUID(uuid_str)
+        except ValueError:
+            return Response(
+                {"error": "Invalid UUID in public_id", "public_id": public_id},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
             video = AdminVideo.objects.get(id=video_id)
             video.public_id = public_id
             video.format = format_
             video.duration = duration
-            video.status = status_
+            video.status = "ready"
             video.save()
-        except ValueError:
-            return Response(
-                {"error": "Invalid UUID in public_id"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
         except AdminVideo.DoesNotExist:
             return Response(
-                {"error": "Video not found"},
+                {"error": "Video not found", "uuid": uuid_str},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         return Response({"success": True}, status=status.HTTP_200_OK)
+
 
 class VideoListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
