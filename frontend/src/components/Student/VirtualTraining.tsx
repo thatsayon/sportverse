@@ -111,11 +111,9 @@ function VirtualTraining() {
                 key={index}
                 profile_pic_url={item.profile_pic_url}
                 institute_name={item.institute_name}
-                id={index}
                 name={item.full_name}
-                rating={4.5} // placeholder, API doesn’t provide rating yet
                 price={matchingTraining ? Number(matchingTraining.price) : 0.00}
-                sports={item.coach_type.replace("controlpanel.Sport.", "")}
+                sports={item.coach_type}
                 sessionType={item.training_info}
               />
             );

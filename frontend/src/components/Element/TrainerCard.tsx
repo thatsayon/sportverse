@@ -38,10 +38,8 @@ interface SessionType {
 }
 
 interface TrainerCardProps {
-  id: number;
   profile_pic_url: string;
   name: string;
-  rating: number; // 0..5
   price: number; // legacy base price fallback
   sessionType: SessionType[];
   institute_name: string | null;
@@ -53,7 +51,8 @@ function formatCurrency(n: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(n);
 }
 
@@ -61,15 +60,13 @@ export default function TrainerCard({
   profile_pic_url,
   name,
   price,
-  rating,
-  id,
   sessionType = [],
   institute_name,
   sports,
 }: TrainerCardProps) {
   const parsedSessions = (sessionType || []).map((s) => ({
     ...s,
-    priceNum: Number.parseFloat(String(s.price).replace(/[^0-9.]/g, "")) || 0,
+    priceNum: Number(String(s.price)) || 0,
   }));
 
 
@@ -121,23 +118,6 @@ export default function TrainerCard({
             <p className="mt-2 font-semibold text-gray-900 flex items-center gap-2">
               Institute: <span className="text-gray-500">{institute_name}</span>
             </p>
-          </div>
-          {/* Rating chip */}
-          <div className="flex w-fit items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 border border-gray-200">
-            {[...Array(1)].map((_, i) => (
-              <Star
-                key={i}
-                size={14}
-                className={
-                  i < Math.round(rating)
-                    ? "fill-yellow-400 stroke-yellow-400"
-                    : "stroke-yellow-400"
-                }
-              />
-            ))}
-            <span className="text-xs font-semibold text-gray-700 ml-1">
-              {rating.toFixed(1)}
-            </span>
           </div>
         </div>
         {/* Pricing block */}

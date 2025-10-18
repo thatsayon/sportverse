@@ -54,6 +54,9 @@ export interface SignUpResponse {
   message: string;
   user?: User;
   verificationToken: string;
+  error: {
+    email: string[]
+  }
 }
 
 export interface LoginResponse {
@@ -109,28 +112,28 @@ export interface getSignatureReponse {
 export interface getSignatureRequest {
   title: string;
   description: string;
-  thumbnail: File
+  thumbnail: File;
 }
 
-export interface GoogleSignUpResponse{
+export interface GoogleSignUpResponse {
   auth_url: string;
+  success?: boolean;
+  error?: {
+    email: string[]; // e.g., { email: ["User Account with this email address already exists."] }
+  };
 }
 
-export interface GoogleExChangeRequest{
+export interface GoogleExChangeRequest {
   code: string;
   role?: string;
 }
 
-
-
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
-
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 // Create the API slice
 export const apiSlice = createApi({
   reducerPath: "api",
-  
+
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL,
     prepareHeaders: (headers) => {
@@ -160,14 +163,14 @@ export const apiSlice = createApi({
   }),
   tagTypes: [
     // Existing tags
-    "User", 
-    "Plan", 
-    "Chat", 
-    "Class", 
+    "User",
+    "Plan",
+    "Chat",
+    "Class",
     "login",
     // New trainer-related tags
     "TrainerDashboard",
-    "TrainerBookings", 
+    "TrainerBookings",
     "TrainerRevenue",
     "TrainerSessions",
     "TrainerBank",
@@ -182,7 +185,7 @@ export const apiSlice = createApi({
     "Video",
     "Documents",
     // student
-    "studentProfile"
+    "studentProfile",
   ], // Define cache tags for invalidation
   endpoints: (builder) => ({
     // Auth endpoints
@@ -206,26 +209,29 @@ export const apiSlice = createApi({
 
     // Google login
     googleLogin: builder.query<GoogleSignUpResponse, void>({
-      query: ()=>"/auth/google-login/"
+      query: () => "/auth/google-login/",
     }),
     // Google Signup
     googleSignup: builder.query<GoogleSignUpResponse, void>({
-      query: ()=> "/auth/google-signup/"
+      query: () => "/auth/google-signup/",
     }),
     // Google exchange
-    googleExchange: builder.mutation<GoogleExChangeResponse, GoogleExChangeRequest>({
-      query: (body)=> ({
+    googleExchange: builder.mutation<
+      GoogleExChangeResponse,
+      GoogleExChangeRequest
+    >({
+      query: (body) => ({
         url: "/auth/google-exchange/",
         method: "POST",
-        body
-      })
+        body,
+      }),
     }),
 
     getTrainerToken: builder.mutation<TokenResponse, void>({
-      query: ()=>({
+      query: () => ({
         url: "/auth/generate-access-token/",
-        method: "POST"
-      })
+        method: "POST",
+      }),
     }),
 
     logout: builder.mutation<{ success: boolean }, void>({
@@ -316,13 +322,13 @@ export const apiSlice = createApi({
       query: () => "/control/get-or-create-sport/",
     }),
     getSignature: builder.mutation<getSignatureReponse, getSignatureRequest>({
-      query:(data)=>({
+      query: (data) => ({
         url: "/control/generate-token/",
         method: "POST",
         body: data,
-        credentials: "include"
-      })
-    })
+        credentials: "include",
+      }),
+    }),
   }),
 });
 
@@ -347,5 +353,5 @@ export const {
   useResendPasswordCodeMutation,
   useResendRegistrationCodeMutation,
   useGetAllSportsQuery,
-  useGetSignatureMutation
+  useGetSignatureMutation,
 } = apiSlice;

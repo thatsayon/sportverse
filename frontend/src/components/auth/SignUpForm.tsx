@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/form";
 import { signUpSchema, type SignUpFormData } from "@/schema/auth.schema";
 import Link from "next/link";
-import Image from "next/image";
 import { GoogleIcon } from "@/SVG/AuthSCG";
 import { useDispatch } from "react-redux";
 import { setEmail, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
@@ -81,7 +80,7 @@ export function SignUpForm() {
         dispatch(setUserQuery("signup"));
         router.push("/forget-password/verify-code");
       } else {
-        toast.error(result.message || "Signup failed");
+        toast.error(result.error.email[0] || "Signup failed");
       }
     } catch (error) {
       if (error instanceof Error) toast.error(`Error: ${error.message}`);
@@ -94,6 +93,8 @@ export function SignUpForm() {
     console.log("response:", response);
     if (response.auth_url) {
       redirect(response.auth_url);
+    }else{
+      toast.success("Google login fail.")
     }
   };
 
