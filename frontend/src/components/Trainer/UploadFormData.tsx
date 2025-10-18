@@ -31,6 +31,7 @@ interface ResponseAccess {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
 
 const DocUpload: React.FC = () => {
   const { decoded } = useJwt();
@@ -47,6 +48,15 @@ const DocUpload: React.FC = () => {
   });
   const [errors, setErrors] = useState<Errors>({});
   const router = useRouter();
+
+  // Check if any file exceeds the size limit
+  const hasOversizedFiles = () => {
+    return (
+      (formData.picture && formData.picture.size > MAX_FILE_SIZE) ||
+      (formData.id_front && formData.id_front.size > MAX_FILE_SIZE) ||
+      (formData.id_back && formData.id_back.size > MAX_FILE_SIZE)
+    );
+  };
 
   // Status Card Component for different verification states
   const StatusCard = () => {
@@ -154,11 +164,23 @@ const DocUpload: React.FC = () => {
     if (files && files[0]) {
       const file = files[0];
 
+      // Validate file type
       if (!file.type.startsWith("image/")) {
         setErrors((prev) => ({
           ...prev,
           [fieldName]: "Only image files are allowed",
         }));
+        return;
+      }
+
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        setErrors((prev) => ({
+          ...prev,
+          [fieldName]: `File size must be less than 1MB (current: ${sizeMB}MB)`,
+        }));
+        toast.error(`File size must be less than 1MB (current: ${sizeMB}MB)`);
         return;
       }
 
@@ -229,6 +251,12 @@ const DocUpload: React.FC = () => {
       return;
     }
 
+    // Check for oversized files before submission
+    if (hasOversizedFiles()) {
+      toast.error("Please ensure all images are less than 1MB");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -268,7 +296,7 @@ const DocUpload: React.FC = () => {
       const data: ResponseAccess = await response.json();
 
       if (data.access_token) {
-        removeCookie("access_token");
+        // removeCookie("access_token");
         setCookie("access_token", data.access_token, 7);
         toast.success("Documents uploaded successfully!");
 
@@ -319,6 +347,19 @@ const DocUpload: React.FC = () => {
             <h3 className="font-semibold text-red-700 mb-1">Verification Rejected</h3>
             <p className="text-sm text-red-600">
               Your previous submission was rejected. Please review your documents carefully and resubmit with correct information.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* File size error alert */}
+      {hasOversizedFiles() && (
+        <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-start space-x-3">
+          <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-red-700 mb-1">File Size Exceeded</h3>
+            <p className="text-sm text-red-600">
+              One or more files exceed the 1MB limit. Please replace these files with smaller versions before submitting.
             </p>
           </div>
         </div>
@@ -459,7 +500,7 @@ const DocUpload: React.FC = () => {
                         Choose a file or drag & drop it here
                       </p>
                       <p className="text-xs text-gray-500 mb-4">
-                        JPEG, PNG, PDF formats, up to 50mb
+                        JPEG, PNG, PDF formats, up to 1MB
                       </p>
 
                       <button
@@ -523,7 +564,7 @@ const DocUpload: React.FC = () => {
                         Choose a file or drag & drop it here
                       </p>
                       <p className="text-xs text-gray-500 mb-4">
-                        JPEG, PNG, PDF formats, up to 50mb
+                        JPEG, PNG, PDF formats, up to 1MB
                       </p>
 
                       <button
@@ -555,8 +596,8 @@ const DocUpload: React.FC = () => {
           <div className="flex justify-center pt-4">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+              disabled={isSubmitting || hasOversizedFiles()}
+              className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors"
             >
               {isSubmitting 
                 ? "Uploading..." 
