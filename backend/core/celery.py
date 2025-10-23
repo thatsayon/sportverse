@@ -20,7 +20,11 @@ app.conf.beat_schedule = {
     'check-session-reminder-notification-every-minute': {
         'task': 'communication.notification.tasks.check-session-reminder-notification-every-minute',
         'schedule': 60.0,
-    }
+    },
+    'remove-invalid-teacher-subscriptions-every-2-minutes': {
+        'task': 'authentication.tasks.remove_invalid_teacher_subscriptions',
+        'schedule': timedelta(minutes=2),  # runs every 2 minutes
+    },
 }
 
 app.conf.timezone = 'UTC'

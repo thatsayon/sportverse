@@ -3,6 +3,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone 
 from datetime import timedelta
+
+from account.models import Teacher, SubscriptionTeacher
 import logging
 
 logger = logging.getLogger(__name__)
@@ -196,3 +198,26 @@ def check_and_send_session_reminders():
         logger.info(f"Reminders queued for session {session.id}")
     
     return f"Processed {sessions_to_remind.count()} session reminders"
+
+@shared_task
+def remove_invalid_teacher_subscriptions():
+    """
+    Celery task that checks all teachers who cannot access schedules
+    and removes any existing SubscriptionTeacher records for them.
+    Intended to be scheduled (e.g., daily with Celery Beat).
+    """
+    # Step 1: Get teachers who should not have access
+    teachers_without_access = Teacher.objects.filter(can_access_schedule=False)
+    
+    # Step 2: Find their subscriptions
+    subscriptions_to_remove = SubscriptionTeacher.objects.filter(user__in=teachers_without_access)
+
+    # Step 3: Delete them
+    deleted_count, _ = subscriptions_to_remove.delete()
+
+    logger.info(
+        f"[{timezone.now()}] Removed {deleted_count} SubscriptionTeacher records "
+        "for teachers without access permissions."
+    )
+
+    return f"Removed {deleted_count} invalid teacher subscriptions."
