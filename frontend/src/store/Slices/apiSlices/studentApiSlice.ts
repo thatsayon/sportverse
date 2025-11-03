@@ -70,6 +70,13 @@ export const studentApiSlice = apiSlice.injectEndpoints({
         credentials: "include"
       })
     }),
+    markRead: builder.mutation<{msg: string}, {id: string}>({
+      query: ({id})=>({
+        url: `/communication/msg/conversations/${id}/messages-read/`,
+        method: "POST",
+        credentials: "include"
+      })
+    }),
     postRating: builder.mutation<TeacherRatingResponse, TeacherRatingRequest>({
       query: (body)=>({
         url:`/teacher/rate-review/`,
@@ -101,5 +108,7 @@ export const {
   // trainer details
   useGetTrainerDetailsQuery,
   // rating
-  usePostRatingMutation
+  usePostRatingMutation,
+  // message mark as read
+  useMarkReadMutation
 } = studentApiSlice;

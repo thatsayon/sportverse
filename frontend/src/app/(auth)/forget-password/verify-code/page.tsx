@@ -94,12 +94,12 @@ export default function VerifyCodePage() {
         if (result.access_token) {
           // Store code in sessionStorage for next step
           // sessionStorage.setItem("verificationCode", fullCode);
-          setCookie("access_token", result.access_token, 7)
+          setCookie("access_token", result.access_token, 7);
           removeCookie("verificationToken");
           // Redirect to success page
           router.push("/forget-password/success");
-        }else{
-          toast.error(result?.error)
+        } else {
+          toast.error(result.error);
         }
       }
       if (userQuery === "forget") {
@@ -116,6 +116,8 @@ export default function VerifyCodePage() {
 
           // Redirect to success page
           router.push("/forget-password/reset-password");
+        } else {
+          toast.error(result.error);
         }
       }
     } catch (error) {
@@ -131,18 +133,18 @@ export default function VerifyCodePage() {
       const response = await resendregistrationCode({
         verificationToken: verificationToken,
       });
-      if(response.data){
-        toast.success("OTP has been resended to your eamil")
-        setTimeLeft(60)
+      if (response.data) {
+        toast.success("OTP has been resended to your eamil");
+        setTimeLeft(60);
       }
     }
     if (userQuery === "forget") {
       const response = await resendPasswordCode({
         passResetToken: passResetToken,
       });
-      if(response.data){
-        toast.success("OTP has been resended to your eamil")
-        setTimeLeft(60)
+      if (response.data) {
+        toast.success("OTP has been resended to your eamil");
+        setTimeLeft(60);
       }
     }
   };
@@ -151,7 +153,7 @@ export default function VerifyCodePage() {
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-8">
       {/* Logo */}
       <div className="text-center mb-8">
-        <Logo href="/"/>
+        <Logo href="/" />
       </div>
 
       {/* Content */}
@@ -168,38 +170,46 @@ export default function VerifyCodePage() {
 
         <div className="mb-8">
           {/* Code Input Fields */}
-          <div className="flex justify-center space-x-2 mb-6">
-            {code.map((digit, index) => (
-              <Input
-                key={index}
-                id={`code-${index}`}
-                type="text"
-                value={digit}
-                onChange={(e) => handleCodeChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-lg font-bold border-2 border-gray-300 focus:border-blue-500"
-                maxLength={1}
-                inputMode="numeric"
-              />
-            ))}
-          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
+            <div className="flex justify-center space-x-2 mb-6">
+              {code.map((digit, index) => (
+                <Input
+                  key={index}
+                  id={`code-${index}`}
+                  type="text"
+                  value={digit}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  className="w-12 h-12 text-center text-lg font-bold border-2 border-gray-300 focus:border-blue-500"
+                  maxLength={1}
+                  inputMode="numeric"
+                />
+              ))}
+            </div>
 
-          <Button
-            onClick={handleSubmit}
-            className="w-full py-4"
-            disabled={isLoading || code.join("").length !== 6}
-          >
-            {isLoading ? "VERIFYING..." : "VERIFY"}
-          </Button>
-          {/* Resend Link */}
-          <Button
-            onClick={handleResend}
-            disabled={timeLeft > 0}
-            className="w-full mt-4 py-4"
-            variant={"outline"}
-          >
-            {timeLeft > 0 ? `Resend code in ${timeLeft}s` : "Resend Code"}
-          </Button>
+            <Button
+            type="submit"
+              className="w-full py-4"
+              disabled={isLoading || code.join("").length !== 6}
+            >
+              {isLoading ? "VERIFYING..." : "VERIFY"}
+            </Button>
+            {/* Resend Link */}
+            <Button
+            type="button"
+              onClick={handleResend}
+              disabled={timeLeft > 0}
+              className="w-full mt-4 py-4"
+              variant={"outline"}
+            >
+              {timeLeft > 0 ? `Resend code in ${timeLeft}s` : "Resend Code"}
+            </Button>
+          </form>
         </div>
 
         {/* Back to Login */}

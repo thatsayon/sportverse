@@ -17,7 +17,7 @@ const HeroSection = () => {
         <div>
           {/* Orange heading */}
           <h1 className="text-3xl md:text-4xl lg:text-[96px] font-montserrat font-bold text-[#F15A24]">
-            POTAINCIAL
+            POTENTIAL
           </h1>
           
           {/* Description - keep original styling for lg+ */}

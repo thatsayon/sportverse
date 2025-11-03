@@ -86,8 +86,8 @@ function BookingPage() {
             <SelectItem className="text-[#F15A24]" value="Ongoing">
               On Going
             </SelectItem>
-            <SelectItem className="text-[#F15A24]" value="Upcomming">
-              Up Comming
+            <SelectItem className="text-[#F15A24]" value="Upcoming">
+              Up Coming
             </SelectItem>
             <SelectItem className="text-[#F15A24]" value="Completed">
               Completed
@@ -98,9 +98,19 @@ function BookingPage() {
 
       {/* Session Cards */}
       <div className="space-y-4 ">
-        {paginatedData.map((item) => (
+        {
+          paginatedData.length <= 0 ? (
+            <div className="flex items-center justify-center">
+            <h1 className="text-orange-500 text-3xl font-semibold py-6">No Booking Found</h1>
+            </div>
+          ):(
+            <>
+            {paginatedData.map((item) => (
           <TrainerBookingCard key={item.id} {...item} />
         ))}
+            </>
+          )
+        }
       </div>
 
       {/* Pagination Controls */}

@@ -28,19 +28,17 @@ function BookingsSection() {
 
   const { data, isLoading, isError } = useGetTrainerBookingsQuery();
 
-  console.log("bookings details:", data)
+  console.log("bookings details:", data);
 
   const trainerBookingData = data?.results ?? [];
 
-   if(isLoading) return <Loading/>
-  if(isError) return <ErrorLoadingPage/>
-
-
+  if (isLoading) return <Loading />;
+  if (isError) return <ErrorLoadingPage />;
 
   if (trainerBookingData?.length === 0) {
     return (
       <>
-        <NoDataFound/>
+        <NoDataFound />
       </>
     );
   }
@@ -56,8 +54,6 @@ function BookingsSection() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-
- 
 
   return (
     <div>
@@ -93,9 +89,19 @@ function BookingsSection() {
 
       {/* Session Cards */}
       <div className="space-y-4">
-        {paginatedData.map((item) => (
-          <TrainerBookingCard key={item.id} {...item} />
-        ))}
+        {paginatedData.length <= 0 ? (
+          <div className="flex items-center justify-center">
+            <h1 className="text-orange-500 text-3xl font-semibold py-6">
+              No Booking Found
+            </h1>
+          </div>
+        ) : (
+          <>
+            {paginatedData.map((item) => (
+              <TrainerBookingCard key={item.id} {...item} />
+            ))}
+          </>
+        )}
       </div>
 
       {/* Pagination Controls */}

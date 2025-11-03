@@ -200,20 +200,16 @@ const TrainerBookingCard: React.FC<StudentBooking> = ({
                 >
                   Join Session
                 </Button>
-              ) : status === "Completed" ? (
+              ) : status === "Completed" && decoded?.role === "student" ? (
                 <Button
                   onClick={handleOpenRatingDialog}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 text-sm"
                 >
+                  
                   Rate Session
                 </Button>
               ) : (
-                <Button
-                  disabled
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 text-sm"
-                >
-                  {status}
-                </Button>
+                <></>
               )}
             </div>
           </div>

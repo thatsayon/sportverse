@@ -24,6 +24,7 @@ import { useDispatch } from "react-redux";
 import { setEmail, setUserQuery } from "@/store/Slices/stateSlices/stateSlice";
 import { setCookie } from "@/hooks/cookie";
 import Logo from "@/components/Element/Logo";
+import { toast } from "sonner";
 
 // Email validation schema
 const emailSchema = z.object({
@@ -64,6 +65,8 @@ export default function ForgotPasswordPage() {
         setCookie("passResetToken", result.passResetToken, 7)
         dispatch(setEmail(data.email))
         router.push("/forget-password/verify-code");
+      }else{
+        toast.error("No user account matches the given email.")
       }
       // Redirect to verification code page
     } catch (error) {

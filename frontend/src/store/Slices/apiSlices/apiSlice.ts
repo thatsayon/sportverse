@@ -71,6 +71,7 @@ export interface verifyEmailCodeResponse {
 export interface verifyForgotPasswordCodeResponse {
   message: string;
   passwordResetVerified: string;
+  error?: string;
 }
 export interface requestForgotPasswordCodeResponse {
   success: boolean;
@@ -80,6 +81,7 @@ export interface requestForgotPasswordCodeResponse {
     email: string;
   };
   passResetToken: string;
+  detail?: string;
 }
 
 export interface resendRegistrationCodeRequesrt {

@@ -24,6 +24,7 @@ import { useGetCurrentBalanceQuery, useGetTrainerChatListQuery } from "@/store/S
 import { getSocket } from "@/lib/socket";
 import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
+import { useMarkReadMutation } from "@/store/Slices/apiSlices/studentApiSlice";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
 const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL;
@@ -68,7 +69,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { data: messageList } = useGetTrainerChatListQuery();
-
+ const [markRead] = useMarkReadMutation();
   // Initialize local message list from API data
   useEffect(() => {
     if (messageList?.results) setLocalMessageList(messageList.results);
@@ -252,12 +253,21 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     router.push("/login");
   };
 
-  const handleMessageClick = (item: any) => {
+  const handleMessageClick =async (item: any) => {
     setActiveConversation({
       id: item.conversation_id,
       otherUser: item.other_user,
     });
     setChatOpen(true);
+
+     try {
+      await markRead({ id: item.conversation_id }).unwrap();
+      console.log("✅ Message marked as read on server");
+    } catch (error) {
+      console.error("❌ Error marking message as read:", error);
+    }
+
+    
 
     // Reset unread count for the clicked conversation
     setLocalMessageList((prev) =>

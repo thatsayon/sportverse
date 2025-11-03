@@ -59,7 +59,10 @@ const publicOnlyRoutes = [
   '/login',
   '/signup',
   '/register',
-  '/'
+  '/',
+  '/forget-password',
+  '/forget-password/verify-code',
+  '/forget-password/reset-password',
 ];
 
 function isPublicOnlyRoute(pathname: string): boolean {

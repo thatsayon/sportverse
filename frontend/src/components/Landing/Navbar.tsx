@@ -73,7 +73,7 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="">
-              <Logo href="/student" />
+              <Logo href="/" />
             </div>
 
             {/* Desktop Navigation */}

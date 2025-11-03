@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const WhyChooseUsSection = () => {
   return (
@@ -41,14 +42,10 @@ const WhyChooseUsSection = () => {
           {/* Right - Content */}
           <div className="space-y-6 col-span-1 lg:col-span-2">
             <p className="text-[#808080] text-lg md:text-xl xl:text-3xl leading-relaxed">
-              At our Sports Learning Academy, we provide expert coaching from
-              certified trainers, personalized programs designed for every age
-              and skill level, world-class facilities with modern equipment, a
-              strong focus on discipline, teamwork, and sportsmanship, and a
-              proven track record of helping athletes grow their skills and
-              transform into champions......
+              To provide accessible, high-quality ball mastery training resources that help soccer players of all levels develop exceptional technical skills. We&apos;re committed to making professional-level soccer training available to everyone through our comprehensive online platform......
             </p>
 
+            <Link href={"/about"}>
             <Button
               variant="outline"
               className="border-[#F15A24] text-[#F15A24] hover:bg-[#F15A24] hover:text-white px-6 py-3 rounded-md group"
@@ -56,6 +53,7 @@ const WhyChooseUsSection = () => {
               Learn more
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
+            </Link>
           </div>
         </div>
       </div>
