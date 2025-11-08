@@ -154,6 +154,7 @@ export default function VideoUploadForm({ onSubmit }: VideoUploadFormProps) {
         {
           method: "POST",
           body: formData,
+          
         }
       );
 

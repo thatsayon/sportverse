@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useGetBookingsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import { useGetBookingsStudentQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 import NoDataFound from "../Element/NoDataFound";
 import Loading from "../Element/Loading";
@@ -26,7 +26,7 @@ function BookingPage() {
     }
   };
 
-  const { data, isLoading, isError } = useGetBookingsQuery();
+  const { data, isLoading, isError } = useGetBookingsStudentQuery();
 
   //console.log("booking data:", data)
 

@@ -37,7 +37,7 @@ export const studentApiSlice = apiSlice.injectEndpoints({
 
     // bookings
 
-    getBookings: builder.query<StudentBookingResponse, void>({
+    getBookingsStudent: builder.query<StudentBookingResponse, void>({
       query: () => "/student/booked-sessions/",
     }),
     // video
@@ -95,7 +95,7 @@ export const {
   useGetSessionDetailsQuery,
   useBookSessionMutation,
   // bookings
-  useGetBookingsQuery,
+  useGetBookingsStudentQuery,
   // video
   useGetStudentVideosQuery,
   useLazyGenerateStudentTokenQuery,
