@@ -10,24 +10,16 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: '/:path*',
         headers: [
           {
-            key: "Content-Security-Policy",
-            value: `
-              default-src *;
-              script-src * 'unsafe-inline' 'unsafe-eval';
-              style-src * 'unsafe-inline';
-              img-src * data: blob:;
-              media-src *;
-              connect-src *;
-              font-src *;
-            `.replace(/\s{2,}/g, ' '),
-          },
-        ],
-      },
-    ];
-  },
+            key: 'Content-Security-Policy',
+            value: "img-src 'self' blob: data: https:;"
+          }
+        ]
+      }
+    ]
+  }
 };
 
 export default nextConfig;
