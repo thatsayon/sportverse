@@ -12,17 +12,19 @@ export interface UserProfileResponse {
   current_plan: string;
   renewal_date: string; // ISO date string
   favorite_sports: Sport[];
-  all_sports: ExtendedSport[];
+  all_sports: AllSports[];
 }
 
+export interface AllSports {
+  id: string;
+  name: string;
+  is_favorite: boolean;
+}
 export interface Sport {
   id: string;
   name: string;
 }
 
-export interface ExtendedSport extends Sport {
-  is_favorite: boolean;
-}
 
 export interface subscriptionResponse{
   checkout_url: string;

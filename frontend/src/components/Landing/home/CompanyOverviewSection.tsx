@@ -34,13 +34,13 @@ const CompanyOverviewSection = () => {
         </div>
 
         {/* Sponsors Section */}
-        <div className="bg-black rounded-2xl py-12 px-8">
+        {/* <div className="bg-black rounded-2xl py-12 px-8">
           <h3 className="text-2xl md:text-3xl font-bold text-white text-center mb-12">
             Our sponsors
           </h3>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 items-center">
-            {/* Sponsor Logos */}
+            
             <div className="flex justify-center">
               <div className="text-blue-400 font-bold text-lg">SteadyGo</div>
             </div>
@@ -61,7 +61,7 @@ const CompanyOverviewSection = () => {
               <div className="text-green-500 font-bold text-lg">Carlsberg</div>
             </div>
             <div className="hidden lg:block">
-              {/* <div className="text-green-500 font-bold text-lg">Carlsberg</div> */}
+              <div className="text-green-500 font-bold text-lg">Carlsberg</div>
             </div>
 
             <div className="flex justify-center">
@@ -76,7 +76,7 @@ const CompanyOverviewSection = () => {
               <div className="text-white font-bold text-lg">.monks</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

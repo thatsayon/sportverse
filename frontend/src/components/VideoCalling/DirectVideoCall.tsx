@@ -9,12 +9,13 @@ import {
   Phone,
   PhoneOff,
   Settings,
-  Users,
 } from "lucide-react";
-import { useAppSelector } from "@/store/hooks/hooks";
+import { useAppSelector } from "@/store/hooks/hooks"; // it's a typed selector hook
 import { useDispatch } from "react-redux";
-import { setIsJoined } from "@/store/Slices/stateSlices/stateSlice";
-import { useJwt } from "@/hooks/useJwt";
+import { setIsJoined } from "@/store/Slices/stateSlices/stateSlice"; // It a boolean state, you can rather use local state if preferred
+
+
+// no other imports needed
 
 // Types for Agora SDK
 interface IAgoraRTCClient {
@@ -88,7 +89,6 @@ const DirectVideoCall: React.FC<DirectVideoCallProps> = ({
     microphone: false,
     checked: false,
   });
-  const {decoded} = useJwt()
 
   // Event handlers with useCallback to prevent recreation
   const handleUserPublished = useCallback(

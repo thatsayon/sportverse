@@ -22,7 +22,7 @@ export default function ForgotPasswordSuccessPage() {
         dispatch(setUserQuery(""));
       } else {
         if (decoded?.role === "student") {
-          router.push("/sports-selection");
+          router.push("/student/sports-selection");
           dispatch(setUserQuery(""));
         } else {
           router.push("/trainer/doc-submission");

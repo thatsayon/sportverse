@@ -65,6 +65,15 @@ const publicOnlyRoutes = [
   '/forget-password/reset-password',
 ];
 
+// Routes that are always accessible regardless of authentication
+const alwaysAccessibleRoutes = [
+  '/forget-password/success',
+];
+
+function isAlwaysAccessible(pathname: string): boolean {
+  return alwaysAccessibleRoutes.some(route => pathname === route);
+}
+
 function isPublicOnlyRoute(pathname: string): boolean {
   return publicOnlyRoutes.some(route => {
     // Exact match for root
@@ -135,6 +144,11 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/auth')
   ) {
+    return NextResponse.next();
+  }
+
+  // Always allow access to certain routes regardless of authentication
+  if (isAlwaysAccessible(pathname)) {
     return NextResponse.next();
   }
 

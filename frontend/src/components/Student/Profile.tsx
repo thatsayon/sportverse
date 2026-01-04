@@ -23,7 +23,10 @@ interface StatCard {
 const Profile = () => {
   const [open, setOpen] = useState<boolean>(false);
   const { data, isLoading, isError } = useGetStudentProfieQuery();
+  console.log("Student Profile:", data?.profile_pic);
 
+  const facoriteSports =
+    data?.all_sports.filter((sports) => sports.is_favorite === true) || [];
   const stats: StatCard[] = [
     {
       id: 1,
@@ -127,14 +130,22 @@ const Profile = () => {
                           {item.name}
                         </span>;
                       })} */}
-                      {data?.favorite_sports.map((item, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm"
-                        >
-                          {item.name}
-                        </span>
-                      ))}
+                      {facoriteSports.length > 0 ? (
+                        <>
+                          {facoriteSports?.map((item, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm"
+                            >
+                              {item.name}
+                            </span>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          <h1>Favorite sports not selected</h1>
+                        </>
+                      )}
                       {/* <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
                         Basketball
                       </span> */}
@@ -184,7 +195,7 @@ const Profile = () => {
               <CardContent>
                 <h3 className="text-xl font-semibold mb-2">About Me</h3>
                 <p className="w-full text-gray-500">
-                  {data?.about === null
+                  {data?.about === null || data?.about === ""
                     ? "About Is not added yet."
                     : data?.about}
                 </p>

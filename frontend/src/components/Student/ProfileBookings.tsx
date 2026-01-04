@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetBookingsQuery } from "@/store/Slices/apiSlices/studentApiSlice";
+import { useGetBookingsStudentQuery } from "@/store/Slices/apiSlices/studentApiSlice";
 import ErrorLoadingPage from "../Element/ErrorLoadingPage";
 import { Button } from "../ui/button";
 import Link from "next/link";
@@ -27,7 +27,7 @@ function ProfileBookings() {
     }
   };
 
-  const { data, isError, isLoading } = useGetBookingsQuery();
+  const { data, isError, isLoading } = useGetBookingsStudentQuery();
 
   //console.log("booking data:", data)
 
@@ -39,7 +39,7 @@ function ProfileBookings() {
   if (trainerBookingData?.length === 0) {
     return (
       <div>
-        <h1 className="mt-14 text-center text-3xl font-semibold">No Session taken yet</h1>
+        <h1 className="mt-14 text-center text-3xl font-semibold">No Session Booked yet</h1>
         <div className="flex items-center justify-center mt-6">
           <Link href={"/student/virtual-training"}>
         <Button>
