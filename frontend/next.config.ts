@@ -5,21 +5,25 @@ const nextConfig: NextConfig = {
 
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "**",
-      },
-      {
-        protocol: "https",
-        hostname: "i.pinimg.com",
-        pathname: "**",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "**",
-      },
+      // {
+      //   protocol: "https",
+      //   hostname: "images.unsplash.com",
+      //   pathname: "/**",
+      // },
+      // {
+      //   protocol: "https",
+      //   hostname: "i.pinimg.com",
+      //   pathname: "/**",
+      // },
+      // {
+      //   protocol: "https",
+      //   hostname: "res.cloudinary.com",
+      //   pathname: "/**",
+      // },
+      new URL("https://res.cloudinary.com/**"),
+      new URL("http://res.cloudinary.com/**"),
+      new URL("https://cdn.pixabay.com/**"),
+      new URL("https://images.unsplash.com**"),
     ],
   },
 

@@ -36,9 +36,9 @@ import io from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 import { useJwt } from "@/hooks/useJwt";
 import { useMarkReadMutation } from "@/store/Slices/apiSlices/studentApiSlice";
+import { toast } from "sonner";
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL;
-const NOTIFICATION_SOCKET_URL = process.env.NEXT_PUBLIC_NOTIFICATION_URL;
 
 interface NavProps {
   className?: string;
@@ -46,10 +46,11 @@ interface NavProps {
 
 interface Notification {
   id: string;
-  title: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
+  header: string;
+  detail: string;
+  onclick_location: string;
+  created_at: string;
+  is_read: boolean;
 }
 
 interface NotificationAPIResponse {
@@ -58,11 +59,11 @@ interface NotificationAPIResponse {
   previous: string | null;
   results: {
     id: string;
-    user_id: string;
-    title: string;
-    message: string;
-    is_read: boolean;
+    header: string;
+    detail: string;
+    onclick_location: string;
     created_at: string;
+    is_read: boolean;
   }[];
 }
 
@@ -76,12 +77,12 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
   const [localMessageList, setLocalMessageList] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
   const { decoded } = useJwt();
   const router = useRouter();
   const pathname = usePathname();
   const { data: messageList } = useGetTrainerChatListQuery();
   const [markRead] = useMarkReadMutation();
+
   // Initialize local message list from API data
   useEffect(() => {
     if (messageList?.results) setLocalMessageList(messageList.results);
@@ -97,12 +98,16 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
   // Socket integration for real-time messaging
   useEffect(() => {
+    if (SOCKET_URL === undefined) {
+      toast.error("SOCKET URL socket is undefined");
+      return;
+    }
     const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
 
     const handleNewMessage = (msg: any) => {
       setLocalMessageList((prev) => {
         const index = prev.findIndex(
-          (c) => c.conversation_id === msg.conversation_id
+          (c) => c.conversation_id === msg.conversation_id,
         );
 
         if (index !== -1) {
@@ -147,14 +152,14 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
       try {
         const response = await fetch(
-          `${NOTIFICATION_SOCKET_URL}notifications/`,
+          `${SOCKET_URL}/communication/notification/list/`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -164,21 +169,9 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
         const data: NotificationAPIResponse = await response.json();
         console.log("📥 Fetched notifications:", data);
 
-        // Transform API response to match our Notification interface
-        const transformedNotifications: Notification[] = data.results.map(
-          (notif) => ({
-            id: notif.id,
-            title: notif.title,
-            message: notif.message,
-            timestamp: notif.created_at,
-            read: notif.is_read,
-          })
-        );
-
-        setNotifications(transformedNotifications);
+        setNotifications(data.results);
       } catch (error) {
         console.error("❌ Error fetching notifications:", error);
-        // Silently fail - don't show error to user
       } finally {
         setIsLoadingNotifications(false);
       }
@@ -213,10 +206,14 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     }
 
     let notificationSocket: any = null;
+    if (SOCKET_URL === undefined) {
+      toast.error("notification socket is undefined");
+      return;
+    }
 
     try {
       // ✅ Establish socket connection
-      notificationSocket = io(NOTIFICATION_SOCKET_URL, {
+      notificationSocket = io(SOCKET_URL, {
         auth: { user_id: userId },
         transports: ["websocket"],
         autoConnect: true,
@@ -229,18 +226,14 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
       // 🔌 Connection events
       notificationSocket.on("connect", () => {
         console.log("🔌 Notification Socket Connected:", notificationSocket.id);
-        setIsSocketConnected(true);
       });
 
       notificationSocket.on("disconnect", () => {
         console.log("❌ Notification Socket Disconnected");
-        setIsSocketConnected(false);
       });
 
       notificationSocket.on("connect_error", (error: any) => {
         console.warn("⚠️ Notification Socket Connection Error:", error.message);
-        setIsSocketConnected(false);
-        // Silently fail - don't show error to user
       });
 
       // 🔔 New notification
@@ -249,28 +242,34 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
         const newNotification: Notification = {
           id: data.id || Date.now().toString(),
-          title: data.title || "New Notification",
-          message: data.message || data.content || "",
-          timestamp:
-            data.timestamp || data.created_at || new Date().toISOString(),
-          read: false,
+          header: data.header || data.title || "New Notification",
+          detail: data.detail || data.message || data.content || "",
+          onclick_location: data.onclick_location || "",
+          created_at: data.created_at || new Date().toISOString(),
+          is_read: false,
         };
 
         setNotifications((prev) => [newNotification, ...prev]);
+
+        // Optional: Show toast notification
+        toast.info(newNotification.header, {
+          description: newNotification.detail,
+        });
       });
 
-      // ✅ Mark notification as read
+      // ✅ Mark notification as read (if backend sends this event)
       notificationSocket.on("notification_read", (data: any) => {
         console.log("✅ Notification marked as read:", data);
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif.id === data.notification_id ? { ...notif, read: true } : notif
-          )
+            notif.id === data.notification_id || notif.id === data.id
+              ? { ...notif, is_read: true }
+              : notif,
+          ),
         );
       });
     } catch (error) {
       console.error("❌ Error setting up notification socket:", error);
-      // Silently fail - don't show error to user
     }
 
     // 🧹 Cleanup on unmount
@@ -325,51 +324,30 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
     console.log("conversation item:", item);
 
     // Mark as read via API
-    try {
-      await markRead({ id: item.conversation_id }).unwrap();
-      console.log("✅ Message marked as read on server");
-    } catch (error) {
-      console.error("❌ Error marking message as read:", error);
-    }
+    // try {
+    //   await markRead({ id: item.conversation_id }).unwrap();
+    //   console.log("✅ Message marked as read on server");
+    // } catch (error) {
+    //   console.error("❌ Error marking message as read:", error);
+    // }
 
     // Reset unread count for the clicked conversation locally
     setLocalMessageList((prev) =>
       prev.map((c) =>
         c.conversation_id === item.conversation_id
           ? { ...c, unread_count: 0 }
-          : c
-      )
+          : c,
+      ),
     );
   };
 
-  const handleNotificationClick = async (notificationId: string) => {
-    // Mark notification as read locally
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-
-    // Send request to server to mark as read
-    try {
-      const accessToken = getCookie("access_token");
-      if (!accessToken) return;
-
-      await fetch(
-        `${NOTIFICATION_SOCKET_URL}notifications/${notificationId}/read/`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+  // Mark all notifications as read when dropdown opens
+  const handleNotificationDropdownOpen = (isOpen: boolean) => {
+    if (isOpen) {
+      setNotifications((prev) =>
+        prev.map((notif) => ({ ...notif, is_read: true })),
       );
-
-      console.log("✅ Notification marked as read on server:", notificationId);
-    } catch (error) {
-      console.error("❌ Error marking notification as read:", error);
-      // Silently fail - don't show error to user
+      console.log("✅ All notifications marked as read locally");
     }
   };
 
@@ -393,10 +371,10 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
 
   const totalUnreadCount = localMessageList.reduce(
     (acc, c) => acc + (c.unread_count || 0),
-    0
+    0,
   );
 
-  const unreadNotificationCount = notifications.filter((n) => !n.read).length;
+  const hasUnreadNotifications = notifications.some((n) => !n.is_read);
 
   return (
     <nav
@@ -504,17 +482,12 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
             </DropdownMenu>
 
             {/* Notifications */}
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={handleNotificationDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="relative">
                   <Bell className="size-6" />
-                  {unreadNotificationCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-[10px] sm:text-xs"
-                    >
-                      {unreadNotificationCount}
-                    </Badge>
+                  {hasUnreadNotifications && (
+                    <span className="absolute -top-0.5 -right-0.5 size-2.5 bg-red-500 rounded-full"></span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -539,27 +512,24 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                 ) : (
                   notifications.map((notification) => (
                     <React.Fragment key={notification.id}>
-                      <DropdownMenuItem
-                        onClick={() => handleNotificationClick(notification.id)}
-                        className={notification.read ? "opacity-60" : ""}
-                      >
+                      <div className="px-2 py-3 hover:bg-gray-50 cursor-default">
                         <div className="flex flex-col space-y-1 w-full">
                           <div className="flex items-start justify-between">
-                            <p className="text-sm font-medium">
-                              {notification.title}
+                            <p className="text-sm font-medium text-gray-900">
+                              {notification.header}
                             </p>
-                            {!notification.read && (
+                            {!notification.is_read && (
                               <span className="h-2 w-2 bg-blue-500 rounded-full mt-1 ml-2 flex-shrink-0"></span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500">
-                            {notification.message}
+                          <p className="text-xs text-gray-600">
+                            {notification.detail}
                           </p>
                           <span className="text-xs text-gray-400">
-                            {getTimeAgo(notification.timestamp)}
+                            {getTimeAgo(notification.created_at)}
                           </span>
                         </div>
-                      </DropdownMenuItem>
+                      </div>
                       <DropdownMenuSeparator />
                     </React.Fragment>
                   ))
@@ -580,7 +550,6 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                       }
                       alt="profile image"
                     />
-
                     <AvatarFallback>User</AvatarFallback>
                   </Avatar>
                   <ChevronDown />
@@ -739,23 +708,18 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                   </DropdownMenu>
 
                   {/* Mobile Notifications */}
-                  <DropdownMenu>
+                  <DropdownMenu onOpenChange={handleNotificationDropdownOpen}>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="relative w-full justify-start"
+                        className={`relative w-full justify-start ${hasUnreadNotifications ? "text-red-500":"text-black"}`}
                       >
                         <Bell className="h-5 w-5 mr-2" />
                         Notifications
-                        {unreadNotificationCount > 0 && (
-                          <Badge
-                            variant="destructive"
-                            className="ml-auto h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]"
-                          >
-                            {unreadNotificationCount}
-                          </Badge>
-                        )}
+                        {/* {hasUnreadNotifications && (
+                          <span className="absolute -top-0.5 -right-0.5 size-2.5 bg-red-500 rounded-full"></span>
+                        )} */}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -779,30 +743,24 @@ const Navbar: React.FC<NavProps> = ({ className = "" }) => {
                       ) : (
                         notifications.map((notification) => (
                           <React.Fragment key={notification.id}>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                handleNotificationClick(notification.id);
-                                setIsMobileMenuOpen(false);
-                              }}
-                              className={notification.read ? "opacity-60" : ""}
-                            >
+                            <div className="px-2 py-3 hover:bg-gray-50 cursor-default">
                               <div className="flex flex-col space-y-1 w-full">
                                 <div className="flex items-start justify-between">
-                                  <p className="text-sm font-medium">
-                                    {notification.title}
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {notification.header}
                                   </p>
-                                  {!notification.read && (
+                                  {!notification.is_read && (
                                     <span className="h-2 w-2 bg-blue-500 rounded-full mt-1 ml-2 flex-shrink-0"></span>
                                   )}
                                 </div>
-                                <p className="text-xs text-gray-500">
-                                  {notification.message}
+                                <p className="text-xs text-gray-600">
+                                  {notification.detail}
                                 </p>
                                 <span className="text-xs text-gray-400">
-                                  {getTimeAgo(notification.timestamp)}
+                                  {getTimeAgo(notification.created_at)}
                                 </span>
                               </div>
-                            </DropdownMenuItem>
+                            </div>
                             <DropdownMenuSeparator />
                           </React.Fragment>
                         ))

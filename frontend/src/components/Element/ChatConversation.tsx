@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { getSocket } from "@/lib/socket";
 import { getCookie } from "@/hooks/cookie";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
  
 interface Message {
   id: string;
@@ -58,6 +59,10 @@ const ChatConversation: React.FC<ChatProps> = ({
       //console.error("Failed to decode JWT", err);
     }
   }, []);
+
+  if(SOCKET_URL === undefined) {
+    return toast.error("Connection disconnected")
+  }
  
   // 2️⃣ Use the centralized socket
   const socket = getSocket(SOCKET_URL, getCookie("access_token") || "");
@@ -130,7 +135,7 @@ const ChatConversation: React.FC<ChatProps> = ({
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
-        className="bg-white rounded-lg shadow-xl max-w-md w-full h-[600px] flex flex-col overflow-hidden"
+        className="bg-white rounded-lg shadow-xl max-w-md w-full h-[600px] max-h-[96%] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="bg-[#8a3618] text-white p-4 flex items-center justify-between">
