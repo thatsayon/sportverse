@@ -116,7 +116,7 @@ export default function TrainerCard({
               {name}
             </h2>
             <p className="mt-2 font-semibold text-gray-900 flex items-center gap-2">
-              Institute: <span className="text-gray-500">{institute_name}</span>
+              Org: <span className="text-gray-500">{institute_name}</span>
             </p>
           </div>
         </div>

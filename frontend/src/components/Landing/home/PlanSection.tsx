@@ -13,7 +13,7 @@ function PlanSection() {
   };
   return (
     <motion.section>
-        <h1 className="text-lg md:text-2xl lg:text-5xl xl:text-6xl text-center mb-24 font-semibold">Consultancy plans</h1>
+        <h1 className="text-lg md:text-2xl lg:text-5xl xl:text-6xl text-center mb-24 font-semibold">Taning Option</h1>
       <div className="grid md:grid-cols-2 gap-6">
         <motion.div
           className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white p-10 h-[504px]"

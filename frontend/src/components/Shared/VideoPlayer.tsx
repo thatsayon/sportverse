@@ -1,6 +1,14 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize, Minimize } from "lucide-react";
+import {
+  ArrowLeft,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useGetAdminVideoDetailsQuery } from "@/store/Slices/apiSlices/adminApiSlice";
@@ -8,6 +16,7 @@ import MediaCard from "@/components/Element/MediaCard";
 import Loading from "@/components/Element/Loading";
 import ErrorLoadingPage from "@/components/Element/ErrorLoadingPage";
 import { useJwt } from "@/hooks/useJwt";
+import Hls from "hls.js";
 
 interface VideoDetails {
   video_id: string;
@@ -43,28 +52,78 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
-  const {decoded}= useJwt()
+
+  const { decoded } = useJwt();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isAdmin = decoded?.role === "admin"
-  
+  const hlsRef = useRef<Hls | null>(null);
+  const isPlayingRef = useRef(false);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
+
+  const isAdmin = decoded?.role === "admin";
+
   const { data, isLoading, isError } = useGetAdminVideoDetailsQuery(id);
   const videoDetails: VideoDetails | undefined = data;
 
-  // Auto-hide controls after 3 seconds of inactivity
-  const resetControlsTimeout = () => {
-    if (controlsTimeoutRef.current) {
-      clearTimeout(controlsTimeoutRef.current);
-    }
-    setShowControls(true);
-    controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying) {
-        setShowControls(false);
-      }
-    }, 3000);
-  };
+  // Smart video source initialization — handles both MP4 and HLS (.m3u8)
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoDetails?.hls_url) return;
 
+    // Destroy any previous HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    const url = videoDetails.hls_url;
+    const isHLS =
+      url.includes(".m3u8") ||
+      url.includes("application/x-mpegURL") ||
+      url.includes("application/vnd.apple.mpegurl");
+
+    if (isHLS) {
+      // True HLS stream
+      if (Hls.isSupported()) {
+        const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+        hlsRef.current = hls;
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        // Safari native HLS
+        video.src = url;
+      }
+    } else {
+      // Plain MP4 / WebM / any direct video URL — just set src directly
+      video.src = url;
+      video.load();
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [videoDetails?.hls_url]);
+
+  // Cleanup controls timeout on unmount
   useEffect(() => {
     return () => {
       if (controlsTimeoutRef.current) {
@@ -73,12 +132,46 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
     };
   }, []);
 
-  const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
+  // Auto-hide controls after 3 seconds of inactivity
+  const resetControlsTimeout = () => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    setShowControls(true);
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (isPlayingRef.current) {
+        setShowControls(false);
+      }
+    }, 3000);
+  };
+
+  const handlePlayPause = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlayingRef.current) {
+      // Wait for any pending play() before pausing
+      if (playPromiseRef.current) {
+        try {
+          await playPromiseRef.current;
+        } catch {
+          // Already interrupted, nothing to do
+        }
+      }
+      video.pause();
+      isPlayingRef.current = false;
+    } else {
+      isPlayingRef.current = true;
+      playPromiseRef.current = video.play();
+      try {
+        await playPromiseRef.current;
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          isPlayingRef.current = false;
+          setIsPlaying(false);
+        }
+      } finally {
+        playPromiseRef.current = null;
       }
     }
   };
@@ -95,15 +188,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
     }
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (videoRef.current) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const width = rect.width;
-      const newTime = (clickX / width) * duration;
-      videoRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
+  const handleSeek = async (e: React.MouseEvent<HTMLDivElement>) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const newTime = (clickX / rect.width) * duration;
+
+    // Wait for any pending play() before seeking to avoid AbortError
+    if (playPromiseRef.current) {
+      try {
+        await playPromiseRef.current;
+      } catch {
+        // ignore
+      }
     }
+
+    video.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,19 +243,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  if (isLoading) return (
-    <div className="min-h-screen">
-      <Loading/>
-    </div>
-  )
-  if (isError || !videoDetails) return (
-    <div className="min-h-screen">
-      <ErrorLoadingPage/>
-    </div>
-  )
+  if (isLoading)
+    return (
+      <div className="min-h-screen">
+        <Loading />
+      </div>
+    );
+
+  if (isError || !videoDetails)
+    return (
+      <div className="min-h-screen">
+        <ErrorLoadingPage />
+      </div>
+    );
 
   if (videoDetails.status === "processing") {
     return (
@@ -178,7 +284,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
             Video Processing Failed
           </h2>
           <p className="text-gray-600">
-            There was an error processing this video. Please try uploading again.
+            There was an error processing this video. Please try uploading
+            again.
           </p>
         </div>
       </div>
@@ -186,18 +293,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
   }
 
   return (
-    <div className="min-h-screen bg-white ">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="border-b border-gray-200 px-4 py-4">
-         <Link href={decoded?.role !== "admin" ?`/${route}/video-library` : "/dashboard/media"}>
-        <Button 
-          variant="ghost" 
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-          onClick={() => window.history.back()}
+        <Link
+          href={
+            decoded?.role !== "admin"
+              ? `/${route}/video-library`
+              : "/dashboard/media"
+          }
         >
-          <ArrowLeft size={20} />
-          Back to video library
-        </Button>
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft size={20} />
+            Back to video library
+          </Button>
         </Link>
       </div>
 
@@ -205,7 +317,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
       <div className="max-w-7xl mx-auto p-4 lg:p-6">
         {/* Video Player Section */}
         <div className="mb-8">
-          <div 
+          <div
             ref={containerRef}
             className="relative bg-black rounded-lg overflow-hidden shadow-2xl cursor-pointer"
             onMouseMove={resetControlsTimeout}
@@ -221,21 +333,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
                 onContextMenu={(e) => e.preventDefault()}
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onClick={handlePlayPause}
-                style={{
-                  outline: 'none',
+                onPlay={() => {
+                  isPlayingRef.current = true;
+                  setIsPlaying(true);
                 }}
+                onPause={() => {
+                  isPlayingRef.current = false;
+                  setIsPlaying(false);
+                }}
+                onClick={handlePlayPause}
+                style={{ outline: "none" }}
               >
-                <source src={videoDetails.hls_url} type="application/x-mpegURL" />
-                <source src={videoDetails.hls_url} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
 
               {/* Custom Controls Overlay */}
-              <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-                {/* Play/Pause Overlay */}
+              <div
+                className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${
+                  showControls ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {/* Play/Pause Center Overlay */}
                 {!isPlaying && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
                     <button
@@ -251,13 +369,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pointer-events-auto">
                   {/* Progress Bar */}
                   <div className="mb-4">
-                    <div 
+                    <div
                       className="w-full h-2 bg-white/30 rounded-full cursor-pointer group"
                       onClick={handleSeek}
                     >
-                      <div 
+                      <div
                         className="h-full bg-[#F15A24] rounded-full transition-all duration-150 group-hover:h-3"
-                        style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                        style={{
+                          width: `${
+                            duration ? (currentTime / duration) * 100 : 0
+                          }%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -270,7 +392,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
                         onClick={handlePlayPause}
                         className="text-white hover:text-[#F15A24] transition-colors"
                       >
-                        {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" fill="currentColor" />}
+                        {isPlaying ? (
+                          <Pause className="w-6 h-6" />
+                        ) : (
+                          <Play className="w-6 h-6" fill="currentColor" />
+                        )}
                       </button>
 
                       {/* Volume Control */}
@@ -279,7 +405,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
                           onClick={toggleMute}
                           className="text-white hover:text-[#F15A24] transition-colors"
                         >
-                          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                          {isMuted ? (
+                            <VolumeX className="w-5 h-5" />
+                          ) : (
+                            <Volume2 className="w-5 h-5" />
+                          )}
                         </button>
                         <input
                           type="range"
@@ -290,7 +420,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
                           onChange={handleVolumeChange}
                           className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
                           style={{
-                            background: `linear-gradient(to right, #F15A24 0%, #F15A24 ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) ${(isMuted ? 0 : volume) * 100}%, rgba(255,255,255,0.3) 100%)`
+                            background: `linear-gradient(to right, #F15A24 0%, #F15A24 ${
+                              (isMuted ? 0 : volume) * 100
+                            }%, rgba(255,255,255,0.3) ${
+                              (isMuted ? 0 : volume) * 100
+                            }%, rgba(255,255,255,0.3) 100%)`,
                           }}
                         />
                       </div>
@@ -303,12 +437,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
 
                     {/* Right Controls */}
                     <div className="flex items-center gap-4">
-                      {/* Fullscreen Toggle */}
                       <button
                         onClick={toggleFullscreen}
                         className="text-white hover:text-[#F15A24] transition-colors"
                       >
-                        {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+                        {isFullscreen ? (
+                          <Minimize className="w-5 h-5" />
+                        ) : (
+                          <Maximize className="w-5 h-5" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -353,7 +490,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
                 Related Videos ({videoDetails.related_videos.length})
               </h2>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {videoDetails.related_videos.map((video) => (
                   <MediaCard
@@ -387,14 +523,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
           )}
       </div>
 
-      {/* Custom CSS for video player styling */}
+      {/* Custom CSS for range input thumb */}
       <style jsx>{`
         input[type="range"]::-webkit-slider-thumb {
           appearance: none;
           width: 16px;
           height: 16px;
           border-radius: 50%;
-          background: #F15A24;
+          background: #f15a24;
           cursor: pointer;
           border: 2px solid white;
         }
@@ -403,7 +539,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
           width: 16px;
           height: 16px;
           border-radius: 50%;
-          background: #F15A24;
+          background: #f15a24;
           cursor: pointer;
           border: 2px solid white;
         }
@@ -412,4 +548,4 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ route, id }) => {
   );
 };
 
-export default VideoPlayer;
+export default VideoPlayer; 
