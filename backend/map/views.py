@@ -475,6 +475,7 @@ from numba import jit
 from typing import Tuple, Optional
 import pickle
 from authentication.models import UserAccount
+from teacher.session.models import SessionOption
 from account.models import Teacher
 
 logger = logging.getLogger(__name__)
@@ -672,10 +673,20 @@ class FindNearestTeacherView(APIView):
     def _load_teachers_from_db(self):
         """Load all teachers from database with location data"""
         # Query all teachers with their document (location data)
-        teachers = Teacher.objects.select_related(
-            'user', 
-            'document'
-        ).prefetch_related('coach_type')
+        # teachers = Teacher.objects.select_related(
+        #     'user', 
+        #     'document'
+        # ).prefetch_related('coach_type')
+        teachers = (
+            Teacher.objects
+            .filter(
+                session__training_type='in_person'
+            )
+            .distinct()
+            .select_related('user', 'document')
+            .prefetch_related('coach_type')
+        )
+
         
         teachers_data = []
         for teacher in teachers:
@@ -800,17 +811,12 @@ class FindNearestTeacherView(APIView):
         return errors
 
     def get(self, request):
-        """Optimized GET endpoint with maximum performance"""
         try:
-            # Fast parameter extraction
             city = request.query_params.get('city', '').strip()
             postal = request.query_params.get('postal', '').strip()
-            country = request.query_params.get('country', 'BD').strip()  # Default to Bangladesh
-            
-            # Fast limit validation
+            country = request.query_params.get('country', 'BD').strip()
             limit = min(max(int(request.query_params.get('limit', '5')), 1), 50)
-            
-            # Quick input validation
+
             validation_errors = self._validate_input_fast(city, postal)
             if validation_errors:
                 return Response({
@@ -818,45 +824,61 @@ class FindNearestTeacherView(APIView):
                     "error": "Validation failed",
                     "details": validation_errors
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Ultra-fast cached location resolution with country preference
+
+            # Resolve user location
             lat, lon, found_source = self._resolve_location_cached(
                 city if city else None,
                 postal if postal else None,
                 country
             )
-            
+
             if lat is None:
                 return Response({
                     "success": False,
-                    "error": "Location not found",
-                    "message": f"Could not resolve coordinates for city: '{city}', postal: '{postal}', country: '{country}'"
+                    "error": "Location not found"
                 }, status=status.HTTP_404_NOT_FOUND)
-            
-            # Load teachers from database
+
+            # Load teachers (existing logic untouched)
             teachers_df = self._load_teachers_from_db()
-            
+
             if teachers_df.empty:
                 return Response({
                     "success": False,
-                    "error": "No teachers available",
-                    "message": "No teachers found with valid location data"
+                    "error": "No teachers available"
                 }, status=status.HTTP_404_NOT_FOUND)
-            
-            # Ultra-fast distance calculation using JIT compilation
-            distances = self._calculate_distances_optimized(lat, lon, teachers_df)
-            
-            # Fast sorting using numpy argsort
+
+            # Calculate distances
+            distances = fast_haversine_vectorized(
+                lat,
+                lon,
+                teachers_df['latitude_array'].values,
+                teachers_df['longitude_array'].values
+            )
+
             sorted_indices = np.argsort(distances)[:limit]
-            
-            # Optimized result formatting
+
             teachers_list = []
+
             for idx in sorted_indices:
-                teacher = teachers_df.iloc[int(idx)]  # Ensure integer index
+                teacher = teachers_df.iloc[int(idx)]
                 distance_km = float(distances[idx])
-                
+
+                session = (
+                    SessionOption.objects
+                    .filter(
+                        teacher_id=teacher['id'],   # ✅ teacher.id from dataframe
+                        training_type='in_person'
+                    )
+                    .only('id')
+                    .first()
+                )
+
+                if not session:
+                    continue
+
                 teachers_list.append({
-                    "id": teacher['id'],
+                    "id": str(session.id),  # session id (frontend-safe)
+
                     "user_id": teacher['user_id'],
                     "username": teacher['username'],
                     "full_name": teacher['full_name'],
@@ -864,23 +886,32 @@ class FindNearestTeacherView(APIView):
                     "institute_name": teacher['institute_name'],
                     "coach_types": teacher['coach_types'],
                     "description": teacher['description'],
+
                     "location": {
                         "city": teacher['city'].title() if teacher['city'] else '',
                         "postal_code": teacher['postal_code'],
                         "latitude": float(teacher['latitude']),
-                        "longitude": float(teacher['longitude'])
+                        "longitude": float(teacher['longitude']),
                     },
+
                     "distance": {
                         "km": round(distance_km, 2),
                         "category": self._get_distance_category_cached(distance_km)
                     }
                 })
             
+
+            if not teachers_list:
+                return Response({
+                    "success": False,
+                    "error": "No in-person sessions available"
+                }, status=status.HTTP_404_NOT_FOUND)
+
             return Response({
                 "success": True,
                 "query": {
-                    "city": city if city else None,
-                    "postal": postal if postal else None,
+                    "city": city or None,
+                    "postal": postal or None,
                     "country": country,
                     "limit": limit
                 },
@@ -894,19 +925,123 @@ class FindNearestTeacherView(APIView):
                     "teachers": teachers_list
                 }
             }, status=status.HTTP_200_OK)
-            
-        except ValueError:
-            return Response({
-                "success": False,
-                "error": "Invalid limit parameter"
-            }, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
-            logger.error(f"Error in FindNearestTeacherView: {e}", exc_info=True)
+            logger.error(f"Error in GET FindNearestTeacherView: {e}", exc_info=True)
             return Response({
                 "success": False,
                 "error": "Internal server error"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    #
+    # def get(self, request):
+    #     """Optimized GET endpoint with maximum performance"""
+    #     try:
+    #         # Fast parameter extraction
+    #         city = request.query_params.get('city', '').strip()
+    #         postal = request.query_params.get('postal', '').strip()
+    #         country = request.query_params.get('country', 'BD').strip()  # Default to Bangladesh
+    #
+    #         # Fast limit validation
+    #         limit = min(max(int(request.query_params.get('limit', '5')), 1), 50)
+    #
+    #         # Quick input validation
+    #         validation_errors = self._validate_input_fast(city, postal)
+    #         if validation_errors:
+    #             return Response({
+    #                 "success": False,
+    #                 "error": "Validation failed",
+    #                 "details": validation_errors
+    #             }, status=status.HTTP_400_BAD_REQUEST)
+    #
+    #         # Ultra-fast cached location resolution with country preference
+    #         lat, lon, found_source = self._resolve_location_cached(
+    #             city if city else None,
+    #             postal if postal else None,
+    #             country
+    #         )
+    #
+    #         if lat is None:
+    #             return Response({
+    #                 "success": False,
+    #                 "error": "Location not found",
+    #                 "message": f"Could not resolve coordinates for city: '{city}', postal: '{postal}', country: '{country}'"
+    #             }, status=status.HTTP_404_NOT_FOUND)
+    #
+    #         # Load teachers from database
+    #         teachers_df = self._load_teachers_from_db()
+    #
+    #         if teachers_df.empty:
+    #             return Response({
+    #                 "success": False,
+    #                 "error": "No teachers available",
+    #                 "message": "No teachers found with valid location data"
+    #             }, status=status.HTTP_404_NOT_FOUND)
+    #
+    #         # Ultra-fast distance calculation using JIT compilation
+    #         distances = self._calculate_distances_optimized(lat, lon, teachers_df)
+    #
+    #         # Fast sorting using numpy argsort
+    #         sorted_indices = np.argsort(distances)[:limit]
+    #
+    #         # Optimized result formatting
+    #         teachers_list = []
+    #         for idx in sorted_indices:
+    #             teacher = teachers_df.iloc[int(idx)]  # Ensure integer index
+    #             distance_km = float(distances[idx])
+    #
+    #             teachers_list.append({
+    #                 "id": teacher['id'],
+    #                 "user_id": teacher['user_id'],
+    #                 "username": teacher['username'],
+    #                 "full_name": teacher['full_name'],
+    #                 "profile_pic": teacher['profile_pic'],
+    #                 "institute_name": teacher['institute_name'],
+    #                 "coach_types": teacher['coach_types'],
+    #                 "description": teacher['description'],
+    #                 "location": {
+    #                     "city": teacher['city'].title() if teacher['city'] else '',
+    #                     "postal_code": teacher['postal_code'],
+    #                     "latitude": float(teacher['latitude']),
+    #                     "longitude": float(teacher['longitude'])
+    #                 },
+    #                 "distance": {
+    #                     "km": round(distance_km, 2),
+    #                     "category": self._get_distance_category_cached(distance_km)
+    #                 }
+    #             })
+    #
+    #         return Response({
+    #             "success": True,
+    #             "query": {
+    #                 "city": city if city else None,
+    #                 "postal": postal if postal else None,
+    #                 "country": country,
+    #                 "limit": limit
+    #             },
+    #             "location": {
+    #                 "resolved_from": found_source,
+    #                 "latitude": round(lat, 6),
+    #                 "longitude": round(lon, 6)
+    #             },
+    #             "results": {
+    #                 "total_found": len(teachers_list),
+    #                 "teachers": teachers_list
+    #             }
+    #         }, status=status.HTTP_200_OK)
+    #
+    #     except ValueError:
+    #         return Response({
+    #             "success": False,
+    #             "error": "Invalid limit parameter"
+    #         }, status=status.HTTP_400_BAD_REQUEST)
+    #     except Exception as e:
+    #         logger.error(f"Error in FindNearestTeacherView: {e}", exc_info=True)
+    #         return Response({
+    #             "success": False,
+    #             "error": "Internal server error"
+    #         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    #
     def post(self, request):
         """Optimized POST endpoint with advanced filtering"""
         try:
